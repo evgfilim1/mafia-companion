@@ -35,7 +35,7 @@ class _MainScreenState extends State<MainScreen> {
         child: const Text("Раздача ролей", style: TextStyle(fontSize: 20)),
       );
     }
-    if (gameState.state == GameState.voting || gameState.state == GameState.finalVoting) {
+    if (gameState.state.isAnyOf([GameState.voting, GameState.finalVoting])) {
       return Counter(
         min: 0,
         max: controller.currentGame.players.aliveCount, // TODO: more smart maximum
@@ -58,8 +58,7 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     final controller = context.watch<GameController>();
     final gameState = controller.currentGame.state;
-    final isGameRunning =
-        gameState.state != GameState.prepare && gameState.state != GameState.finish;
+    final isGameRunning = !gameState.state.isAnyOf([GameState.prepare, GameState.finish]);
     final roles = Iterable.generate(10).map((i) => controller.currentGame.players.getRole(i + 1));
     return Scaffold(
       appBar: AppBar(

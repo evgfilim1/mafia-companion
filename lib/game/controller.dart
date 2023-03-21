@@ -70,7 +70,7 @@ class Game {
       if (!player.isAlive) {
         continue;
       }
-      if (player.role == PlayerRole.mafia || player.role == PlayerRole.don) {
+      if (player.role.isAnyOf([PlayerRole.mafia, PlayerRole.don])) {
         mafiaCount++;
       } else {
         citizenCount++;
