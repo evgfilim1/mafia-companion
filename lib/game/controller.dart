@@ -46,7 +46,7 @@ class Game {
   var _firstSpeakingPlayer = 0;
   final List<int> _selectedPlayers = [];
   final LinkedHashMap<int, int> _votes = LinkedHashMap();
-  var _consequentDaysWithoutKills = 0; // TODO: use this
+  //var _consequentDaysWithoutKills = 0; // TODO: use this
 
   Game() : this.withPlayers(generatePlayers());
 
@@ -170,22 +170,16 @@ class Game {
           player: _players[_selectedPlayers[nextIndex]],
         );
       case GameState.nightKill:
-        final don = players.donNumber;
-        if (players.isAlive(don)) {
-          return GameStateWithPlayer(state: GameState.nightCheck, player: _players[don - 1]);
-        }
-        final commissar = players.commissarNumber;
-        if (players.isAlive(commissar)) {
-          return GameStateWithPlayer(state: GameState.nightCheck, player: _players[commissar - 1]);
-        }
-        return _handleEndOfNight();
+        return GameStateWithPlayer(
+          state: GameState.nightCheck,
+          player: _players[players.donNumber - 1],
+        );
       case GameState.nightCheck:
         if (_state.player!.role == PlayerRole.don) {
-          final commissar = players.commissarNumber;
-          if (players.isAlive(commissar)) {
-            return GameStateWithPlayer(
-                state: GameState.nightCheck, player: _players[commissar - 1]);
-          }
+          return GameStateWithPlayer(
+            state: GameState.nightCheck,
+            player: _players[players.commissarNumber - 1],
+          );
         }
         return _handleEndOfNight();
       case GameState.nightLastWords:
@@ -340,7 +334,9 @@ class Game {
       return const GameStateWithPlayer(state: GameState.day);
     }
     return GameStateWithPlayer(
-        state: GameState.nightLastWords, player: _players[_selectedPlayers.first]);
+      state: GameState.nightLastWords,
+      player: _players[_selectedPlayers.first],
+    );
   }
 
   int _nextSelectedPlayer(int from) {

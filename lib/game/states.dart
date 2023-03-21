@@ -90,7 +90,7 @@ const validTransitions = {
   GameState.finalVoting: [GameState.finalVoting, GameState.dayLastWords, GameState.dropTableVoting],
   GameState.dropTableVoting: [GameState.dayLastWords, GameState.nightKill],
   GameState.dayLastWords: [GameState.dayLastWords, GameState.nightKill, GameState.finish],
-  GameState.nightKill: [GameState.nightCheck, GameState.nightLastWords, GameState.day],
+  GameState.nightKill: [GameState.nightCheck],
   GameState.nightCheck: [GameState.nightCheck, GameState.nightLastWords, GameState.day],
   GameState.nightLastWords: [GameState.day, GameState.finish],
   GameState.finish: [],
