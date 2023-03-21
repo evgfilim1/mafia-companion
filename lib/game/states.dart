@@ -84,7 +84,12 @@ const validTransitions = {
   GameState.night0: [GameState.nightVibeCheck],
   GameState.nightVibeCheck: [GameState.nightVibeCheck, GameState.day],
   GameState.day: [GameState.speaking],
-  GameState.speaking: [GameState.speaking, GameState.voting, GameState.nightKill],
+  GameState.speaking: [
+    GameState.speaking,
+    GameState.voting,
+    GameState.dayLastWords,
+    GameState.nightKill,
+  ],
   GameState.voting: [GameState.voting, GameState.excuse, GameState.dayLastWords],
   GameState.excuse: [GameState.excuse, GameState.finalVoting],
   GameState.finalVoting: [GameState.finalVoting, GameState.dayLastWords, GameState.dropTableVoting],
