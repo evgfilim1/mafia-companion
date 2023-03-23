@@ -47,16 +47,27 @@ class _MainScreenState extends State<MainScreen> {
         value: controller.currentGame.getPlayerVotes(gameState.player!.number),
       );
     }
+    if (gameState.state == GameState.finish) {
+      final winRole = controller.currentGame.citizenTeamWon! ? "мирных жителей" : "мафии";
+      return Text("Победа команды $winRole", style: const TextStyle(fontSize: 20));
+    }
+    if (gameState.state == GameState.dropTableVoting) {
+      return TextButton(
+        onPressed: () => setState(() {
+          for (var i = 1; i <= 10; i++) {
+            controller.currentGame.deselectPlayer(i);
+          }
+          controller.currentGame.nextState();
+        }),
+        child: const Text("Нет", style: TextStyle(fontSize: 20)),
+      );
+    }
     final timeLimit = timeLimits[gameState.state];
     if (timeLimit != null) {
       return PlayerTimer(
         key: ValueKey(controller.currentGame.state),
         duration: timeLimit,
       );
-    }
-    if (gameState.state == GameState.finish) {
-      final winRole = controller.currentGame.citizenTeamWon! ? "мирных жителей" : "мафии";
-      return Text("Победа команды $winRole", style: const TextStyle(fontSize: 20));
     }
     return null;
   }
