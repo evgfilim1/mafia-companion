@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -21,6 +22,8 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
+  bool _showRole = false;
+
   Widget? _getBottomTextWidget(BuildContext context, GameController controller) {
     final gameState = controller.currentGame.state;
     final roles = Iterable.generate(10).map((i) => controller.currentGame.players.getRole(i + 1));
@@ -83,6 +86,11 @@ class _MainScreenState extends State<MainScreen> {
               ),
             ),
           IconButton(
+            onPressed: () => setState(() => _showRole = !_showRole),
+            tooltip: "${!_showRole ? "Показать" : "Скрыть"} роли",
+            icon: const Icon(Icons.person_search),
+          ),
+          IconButton(
             icon: const Icon(Icons.restart_alt),
             tooltip: "Перезапустить игру",
             onPressed: () {
@@ -139,6 +147,7 @@ class _MainScreenState extends State<MainScreen> {
                       child: const Text("Предупреждение"),
                     ),
                   ],
+                  showRole: _showRole,
                 );
               },
             ),

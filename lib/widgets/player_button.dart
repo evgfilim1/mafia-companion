@@ -11,7 +11,7 @@ class PlayerButton extends StatelessWidget {
   final bool isActive;
   final VoidCallback? onTap;
   final List<Widget> longPressActions;
-  final Widget? child;
+  final bool showRole;
 
   const PlayerButton({
     super.key,
@@ -22,7 +22,7 @@ class PlayerButton extends StatelessWidget {
     this.isActive = false,
     this.onTap,
     this.longPressActions = const [],
-    this.child,
+    this.showRole = false,
   });
 
   void _onLongPress(BuildContext context) {
@@ -59,6 +59,19 @@ class PlayerButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final borderColor = _getBorderColor(context);
+    final String roleText;
+    if (role == PlayerRole.citizen) {
+      roleText = "";
+    } else if (role == PlayerRole.mafia) {
+      roleText = "М";
+    } else if (role == PlayerRole.don) {
+      roleText = "Д";
+    } else if (role == PlayerRole.commissar) {
+      roleText = "К";
+    } else {
+      throw AssertionError("Unknown role: $role");
+    }
+    final cardText = "$number${showRole ? roleText : ""}";
     return Padding(
       padding: const EdgeInsets.all(4),
       child: ElevatedButton(
@@ -77,7 +90,7 @@ class PlayerButton extends StatelessWidget {
         ),
         onPressed: onTap,
         onLongPress: () => _onLongPress(context),
-        child: child ?? Center(child: Text("$number")),
+        child: Center(child: Text(cardText)),
       ),
     );
   }
