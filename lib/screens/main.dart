@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -105,10 +104,27 @@ class _MainScreenState extends State<MainScreen> {
           IconButton(
             icon: const Icon(Icons.restart_alt),
             tooltip: "Перезапустить игру",
-            onPressed: () {
-              setState(() => controller.restart());
-              showSnackBar(context, const SnackBar(content: Text("Игра перезапущена")));
-            },
+            onPressed: () => showDialog(
+              context: context,
+              builder: (context) => AlertDialog(
+                title: const Text("Перезапустить игру"),
+                content: const Text("Вы уверены? Весь прогресс будет потерян."),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      setState(() => controller.restart());
+                      Navigator.pop(context);
+                      showSnackBar(context, const SnackBar(content: Text("Игра перезапущена")));
+                    },
+                    child: const Text("Да"),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text("Нет"),
+                  ),
+                ],
+              ),
+            ),
           )
         ],
       ),
