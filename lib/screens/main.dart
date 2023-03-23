@@ -51,6 +51,10 @@ class _MainScreenState extends State<MainScreen> {
         duration: timeLimit,
       );
     }
+    if (gameState.state == GameState.finish) {
+      final winRole = controller.currentGame.citizenTeamWon! ? "мирных жителей" : "мафии";
+      return Text("Победа команды $winRole", style: const TextStyle(fontSize: 20));
+    }
     return null;
   }
 
@@ -60,6 +64,7 @@ class _MainScreenState extends State<MainScreen> {
     final gameState = controller.currentGame.state;
     final isGameRunning = !gameState.state.isAnyOf([GameState.prepare, GameState.finish]);
     final roles = Iterable.generate(10).map((i) => controller.currentGame.players.getRole(i + 1));
+    final nextStateAssumption = controller.currentGame.nextStateAssumption;
     return Scaffold(
       appBar: AppBar(
         title: isGameRunning
@@ -163,8 +168,10 @@ class _MainScreenState extends State<MainScreen> {
                   width: MediaQuery.of(context).size.width,
                   child: BottomControlBar(
                     backLabel: "(не реализовано)",
-                    onTapNext: () => setState(() => controller.currentGame.nextState()),
-                    nextLabel: controller.currentGame.nextStateAssumption!.prettyName,
+                    onTapNext: nextStateAssumption != null
+                        ? () => setState(() => controller.currentGame.nextState())
+                        : null,
+                    nextLabel: nextStateAssumption?.prettyName ?? "(игра окончена)",
                   ),
                 )
               ],
