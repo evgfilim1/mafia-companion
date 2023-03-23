@@ -219,6 +219,10 @@ class Game {
         }
         break;
       case GameState.excuse:
+        if (oldState == GameState.voting) {
+          _selectedPlayers.clear();
+          _selectedPlayers.addAll(_getMaxVotesPlayers()!);
+        }
         break;
       case GameState.finalVoting:
         if (oldState != GameState.finalVoting) {
