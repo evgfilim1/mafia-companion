@@ -39,6 +39,7 @@ class _MainScreenState extends State<MainScreen> {
       );
     }
     if (gameState.state.isAnyOf([GameState.voting, GameState.finalVoting])) {
+      // TODO: don't show counter if only one player is selected
       return Counter(
         min: 0,
         max: controller.currentGame.players.aliveCount, // TODO: more smart maximum

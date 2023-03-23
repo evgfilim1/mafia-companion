@@ -87,7 +87,6 @@ const validTransitions = {
   GameState.speaking: [
     GameState.speaking,
     GameState.voting,
-    GameState.dayLastWords,
     GameState.nightKill,
   ],
   GameState.voting: [GameState.voting, GameState.excuse, GameState.dayLastWords],

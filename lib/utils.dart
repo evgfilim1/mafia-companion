@@ -30,6 +30,10 @@ extension FirstWhereOrNull<T> on Iterable<T> {
   }
 }
 
+extension Sum on Iterable<int> {
+  int get sum => fold(0, (value, element) => value + element);
+}
+
 typedef CountdownTimerCallback = void Function(Duration timeLeft);
 
 /// A simple countdown timer that calls [callback] every second until [duration]

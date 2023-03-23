@@ -121,12 +121,6 @@ class Game {
           if (_selectedPlayers.isEmpty || _day == 0 && _selectedPlayers.length == 1) {
             return const GameStateWithPlayer(state: GameState.nightKill);
           }
-          if (_selectedPlayers.length == 1) {
-            return GameStateWithPlayer(
-              state: GameState.dayLastWords,
-              player: _players[_selectedPlayers.first],
-            );
-          }
           return GameStateWithPlayer(
             state: GameState.voting,
             player: _players[_selectedPlayers.first],
@@ -308,15 +302,13 @@ class Game {
   }
 
   GameStateWithPlayer _handleVoting() {
-    if (_votes.length != _selectedPlayers.length) {
+    final maxVotesPlayers = _getMaxVotesPlayers();
+    if (maxVotesPlayers == null) {
       return GameStateWithPlayer(
         state: _state.state,
         player: _players[_selectedPlayers[_votes.length]],
       );
     }
-    final maxVotes = _votes.values.maxItem;
-    final maxVotesPlayers =
-        _votes.entries.where((entry) => entry.value == maxVotes).map((entry) => entry.key);
     if (maxVotesPlayers.length == 1) {
       return GameStateWithPlayer(
         state: GameState.dayLastWords,
@@ -344,7 +336,33 @@ class Game {
     assert(0 < nextIndex && nextIndex < _selectedPlayers.length);
     return nextIndex;
   }
-// endregion
+
+  List<int>? _getMaxVotesPlayers() {
+    final votes = {..._votes};
+    final aliveCount = players.aliveCount;
+    if (votes.length + 1 == _selectedPlayers.length) {
+      // All players except one was voted against
+      // The rest of the votes will be given to the last player
+      votes[_selectedPlayers.last] = aliveCount - votes.values.sum;
+    }
+    if (votes.isEmpty || votes.values.sum <= aliveCount ~/ 2) {
+      return null;
+    }
+    var max = 0;
+    final res = <int>[];
+    for (final entry in votes.entries) {
+      if (entry.value > max) {
+        max = entry.value;
+        res.clear();
+      }
+      if (entry.value == max) {
+        res.add(entry.key);
+      }
+    }
+    assert(res.isNotEmpty);
+    return res;
+  }
+  // endregion
 }
 
 class GameController {
