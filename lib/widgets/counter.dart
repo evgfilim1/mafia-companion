@@ -2,25 +2,24 @@ import 'package:flutter/material.dart';
 
 class Counter extends StatelessWidget {
   final int value;
-  final int? min;
-  final int? max;
+  final int min;
+  final int max;
   final ValueChanged<int> onValueChanged;
 
   const Counter({
     super.key,
-    this.min,
-    this.max,
+    required this.min,
+    required this.max,
     required this.onValueChanged,
-    int? value,
-  })  : assert((min ?? double.negativeInfinity) < (max ?? double.infinity)),
-        value = (value ?? min ?? 0);
+    required this.value,
+  })  : assert(min <= value && value <= max);
 
   VoidCallback? _onButtonPressedFactory({required bool increment}) {
     final delta = increment ? 1 : -1;
-    if (increment && max != null && value >= max!) {
+    if (increment && value >= max) {
       return null;
     }
-    if (!increment && min != null && value <= min!) {
+    if (!increment && value <= min) {
       return null;
     }
     return () => onValueChanged(value + delta);

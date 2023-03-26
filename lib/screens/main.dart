@@ -25,26 +25,37 @@ class _MainScreenState extends State<MainScreen> {
 
   Widget? _getBottomTextWidget(BuildContext context, GameController controller) {
     final gameState = controller.currentGame.state;
-    final roles = Iterable.generate(10).map((i) => controller.currentGame.players.getRole(i + 1));
+    final roles = <PlayerRole>[];
+    final selectedPlayers = <int>{};
+    for (var i = 1; i <= 10; i++) {
+      roles.add(controller.currentGame.players.getRole(i));
+      if (controller.currentGame.isPlayerSelected(i)) {
+        selectedPlayers.add(i);
+      }
+    }
     if (gameState.state == GameState.prepare) {
       return TextButton(
         onPressed: () => Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (_) => RolesScreen(roles: roles.toList()),
+            builder: (_) => RolesScreen(roles: roles),
           ),
         ),
         child: const Text("Раздача ролей", style: TextStyle(fontSize: 20)),
       );
     }
     if (gameState.state.isAnyOf([GameState.voting, GameState.finalVoting])) {
-      // TODO: don't show counter if only one player is selected
+      assert(selectedPlayers.isNotEmpty);
+      final onlyOneSelected = selectedPlayers.length == 1;
+      final aliveCount = controller.currentGame.players.aliveCount;
       return Counter(
-        min: 0,
-        max: controller.currentGame.players.aliveCount, // TODO: more smart maximum
+        min: onlyOneSelected ? aliveCount : 0,
+        max: aliveCount, // TODO: more smart maximum
         onValueChanged: (value) =>
             setState(() => controller.currentGame.vote(gameState.player!.number, value)),
-        value: controller.currentGame.getPlayerVotes(gameState.player!.number),
+        value: onlyOneSelected
+            ? aliveCount
+            : controller.currentGame.getPlayerVotes(gameState.player!.number),
       );
     }
     if (gameState.state == GameState.finish) {
@@ -111,16 +122,16 @@ class _MainScreenState extends State<MainScreen> {
                 content: const Text("Вы уверены? Весь прогресс будет потерян."),
                 actions: [
                   TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text("Нет"),
+                  ),
+                  TextButton(
                     onPressed: () {
                       setState(() => controller.restart());
                       Navigator.pop(context);
                       showSnackBar(context, const SnackBar(content: Text("Игра перезапущена")));
                     },
                     child: const Text("Да"),
-                  ),
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text("Нет"),
                   ),
                 ],
               ),
