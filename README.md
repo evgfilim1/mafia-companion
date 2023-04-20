@@ -1,16 +1,24 @@
-# mafia_companion
+# Mafia companion app
 
-A new Flutter project.
+Приложение-компаньон для ведущего игры в турнирную Мафию. В разработке.
 
-## Getting Started
+## Возможности
 
-This project is a starting point for a Flutter application.
+- [x] Случайно генерирует роли для игроков
+- [x] Отслеживает состояние игры
+  - Роли игроков
+  - Живые и мёртвые игроки
+  - Активный (говорящий) игрок
+  - Выставленные на голосование игроки
+- [x] Таймер
+- [ ] Ведёт лог игры
+- [ ] Отслеживает предупреждения игроков
+- [ ] Позволяет откатиться к предыдущему состоянию игры
 
-A few resources to get you started if this is your first Flutter project:
+## Помощь в разработке
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+Приложение написано на языке Dart с использованием фреймворка [Flutter](https://flutter.dev/).
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Для начала разработки на Flutter смотрите [документацию](https://docs.flutter.dev/), которая
+содержит руководства, примеры, советы по разработке под мобильные платформы и полный
+[API-справочник](https://api.flutter.dev/).
