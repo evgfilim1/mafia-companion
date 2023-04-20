@@ -11,7 +11,7 @@ env:
   PAGES_CNAME: "mafia.evgfilim1.me"
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build-apk:
@@ -94,6 +94,8 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - build-apk
+    permissions:
+      contents: write
     steps:
       - name: Download APK artifact
         uses: actions/download-artifact@v3
