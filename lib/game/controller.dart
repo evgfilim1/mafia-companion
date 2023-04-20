@@ -233,14 +233,7 @@ class Game {
         break;
       case GameState.dayLastWords:
         if (oldState != GameState.dayLastWords) {
-          if (_votes.isEmpty) {
-            // Happens when only one player was selected for voting
-            // TODO: generalize this case
-            _votes[_selectedPlayers.first] = players.aliveCount;
-          }
-          final maxVotes = _votes.values.maxItem;
-          final maxVotesPlayers =
-              _votes.entries.where((entry) => entry.value == maxVotes).map((entry) => entry.key);
+          final maxVotesPlayers = _getMaxVotesPlayers()!;
           _selectedPlayers.clear();
           _selectedPlayers.addAll(maxVotesPlayers);
           _votes.clear();
@@ -257,6 +250,8 @@ class Game {
         nextState.player!.kill();
         break;
       case GameState.finish:
+        _selectedPlayers.clear();
+        _votes.clear();
         break;
     }
     _state = nextState;

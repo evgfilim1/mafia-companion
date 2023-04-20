@@ -150,24 +150,27 @@ class _MainScreenState extends State<MainScreen> {
               itemCount: controller.currentGame.players.length,
               itemBuilder: (context, index) {
                 final playerNumber = index + 1;
+                final isAlive = controller.currentGame.players.isAlive(playerNumber);
                 return PlayerButton(
                   number: playerNumber,
                   role: controller.currentGame.players.getRole(playerNumber),
-                  isAlive: controller.currentGame.players.isAlive(playerNumber),
+                  isAlive: isAlive,
                   isSelected: controller.currentGame.isPlayerSelected(playerNumber),
                   isActive: gameState.player?.number == playerNumber ||
                       gameState.state.isAnyOf([GameState.night0, GameState.nightKill]) &&
-                          controller.currentGame.players.isAlive(playerNumber) &&
+                          isAlive &&
                           (controller.currentGame.players
                               .getRole(playerNumber)
                               .isAnyOf([PlayerRole.mafia, PlayerRole.don])),
-                  onTap: () => setState(() {
-                    if (controller.currentGame.isPlayerSelected(playerNumber)) {
-                      controller.currentGame.deselectPlayer(playerNumber);
-                    } else {
-                      controller.currentGame.selectPlayer(playerNumber);
-                    }
-                  }),
+                  onTap: isAlive
+                      ? () => setState(() {
+                            if (controller.currentGame.isPlayerSelected(playerNumber)) {
+                              controller.currentGame.deselectPlayer(playerNumber);
+                            } else {
+                              controller.currentGame.selectPlayer(playerNumber);
+                            }
+                          })
+                      : null,
                   longPressActions: [
                     TextButton(
                       onPressed: () {
