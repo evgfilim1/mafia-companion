@@ -220,8 +220,9 @@ class Game {
         break;
       case GameState.excuse:
         if (oldState == GameState.voting) {
+          final maxVotesPlayers = _getMaxVotesPlayers()!;
           _selectedPlayers.clear();
-          _selectedPlayers.addAll(_getMaxVotesPlayers()!);
+          _selectedPlayers.addAll(maxVotesPlayers);
         }
         break;
       case GameState.finalVoting:
