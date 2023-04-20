@@ -1,0 +1,86 @@
+name: Build app
+
+on:
+  push:
+    tags:
+      - '*'
+
+env:
+  JAVA_VERSION: "11"
+  FLUTTER_CHANNEL: "beta"
+  PAGES_CNAME: "mafia.evgfilim1.me"
+
+jobs:
+  build-apk:
+    name: Build app for Android
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Java
+        uses: actions/setup-java@v2
+        with:
+          distribution: zulu
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ env.FLUTTER_CHANNEL }}
+          cache: true
+          cache-key: "flutter-:os:-:version:-:hash:"
+
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Get Flutter dependencies
+        run: flutter pub get
+
+      - name: Build app for Android
+        run: flutter build apk --split-per-abi
+
+      - name: Draft a release
+        uses: marvinpinto/action-automatic-releases@latest
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          prerelease: true
+          draft: true
+          files: |
+            build/app/outputs/flutter-apk/app-*.apk
+
+  build-web:
+    name: Build and publish app for web
+    runs-on: ubuntu-latest
+    if: "false"  # skip this job for now as web is not tested or ready yet
+    steps:
+      - name: Install Java
+        uses: actions/setup-java@v2
+        with:
+          distribution: zulu
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Install Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ env.FLUTTER_CHANNEL }}
+          cache: true
+          cache-key: "flutter-:os:-:version:-:hash:"
+
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Get Flutter dependencies
+        run: flutter pub get
+
+      - name: Build app for web
+        run: flutter build web
+
+      - name: Patch app name for web
+        run: |
+          jq -c '.app_name = "Mafia companion"' build/web/version.json >build/web/version.new.json
+          mv build/web/version{.new,}.json
+
+      - name: Publish web on GitHub pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          cname: ${{ env.PAGES_CNAME }}
+          publish_dir: build/web
