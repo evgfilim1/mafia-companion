@@ -197,7 +197,8 @@ class _MainScreenState extends State<MainScreen> {
                         showSnackBar(
                           context,
                           SnackBar(
-                            content: Text("Выдано предупреждение игроку $playerNumber"),
+                            // content: Text("Выдано предупреждение игроку $playerNumber"),
+                            content: const Text("Предупреждения в разработке"),
                             action: SnackBarAction(
                               label: "Отменить",
                               onPressed: () {},
