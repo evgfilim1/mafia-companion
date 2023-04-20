@@ -23,6 +23,40 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   bool _showRole = false;
 
+  void _pushRolesScreen(BuildContext context, GameController controller) {
+    final roles = Iterable.generate(10).map((i) => controller.currentGame.players.getRole(i + 1));
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => RolesScreen(roles: roles.toList()),
+      ),
+    );
+  }
+
+  Future<bool> _showRestartGameDialog(BuildContext context) async {
+    final res = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Перезапустить игру"),
+        content: const Text("Вы уверены? Весь прогресс будет потерян."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text("Нет"),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context, true);
+              showSnackBar(context, const SnackBar(content: Text("Игра перезапущена")));
+            },
+            child: const Text("Да"),
+          ),
+        ],
+      ),
+    );
+    return res!;
+  }
+
   Widget? _getBottomTextWidget(BuildContext context, GameController controller) {
     final gameState = controller.currentGame.state;
     final roles = <PlayerRole>[];
@@ -35,12 +69,7 @@ class _MainScreenState extends State<MainScreen> {
     }
     if (gameState.state == GameState.prepare) {
       return TextButton(
-        onPressed: () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => RolesScreen(roles: roles),
-          ),
-        ),
+        onPressed: () => _pushRolesScreen(context, controller),
         child: const Text("Раздача ролей", style: TextStyle(fontSize: 20)),
       );
     }
@@ -60,7 +89,20 @@ class _MainScreenState extends State<MainScreen> {
     }
     if (gameState.state == GameState.finish) {
       final winRole = controller.currentGame.citizenTeamWon! ? "мирных жителей" : "мафии";
-      return Text("Победа команды $winRole", style: const TextStyle(fontSize: 20));
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text("Победа команды $winRole", style: const TextStyle(fontSize: 20)),
+          TextButton(
+            onPressed: () async {
+              if (await _showRestartGameDialog(context)) {
+                setState(() => controller.restart());
+              }
+            },
+            child: const Text("Начать заново", style: TextStyle(fontSize: 20)),
+          ),
+        ],
+      );
     }
     if (gameState.state == GameState.dropTableVoting) {
       return TextButton(
@@ -88,7 +130,6 @@ class _MainScreenState extends State<MainScreen> {
     final controller = context.watch<GameController>();
     final gameState = controller.currentGame.state;
     final isGameRunning = !gameState.state.isAnyOf([GameState.prepare, GameState.finish]);
-    final roles = Iterable.generate(10).map((i) => controller.currentGame.players.getRole(i + 1));
     final nextStateAssumption = controller.currentGame.nextStateAssumption;
     return Scaffold(
       appBar: AppBar(
@@ -100,12 +141,7 @@ class _MainScreenState extends State<MainScreen> {
             IconButton(
               icon: const Icon(Icons.person),
               tooltip: "Роли",
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => RolesScreen(roles: roles.toList()),
-                ),
-              ),
+              onPressed: () => _pushRolesScreen(context, controller),
             ),
           IconButton(
             onPressed: () => setState(() => _showRole = !_showRole),
@@ -115,27 +151,11 @@ class _MainScreenState extends State<MainScreen> {
           IconButton(
             icon: const Icon(Icons.restart_alt),
             tooltip: "Перезапустить игру",
-            onPressed: () => showDialog(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: const Text("Перезапустить игру"),
-                content: const Text("Вы уверены? Весь прогресс будет потерян."),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text("Нет"),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      setState(() => controller.restart());
-                      Navigator.pop(context);
-                      showSnackBar(context, const SnackBar(content: Text("Игра перезапущена")));
-                    },
-                    child: const Text("Да"),
-                  ),
-                ],
-              ),
-            ),
+            onPressed: () async {
+              if (await _showRestartGameDialog(context)) {
+                setState(() => controller.restart());
+              }
+            },
           )
         ],
       ),
