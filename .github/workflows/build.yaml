@@ -10,6 +10,9 @@ env:
   FLUTTER_CHANNEL: "beta"
   PAGES_CNAME: "mafia.evgfilim1.me"
 
+permissions:
+  contents: write
+
 jobs:
   build-apk:
     name: Build app for Android
