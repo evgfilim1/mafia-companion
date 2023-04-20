@@ -40,13 +40,12 @@ jobs:
       - name: Build app for Android
         run: flutter build apk --split-per-abi
 
-      - name: Draft a release
-        uses: marvinpinto/action-automatic-releases@latest
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v3
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          prerelease: true
-          draft: true
-          files: |
+          name: android-apk
+          if-no-files-found: error
+          path: |
             build/app/outputs/flutter-apk/app-*.apk
 
   build-web:
@@ -87,3 +86,24 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           cname: ${{ env.PAGES_CNAME }}
           publish_dir: build/web
+
+  draft-release:
+    name: Draft release
+    runs-on: ubuntu-latest
+    needs:
+      - build-apk
+    steps:
+      - name: Download APK artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: android-apk
+          path: build
+
+      - name: Draft a release
+        uses: marvinpinto/action-automatic-releases@latest
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          prerelease: true
+          draft: true
+          files: |
+            build/app-*.apk
