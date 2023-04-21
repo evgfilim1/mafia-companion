@@ -47,6 +47,7 @@ class Game {
   final List<int> _selectedPlayers = [];
   final LinkedHashMap<int, int> _votes = LinkedHashMap();
   //var _consequentDaysWithoutKills = 0; // TODO: use this
+  int? _lastVotedPlayer;
 
   Game() : this.withPlayers(generatePlayers());
 
@@ -207,6 +208,7 @@ class Game {
         break;
       case GameState.day:
         _selectedPlayers.clear();
+        _lastVotedPlayer = null;
         break;
       case GameState.speaking:
         if (oldState != GameState.speaking) {
@@ -259,10 +261,27 @@ class Game {
   }
 
   void selectPlayer(int playerNumber) {
-    // TODO: check game state
+    if (!state.state.isAnyOf([
+      GameState.speaking,
+      GameState.nightKill,
+      //GameState.nightLastWords, // TODO: "best move"
+    ])) {
+      return;
+    }
     final index = playerNumber - 1;
     if (_selectedPlayers.contains(index)) {
       return;
+    }
+    if (!_players[index].isAlive) {
+      return;
+    }
+    if (state.state == GameState.speaking) {
+      if (_lastVotedPlayer == state.player!.number) {
+        _selectedPlayers.removeAt(_selectedPlayers.length - 1);
+      }
+      _lastVotedPlayer = state.player!.number;
+    } else if (state.state == GameState.nightKill && _selectedPlayers.isNotEmpty) {
+      _selectedPlayers.clear();
     }
     _selectedPlayers.add(index);
   }
@@ -273,13 +292,37 @@ class Game {
   }
 
   void deselectPlayer(int playerNumber) {
-    // TODO: check game state
+    if (!state.state.isAnyOf([
+      GameState.speaking,
+      GameState.nightKill,
+    ])) {
+      return;
+    }
     final index = playerNumber - 1;
+    if (state.state == GameState.speaking && _lastVotedPlayer == state.player!.number) {
+      _lastVotedPlayer = null;
+    }
     _selectedPlayers.remove(index);
   }
 
+  void deselectAllPlayers() {
+    if (!state.state.isAnyOf([
+      GameState.speaking,
+      GameState.dropTableVoting,
+      GameState.nightKill,
+    ])) {
+      return;
+    }
+    _selectedPlayers.clear();
+  }
+
   void vote(int playerNumber, int count) {
-    // TODO: check game state
+    if (!state.state.isAnyOf([
+      GameState.voting,
+      GameState.finalVoting,
+    ])) {
+      return;
+    }
     final index = playerNumber - 1;
     _votes[index] = count;
   }
@@ -362,7 +405,7 @@ class Game {
     assert(res.isNotEmpty);
     return res;
   }
-  // endregion
+// endregion
 }
 
 class GameController {

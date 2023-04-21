@@ -107,9 +107,7 @@ class _MainScreenState extends State<MainScreen> {
     if (gameState.state == GameState.dropTableVoting) {
       return TextButton(
         onPressed: () => setState(() {
-          for (var i = 1; i <= 10; i++) {
-            controller.currentGame.deselectPlayer(i);
-          }
+          controller.currentGame.deselectAllPlayers();
           controller.currentGame.nextState();
         }),
         child: const Text("Нет", style: TextStyle(fontSize: 20)),
