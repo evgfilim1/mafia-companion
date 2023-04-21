@@ -181,13 +181,42 @@ class _MainScreenState extends State<MainScreen> {
                               .getRole(playerNumber)
                               .isAnyOf([PlayerRole.mafia, PlayerRole.don])),
                   onTap: isAlive
-                      ? () => setState(() {
-                            if (controller.currentGame.isPlayerSelected(playerNumber)) {
-                              controller.currentGame.deselectPlayer(playerNumber);
+                      ? () {
+                          if (gameState.state == GameState.nightCheck) {
+                            final String result;
+                            if (gameState.player!.role == PlayerRole.don) {
+                              if (controller.currentGame.players.getRole(playerNumber) ==
+                                  PlayerRole.commissar) {
+                                result = "КОМИССАР";
+                              } else {
+                                result = "НЕ комиссар";
+                              }
+                            } else if (gameState.player!.role == PlayerRole.commissar) {
+                              if (controller.currentGame.players
+                                  .getRole(playerNumber)
+                                  .isAnyOf([PlayerRole.mafia, PlayerRole.don])) {
+                                result = "МАФИЯ";
+                              } else {
+                                result = "НЕ мафия";
+                              }
                             } else {
-                              controller.currentGame.selectPlayer(playerNumber);
+                              throw AssertionError();
                             }
-                          })
+                            showSimpleDialog(
+                              context: context,
+                              title: const Text("Результат проверки"),
+                              content: Text("Игрок $playerNumber — $result"),
+                            );
+                          } else {
+                            setState(() {
+                              if (controller.currentGame.isPlayerSelected(playerNumber)) {
+                                controller.currentGame.deselectPlayer(playerNumber);
+                              } else {
+                                controller.currentGame.selectPlayer(playerNumber);
+                              }
+                            });
+                          }
+                        }
                       : null,
                   longPressActions: [
                     TextButton(

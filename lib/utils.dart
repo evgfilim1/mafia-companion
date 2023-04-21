@@ -151,3 +151,23 @@ extension GameStatePrettyString on GameStateWithPlayer {
 extension IsAnyOf on Object {
   bool isAnyOf(Iterable values) => values.contains(this);
 }
+
+void showSimpleDialog({
+  required BuildContext context,
+  required Widget title,
+  required Widget content,
+}) {
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: title,
+      content: content,
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text("ОК"),
+        ),
+      ],
+    ),
+  );
+}
