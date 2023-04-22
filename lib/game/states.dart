@@ -7,8 +7,8 @@ enum GameState {
   /// First night, nobody dies
   night0,
 
-  /// Don and commissar wakes up, but doesn't check anyone
-  nightVibeCheck,
+  /// Commissar wakes up and looks on the players, but doesn't check anyone
+  night0CommissarCheck,
 
   /// A new day starts here
   day,
@@ -64,25 +64,25 @@ class GameStateWithPlayer {
 
 const timeLimits = {
   GameState.prepare: null,
-  GameState.night0: Duration(minutes: 2),
-  GameState.nightVibeCheck: Duration(seconds: 10),
-  GameState.speaking: Duration(minutes: 1, seconds: 10),
+  GameState.night0: Duration(minutes: 1, seconds: 5),
+  GameState.night0CommissarCheck: Duration(seconds: 25),
+  GameState.speaking: Duration(minutes: 1, seconds: 5),
   GameState.voting: null,
   GameState.excuse: Duration(seconds: 35),
   GameState.finalVoting: null,
   GameState.dropTableVoting: null,
-  GameState.dayLastWords: Duration(seconds: 35),
+  GameState.dayLastWords: Duration(minutes: 1, seconds: 5),
   GameState.nightKill: null,
   GameState.nightCheck: Duration(seconds: 15),
-  GameState.nightLastWords: Duration(seconds: 35),
+  GameState.nightLastWords: Duration(minutes: 1, seconds: 5),
   GameState.finish: null,
 };
 
 const validTransitions = {
   // TODO: game draw
   GameState.prepare: [GameState.night0],
-  GameState.night0: [GameState.nightVibeCheck],
-  GameState.nightVibeCheck: [GameState.nightVibeCheck, GameState.day],
+  GameState.night0: [GameState.night0CommissarCheck],
+  GameState.night0CommissarCheck: [GameState.day],
   GameState.day: [GameState.speaking],
   GameState.speaking: [
     GameState.speaking,

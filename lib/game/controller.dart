@@ -97,16 +97,10 @@ class Game {
         return const GameStateWithPlayer(state: GameState.night0);
       case GameState.night0:
         return GameStateWithPlayer(
-          state: GameState.nightVibeCheck,
-          player: _players[players.donNumber - 1],
+          state: GameState.night0CommissarCheck,
+          player: _players[players.commissarNumber - 1],
         );
-      case GameState.nightVibeCheck:
-        if (_state.player!.number == players.donNumber) {
-          return GameStateWithPlayer(
-            state: GameState.nightVibeCheck,
-            player: _players[players.commissarNumber - 1],
-          );
-        }
+      case GameState.night0CommissarCheck:
         return const GameStateWithPlayer(state: GameState.day);
       case GameState.day:
         final int next;
@@ -204,7 +198,7 @@ class Game {
         throw AssertionError("Can't go to prepare state");
       case GameState.night0:
         break;
-      case GameState.nightVibeCheck:
+      case GameState.night0CommissarCheck:
         break;
       case GameState.day:
         _selectedPlayers.clear();
@@ -345,6 +339,7 @@ class Game {
   }
 
   GameStateWithPlayer _handleVoting() {
+    // TODO: https://mafiaworldtour.com/fiim-rules 4.4.12.2
     final maxVotesPlayers = _getMaxVotesPlayers();
     if (maxVotesPlayers == null) {
       return GameStateWithPlayer(

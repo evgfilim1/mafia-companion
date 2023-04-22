@@ -120,8 +120,8 @@ extension GameStatePrettyString on GameStateWithPlayer {
         return "Ожидание игроков...";
       case GameState.night0:
         return "Первая ночь";
-      case GameState.nightVibeCheck:
-        return "${player!.role.prettyName} обозначает себя";
+      case GameState.night0CommissarCheck:
+        return "Комиссар осматривает стол";
       case GameState.day:
         return "Начало дня";
       case GameState.speaking:
