@@ -59,21 +59,21 @@ class _MainScreenState extends State<MainScreen> {
 
   Widget? _getBottomTextWidget(BuildContext context, GameController controller) {
     final gameState = controller.currentGame.state;
-    final roles = <PlayerRole>[];
-    final selectedPlayers = <int>{};
-    for (var i = 1; i <= 10; i++) {
-      roles.add(controller.currentGame.players.getRole(i));
-      if (controller.currentGame.isPlayerSelected(i)) {
-        selectedPlayers.add(i);
-      }
-    }
     if (gameState.state == GameState.prepare) {
       return TextButton(
         onPressed: () => _pushRolesScreen(context, controller),
         child: const Text("Раздача ролей", style: TextStyle(fontSize: 20)),
       );
     }
+    if (gameState.state.isAnyOf([GameState.preVoting, GameState.preFinalVoting])) {
+      final selectedPlayers = controller.currentGame.voteCandidates();
+      return Text(
+        "Выставлены: ${selectedPlayers.join(", ")}",
+        style: const TextStyle(fontSize: 20),
+      );
+    }
     if (gameState.state.isAnyOf([GameState.voting, GameState.finalVoting])) {
+      final selectedPlayers = controller.currentGame.voteCandidates();
       assert(selectedPlayers.isNotEmpty);
       final onlyOneSelected = selectedPlayers.length == 1;
       final aliveCount = controller.currentGame.players.aliveCount;

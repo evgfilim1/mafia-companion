@@ -14,34 +14,42 @@ enum GameState {
   day,
 
   /// Players speak during day and make accusations
-  speaking, // next may be: speaking, voting, nightKill
+  speaking,
+
+  /// Players are announced about vote order before voting
+  preVoting,
 
   /// Players vote for accused players they want to kill
-  voting, // next may be: voting, excuse, dayLastWords
+  voting,
 
   /// Accused players can speak more (if the voting is tied)
-  excuse, // next may be: excuse, finalVoting
+  excuse,
+
+  /// Players are announced about vote order before final voting
+  preFinalVoting,
 
   /// Final voting for accused players
-  finalVoting, // next may be: finalVoting, dayLastWords, dropTableVoting
+  finalVoting,
 
   /// Ask players if they want to kill all accused players
-  dropTableVoting, // next may be: dayLastWords, nightKill
+  dropTableVoting,
 
   /// Last words of players who were killed during day
-  dayLastWords, // next may be: dayLastWords, nightKill, finish
+  dayLastWords,
 
   /// Further nights, mafia kills
-  nightKill, // next may be: nightCheck, nightLastWords, speaking
+  nightKill,
 
   /// Further nights, don and commissar check
-  nightCheck, // next may be: nightLastWords, speaking
+  nightCheck,
 
   /// Last words of player who was killed during night
-  nightLastWords, // next may be: speaking, finish
+  nightLastWords,
 
   /// Final state, game is over
   finish,
+
+  ;
 }
 
 class GameStateWithPlayer {
@@ -67,8 +75,10 @@ const timeLimits = {
   GameState.night0: Duration(minutes: 1, seconds: 5),
   GameState.night0CommissarCheck: Duration(seconds: 25),
   GameState.speaking: Duration(minutes: 1, seconds: 5),
+  GameState.preVoting: null,
   GameState.voting: null,
   GameState.excuse: Duration(seconds: 35),
+  GameState.preFinalVoting: null,
   GameState.finalVoting: null,
   GameState.dropTableVoting: null,
   GameState.dayLastWords: Duration(minutes: 1, seconds: 5),
@@ -86,11 +96,13 @@ const validTransitions = {
   GameState.day: [GameState.speaking],
   GameState.speaking: [
     GameState.speaking,
-    GameState.voting,
+    GameState.preVoting,
     GameState.nightKill,
   ],
+  GameState.preVoting: [GameState.voting, GameState.dayLastWords],
   GameState.voting: [GameState.voting, GameState.excuse, GameState.dayLastWords],
-  GameState.excuse: [GameState.excuse, GameState.finalVoting],
+  GameState.excuse: [GameState.excuse, GameState.preFinalVoting],
+  GameState.preFinalVoting: [GameState.finalVoting],
   GameState.finalVoting: [GameState.finalVoting, GameState.dayLastWords, GameState.dropTableVoting],
   GameState.dropTableVoting: [GameState.dayLastWords, GameState.nightKill],
   GameState.dayLastWords: [GameState.dayLastWords, GameState.nightKill, GameState.finish],

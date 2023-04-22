@@ -126,10 +126,14 @@ extension GameStatePrettyString on GameStateWithPlayer {
         return "Начало дня";
       case GameState.speaking:
         return "Речь игрока ${player!.number}";
+      case GameState.preVoting:
+        return "Голосование";
       case GameState.voting:
         return "Голосование против игрока ${player!.number}";
       case GameState.excuse:
         return "Повторная речь игрока ${player!.number}";
+      case GameState.preFinalVoting:
+        return "Повторное голосование";
       case GameState.finalVoting:
         return "Повторное голосование против игрока ${player!.number}";
       case GameState.dropTableVoting:

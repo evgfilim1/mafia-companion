@@ -46,7 +46,7 @@ class Game {
   var _firstSpeakingPlayer = 0;
   final List<int> _selectedPlayers = [];
   final LinkedHashMap<int, int> _votes = LinkedHashMap();
-  //var _consequentDaysWithoutKills = 0; // TODO: use this
+  var _consequentDaysWithoutKills = 0; // TODO: use this
   int? _lastVotedPlayer;
 
   Game() : this.withPlayers(generatePlayers());
@@ -116,25 +116,30 @@ class Game {
           if (_selectedPlayers.isEmpty || _day == 0 && _selectedPlayers.length == 1) {
             return const GameStateWithPlayer(state: GameState.nightKill);
           }
-          return GameStateWithPlayer(
-            state: GameState.voting,
-            player: _players[_selectedPlayers.first],
-          );
+          return const GameStateWithPlayer(state: GameState.preVoting);
         }
         return GameStateWithPlayer(state: GameState.speaking, player: _players[next]);
+      case GameState.preVoting:
+        final player = _players[_selectedPlayers.first];
+        if (_selectedPlayers.length == 1) {
+          return GameStateWithPlayer(state: GameState.dayLastWords, player: player);
+        }
+        return GameStateWithPlayer(state: GameState.voting, player: player);
       case GameState.voting:
         return _handleVoting();
       case GameState.excuse:
         if (_state.player!.number - 1 == _selectedPlayers.last) {
-          return GameStateWithPlayer(
-            state: GameState.finalVoting,
-            player: _players[_selectedPlayers.first],
-          );
+          return const GameStateWithPlayer(state: GameState.preFinalVoting);
         }
         final nextIndex = _nextSelectedPlayer(_state.player!.number - 1);
         return GameStateWithPlayer(
           state: GameState.excuse,
           player: _players[_selectedPlayers[nextIndex]],
+        );
+      case GameState.preFinalVoting:
+        return GameStateWithPlayer(
+          state: GameState.finalVoting,
+          player: _players[_selectedPlayers.first],
         );
       case GameState.finalVoting:
         return _handleVoting();
@@ -189,8 +194,8 @@ class Game {
       throw StateError("Game is over");
     }
     assert(
-      validTransitions[_state.state]!.contains(nextState.state),
-      "Invalid transition from ${_state.state} to ${nextState.state}",
+      validTransitions[_state.state]?.contains(nextState.state) == true,
+      "Invalid or unspecified transition from ${_state.state} to ${nextState.state}",
     );
     final oldState = _state.state;
     switch (nextState.state) {
@@ -209,6 +214,8 @@ class Game {
           _firstSpeakingPlayer = nextState.player!.number - 1;
         }
         break;
+      case GameState.preVoting:
+        break;
       case GameState.voting:
         if (oldState != GameState.voting) {
           _votes.clear();
@@ -220,6 +227,8 @@ class Game {
           _selectedPlayers.clear();
           _selectedPlayers.addAll(maxVotesPlayers);
         }
+        break;
+      case GameState.preFinalVoting:
         break;
       case GameState.finalVoting:
         if (oldState != GameState.finalVoting) {
@@ -310,6 +319,18 @@ class Game {
     _selectedPlayers.clear();
   }
 
+  List<int> voteCandidates() {
+    if (!state.state.isAnyOf([
+      GameState.preVoting,
+      GameState.voting,
+      GameState.preFinalVoting,
+      GameState.finalVoting,
+    ])) {
+      throw StateError("Can't get vote candidates in state ${state.state}");
+    }
+    return _selectedPlayers.map((e) => e + 1).toUnmodifiableList();
+  }
+
   void vote(int playerNumber, int count) {
     if (!state.state.isAnyOf([
       GameState.voting,
@@ -339,7 +360,6 @@ class Game {
   }
 
   GameStateWithPlayer _handleVoting() {
-    // TODO: https://mafiaworldtour.com/fiim-rules 4.4.12.2
     final maxVotesPlayers = _getMaxVotesPlayers();
     if (maxVotesPlayers == null) {
       return GameStateWithPlayer(
@@ -356,6 +376,7 @@ class Game {
     if (_state.state == GameState.voting) {
       return GameStateWithPlayer(state: GameState.excuse, player: _players[maxVotesPlayers.first]);
     }
+    // TODO: https://mafiaworldtour.com/fiim-rules 4.4.12.2
     return const GameStateWithPlayer(state: GameState.dropTableVoting);
   }
 
