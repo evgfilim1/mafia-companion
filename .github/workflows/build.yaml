@@ -50,9 +50,8 @@ jobs:
             build/app/outputs/flutter-apk/app-*.apk
 
   build-web:
-    name: Build and publish app for web
+    name: Build app for web
     runs-on: ubuntu-latest
-    if: "false"  # skip this job for now as web is not tested or ready yet
     steps:
       - name: Checkout repo
         uses: actions/checkout@v3
@@ -82,12 +81,12 @@ jobs:
           jq -c '.app_name = "Mafia companion"' build/web/version.json >build/web/version.new.json
           mv build/web/version{.new,}.json
 
-      - name: Publish web on GitHub pages
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Upload web artifact
+        uses: actions/upload-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          cname: ${{ env.PAGES_CNAME }}
-          publish_dir: build/web
+          name: web-bundle
+          if-no-files-found: error
+          path: build/web
 
   draft-release:
     name: Draft release
@@ -111,3 +110,24 @@ jobs:
           draft: true
           files: |
             build/app-*.apk
+
+  publish-web:
+    name: Publish web build on GitHub Pages
+    runs-on: ubuntu-latest
+    needs:
+      - build-web
+    permissions:
+      contents: write
+    steps:
+      - name: Download APK artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: web-bundle
+          path: web
+
+      - name: Publish web on GitHub pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          cname: ${{ env.PAGES_CNAME }}
+          publish_dir: web
