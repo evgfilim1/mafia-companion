@@ -8,7 +8,6 @@ on:
 env:
   JAVA_VERSION: "11"
   FLUTTER_CHANNEL: "beta"
-  PAGES_CNAME: "mafia.evgfilim1.me"
 
 permissions:
   contents: read
