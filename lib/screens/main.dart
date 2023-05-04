@@ -123,6 +123,84 @@ class _MainScreenState extends State<MainScreen> {
     return null;
   }
 
+  void _onPlayerButtonTap(BuildContext context, GameController controller, int playerNumber) {
+    final gameState = controller.currentGame.state;
+    if (gameState.state == GameState.nightCheck) {
+      final String result;
+      if (gameState.player!.role == PlayerRole.don) {
+        if (controller.currentGame.players.getRole(playerNumber) == PlayerRole.commissar) {
+          result = "КОМИССАР";
+        } else {
+          result = "НЕ комиссар";
+        }
+      } else if (gameState.player!.role == PlayerRole.commissar) {
+        if (controller.currentGame.players
+            .getRole(playerNumber)
+            .isAnyOf([PlayerRole.mafia, PlayerRole.don])) {
+          result = "МАФИЯ";
+        } else {
+          result = "НЕ мафия";
+        }
+      } else {
+        throw AssertionError();
+      }
+      showSimpleDialog(
+        context: context,
+        title: const Text("Результат проверки"),
+        content: Text("Игрок $playerNumber — $result"),
+      );
+    } else {
+      setState(() {
+        if (controller.currentGame.isPlayerSelected(playerNumber)) {
+          controller.currentGame.deselectPlayer(playerNumber);
+        } else {
+          controller.currentGame.selectPlayer(playerNumber);
+        }
+      });
+    }
+  }
+
+  void _onWarnPlayerTap(BuildContext context, int playerNumber) {
+    showSnackBar(
+      context,
+      SnackBar(
+        // content: Text("Выдано предупреждение игроку $playerNumber"),
+        content: const Text("Предупреждения в разработке"),
+        action: SnackBarAction(
+          label: "Отменить",
+          onPressed: () {},
+        ),
+      ),
+    );
+    Navigator.pop(context);
+  }
+
+  Widget _playerButtonBuilder(BuildContext context, int index, GameController controller) {
+    final playerNumber = index + 1;
+    final isAlive = controller.currentGame.players.isAlive(playerNumber);
+    final currentPlayerRole = controller.currentGame.players.getRole(playerNumber);
+    final gameState = controller.currentGame.state;
+    final isActive = gameState.player?.number == playerNumber ||
+        gameState.state.isAnyOf([GameState.night0, GameState.nightKill]) &&
+            isAlive &&
+            (currentPlayerRole.isAnyOf([PlayerRole.mafia, PlayerRole.don]));
+    return PlayerButton(
+      number: playerNumber,
+      role: controller.currentGame.players.getRole(playerNumber),
+      isAlive: isAlive,
+      isSelected: controller.currentGame.isPlayerSelected(playerNumber),
+      isActive: isActive,
+      onTap: isAlive ? () => _onPlayerButtonTap(context, controller, playerNumber) : null,
+      longPressActions: [
+        TextButton(
+          onPressed: () => _onWarnPlayerTap(context, playerNumber),
+          child: const Text("Предупреждение"),
+        ),
+      ],
+      showRole: _showRole,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<GameController>();
@@ -166,80 +244,7 @@ class _MainScreenState extends State<MainScreen> {
                 maxCrossAxisExtent: 100,
               ),
               itemCount: controller.currentGame.players.length,
-              itemBuilder: (context, index) {
-                final playerNumber = index + 1;
-                final isAlive = controller.currentGame.players.isAlive(playerNumber);
-                return PlayerButton(
-                  number: playerNumber,
-                  role: controller.currentGame.players.getRole(playerNumber),
-                  isAlive: isAlive,
-                  isSelected: controller.currentGame.isPlayerSelected(playerNumber),
-                  isActive: gameState.player?.number == playerNumber ||
-                      gameState.state.isAnyOf([GameState.night0, GameState.nightKill]) &&
-                          isAlive &&
-                          (controller.currentGame.players
-                              .getRole(playerNumber)
-                              .isAnyOf([PlayerRole.mafia, PlayerRole.don])),
-                  onTap: isAlive
-                      ? () {
-                          if (gameState.state == GameState.nightCheck) {
-                            final String result;
-                            if (gameState.player!.role == PlayerRole.don) {
-                              if (controller.currentGame.players.getRole(playerNumber) ==
-                                  PlayerRole.commissar) {
-                                result = "КОМИССАР";
-                              } else {
-                                result = "НЕ комиссар";
-                              }
-                            } else if (gameState.player!.role == PlayerRole.commissar) {
-                              if (controller.currentGame.players
-                                  .getRole(playerNumber)
-                                  .isAnyOf([PlayerRole.mafia, PlayerRole.don])) {
-                                result = "МАФИЯ";
-                              } else {
-                                result = "НЕ мафия";
-                              }
-                            } else {
-                              throw AssertionError();
-                            }
-                            showSimpleDialog(
-                              context: context,
-                              title: const Text("Результат проверки"),
-                              content: Text("Игрок $playerNumber — $result"),
-                            );
-                          } else {
-                            setState(() {
-                              if (controller.currentGame.isPlayerSelected(playerNumber)) {
-                                controller.currentGame.deselectPlayer(playerNumber);
-                              } else {
-                                controller.currentGame.selectPlayer(playerNumber);
-                              }
-                            });
-                          }
-                        }
-                      : null,
-                  longPressActions: [
-                    TextButton(
-                      onPressed: () {
-                        showSnackBar(
-                          context,
-                          SnackBar(
-                            // content: Text("Выдано предупреждение игроку $playerNumber"),
-                            content: const Text("Предупреждения в разработке"),
-                            action: SnackBarAction(
-                              label: "Отменить",
-                              onPressed: () {},
-                            ),
-                          ),
-                        );
-                        Navigator.pop(context);
-                      },
-                      child: const Text("Предупреждение"),
-                    ),
-                  ],
-                  showRole: _showRole,
-                );
-              },
+              itemBuilder: (context, index) => _playerButtonBuilder(context, index, controller),
             ),
           ),
           Expanded(
