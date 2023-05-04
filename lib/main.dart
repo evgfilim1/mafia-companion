@@ -15,7 +15,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     const seedColor = Colors.purple;
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: "Mafia companion",
       theme: ThemeData(
         colorSchemeSeed: seedColor,
         brightness: Brightness.light,

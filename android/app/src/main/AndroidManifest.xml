@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="me.evgfilim1.mafia_companion">
    <application
-        android:label="mafia_companion"
+        android:label="Mafia companion"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

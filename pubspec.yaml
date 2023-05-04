@@ -1,5 +1,5 @@
 name: mafia_companion
-description: A new Flutter project.
+description: A companion for Tournament Mafia game
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
 # The following defines the version and build number for your application.
