@@ -82,11 +82,9 @@ jobs:
           mv build/web/version{.new,}.json
 
       - name: Upload web artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-pages-artifact@v1
         with:
-          name: web-bundle
-          if-no-files-found: error
-          path: build/web
+          path: build/web/
 
   draft-release:
     name: Draft release
@@ -117,17 +115,12 @@ jobs:
     needs:
       - build-web
     permissions:
-      contents: write
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Download APK artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: web-bundle
-          path: web
-
       - name: Publish web on GitHub pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          cname: ${{ env.PAGES_CNAME }}
-          publish_dir: web
+        id: deployment
+        uses: actions/deploy-pages@v2
