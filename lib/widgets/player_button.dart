@@ -59,19 +59,19 @@ class PlayerButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final borderColor = _getBorderColor(context);
-    final String roleText;
+    final String roleSuffix;
     if (role == PlayerRole.citizen) {
-      roleText = "";
+      roleSuffix = "";
     } else if (role == PlayerRole.mafia) {
-      roleText = "М";
+      roleSuffix = "М";
     } else if (role == PlayerRole.don) {
-      roleText = "Д";
+      roleSuffix = "ДМ";
     } else if (role == PlayerRole.commissar) {
-      roleText = "К";
+      roleSuffix = "К";
     } else {
       throw AssertionError("Unknown role: $role");
     }
-    final cardText = "$number${showRole ? roleText : ""}";
+    final cardText = "$number${showRole ? roleSuffix : ""}";
     return Padding(
       padding: const EdgeInsets.all(4),
       child: ElevatedButton(
