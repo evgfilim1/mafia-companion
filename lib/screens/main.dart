@@ -190,7 +190,9 @@ class _MainScreenState extends State<MainScreen> {
       isAlive: isAlive,
       isSelected: controller.currentGame.isPlayerSelected(playerNumber),
       isActive: isActive,
-      onTap: isAlive ? () => _onPlayerButtonTap(context, controller, playerNumber) : null,
+      onTap: isAlive || gameState.state == GameState.nightCheck
+          ? () => _onPlayerButtonTap(context, controller, playerNumber)
+          : null,
       longPressActions: [
         TextButton(
           onPressed: () => _onWarnPlayerTap(context, playerNumber),
