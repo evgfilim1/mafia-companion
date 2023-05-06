@@ -45,10 +45,24 @@ class PlayerButton extends StatelessWidget {
 
   Color? _getBorderColor(BuildContext context) {
     if (isActive) {
-      return Colors.yellow;
+      return Theme.of(context).colorScheme.primary;
     }
     if (isSelected) {
-      return Theme.of(context).colorScheme.primary;
+      return Colors.green;
+    }
+    return null;
+  }
+
+  Color? _getBackgroundColor(BuildContext context) {
+    if (!isAlive) {
+      return Colors.red.withOpacity(0.25);
+    }
+    return null;
+  }
+
+  Color? _getForegroundColor(BuildContext context) {
+    if (isSelected) {
+      return Colors.green;
     }
     if (!isAlive) {
       return Colors.red;
@@ -56,22 +70,27 @@ class PlayerButton extends StatelessWidget {
     return null;
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final borderColor = _getBorderColor(context);
-    final String roleSuffix;
+  String _getRoleSuffix() {
+    if (!showRole) {
+      return "";
+    }
     if (role == PlayerRole.citizen) {
-      roleSuffix = "";
+      return "";
     } else if (role == PlayerRole.mafia) {
-      roleSuffix = "М";
+      return "М";
     } else if (role == PlayerRole.don) {
-      roleSuffix = "ДМ";
+      return "ДМ";
     } else if (role == PlayerRole.commissar) {
-      roleSuffix = "К";
+      return "К";
     } else {
       throw AssertionError("Unknown role: $role");
     }
-    final cardText = "$number${showRole ? roleSuffix : ""}";
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final borderColor = _getBorderColor(context);
+    final cardText = "$number${_getRoleSuffix()}";
     return Padding(
       padding: const EdgeInsets.all(4),
       child: ElevatedButton(
@@ -81,12 +100,16 @@ class PlayerButton extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
             ),
           ),
-          side: MaterialStateProperty.all(
-            BorderSide(
-              color: borderColor ?? Colors.transparent,
-              width: 1,
-            ),
-          ),
+          side: borderColor != null
+              ? MaterialStateProperty.all(
+                  BorderSide(
+                    color: borderColor,
+                    width: 1,
+                  ),
+                )
+              : null,
+          backgroundColor: MaterialStateProperty.all(_getBackgroundColor(context)),
+          foregroundColor: MaterialStateProperty.all(_getForegroundColor(context)),
         ),
         onPressed: onTap,
         onLongPress: () => _onLongPress(context),
