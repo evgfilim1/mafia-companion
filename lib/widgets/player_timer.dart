@@ -5,15 +5,15 @@ import 'package:flutter/material.dart';
 import '../utils.dart';
 
 class PlayerTimer extends StatefulWidget {
+  /// The duration of the timer.
   final Duration duration;
+  /// Called when the timer ticks.
   final ValueChanged<Duration>? onTimerTick;
-  final Map<Duration, TextStyle> thresholds;
 
   const PlayerTimer({
     super.key,
     required this.duration,
     this.onTimerTick,
-    this.thresholds = const {},
   });
 
   @override
@@ -45,6 +45,7 @@ class _PlayerTimerState extends State<PlayerTimer> {
         widget.onTimerTick?.call(timeLeft);
       }),
     );
+    _textVisible = true;
   }
 
   @override
