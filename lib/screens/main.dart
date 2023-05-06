@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:vibration/vibration.dart';
 
 import '../game/controller.dart';
 import '../game/player.dart';
@@ -118,6 +119,18 @@ class _MainScreenState extends State<MainScreen> {
       return PlayerTimer(
         key: ValueKey(controller.currentGame.state),
         duration: timeLimit,
+        onTimerTick: (duration) async {
+          if (await Vibration.hasVibrator() != true) {
+            return;
+          }
+          if (duration == Duration.zero) {
+            Vibration.vibrate(duration: 100);
+            await Future.delayed(const Duration(milliseconds: 300)); // 100 vibration + 200 pause
+            Vibration.vibrate(duration: 100);
+          } else if (duration <= const Duration(seconds: 5)) {
+            Vibration.vibrate(duration: 20);
+          }
+        },
       );
     }
     return null;

@@ -29,6 +29,8 @@ dependencies:
   flutter:
     sdk: flutter
   provider: ^6.0.5
+  vibration: ^1.7.6
+  vibration_web: ^1.6.5  # adds web support for `vibration` package
 
 dev_dependencies:
   flutter_test:
