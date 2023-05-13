@@ -4,12 +4,13 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 
 import '../settings.dart';
+import '../utils.dart';
 
 class _ChoiceListTile<T> extends StatelessWidget {
   final Widget? leading;
   final Widget title;
   final List<T> items;
-  final String Function(T)? itemToString;
+  final ConverterFunction<T, String>? itemToString;
   final int index;
   final ValueChanged<T> onChanged;
 
@@ -74,8 +75,25 @@ class SettingsScreen extends StatelessWidget {
       body: ListView(
         children: [
           _ChoiceListTile(
+            leading: const Icon(Icons.color_lens),
+            title: const Text("Тема"),
+            items: ThemeMode.values,
+            itemToString: (item) {
+              switch (item) {
+                case ThemeMode.system:
+                  return "Системная";
+                case ThemeMode.light:
+                  return "Светлая";
+                case ThemeMode.dark:
+                  return "Тёмная";
+              }
+            },
+            index: settings.themeMode.index,
+            onChanged: (value) => settings.setThemeMode(value),
+          ),
+          _ChoiceListTile(
             leading: const Icon(Icons.timer),
-            title: const Text("Таймер"),
+            title: const Text("Режим таймера"),
             items: TimerType.values,
             itemToString: (item) {
               switch (item) {

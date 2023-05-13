@@ -26,6 +26,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final settings = context.watch<SettingsModel>();
     const seedColor = Colors.purple;
     return MaterialApp(
       title: "Mafia companion",
@@ -39,7 +40,7 @@ class MyApp extends StatelessWidget {
         brightness: Brightness.dark,
         useMaterial3: true,
       ),
-      themeMode: ThemeMode.system,
+      themeMode: settings.themeMode,
       home: Provider<GameController>(
         create: (_) => GameController(),
         child: const MainScreen(),

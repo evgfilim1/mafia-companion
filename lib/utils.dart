@@ -36,6 +36,8 @@ extension Sum on Iterable<int> {
 
 typedef CountdownTimerCallback = void Function(Duration timeLeft);
 
+typedef ConverterFunction<T, R> = R Function(T value);
+
 /// A simple countdown timer that calls [callback] every second until [duration]
 /// is reached.
 class CountdownTimer {
