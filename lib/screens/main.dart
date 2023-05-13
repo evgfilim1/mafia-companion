@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:vibration/vibration.dart';
 
@@ -242,12 +243,13 @@ class _MainScreenState extends State<MainScreen> {
     final isGameRunning = !gameState.state.isAnyOf([GameState.prepare, GameState.finish]);
     final nextStateAssumption = controller.nextStateAssumption;
     final settings = context.watch<SettingsModel>();
+    final packageInfo = context.watch<PackageInfo>();
     final previousState = controller.previousState;
     return Scaffold(
       appBar: AppBar(
         title: isGameRunning
             ? Text("День ${controller.day}")
-            : const Text("Mafia companion"),
+            : Text(packageInfo.appName),
         actions: [
           IconButton(
             onPressed: () => setState(() => _showRole = !_showRole),
@@ -271,7 +273,7 @@ class _MainScreenState extends State<MainScreen> {
             DrawerHeader(
               child: Center(
                 child: Text(
-                  "Mafia companion",
+                  packageInfo.appName,
                   style: Theme.of(context).textTheme.titleLarge,
                 ),
               ),
