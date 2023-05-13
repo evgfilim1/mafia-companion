@@ -11,7 +11,7 @@ enum PlayerRole {
 class Player {
   bool _isAlive = true;
   final PlayerRole role;
-  var warns = 0;
+  var _warns = 0;
   final int number;
 
   Player({required this.role, required this.number});
@@ -24,6 +24,8 @@ class Player {
 
   bool get isAlive => _isAlive;
 
+  int get warns => _warns;
+
   void kill() {
     assert(isAlive, "Player is already dead");
     _isAlive = false;
@@ -34,11 +36,13 @@ class Player {
     _isAlive = true;
   }
 
-  void warn() {
-    warns++;
-    if (warns > 3) {
-      kill();
+  void warn() => _warns++;
+
+  void unwarn() {
+    if (_warns == 0) {
+      return;
     }
+    _warns--;
   }
 }
 

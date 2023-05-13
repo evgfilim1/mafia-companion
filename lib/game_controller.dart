@@ -67,4 +67,16 @@ class GameController with ChangeNotifier {
     _game.setPreviousState();
     notifyListeners();
   }
+
+  void warnPlayer(int player) {
+    _game.warnPlayer(player);
+    notifyListeners();
+  }
+
+  int getPlayerWarnCount(int player) => _game.players.getWarnCount(player);
+
+  void unwarnPlayer(int player) {
+    _game.unwarnPlayer(player);
+    notifyListeners();
+  }
 }

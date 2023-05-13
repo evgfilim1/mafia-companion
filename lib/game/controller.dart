@@ -34,6 +34,8 @@ class PlayersView {
   bool get isDonAlive => isAlive(donNumber);
 
   bool get isCommissarAlive => isAlive(commissarNumber);
+
+  int getWarnCount(int number) => _players[number - 1].warns;
 }
 
 /// Game controller. Manages game state and players. Doesn't know about UI.
@@ -398,9 +400,19 @@ class Game {
     return _votes[index] ?? 0;
   }
 
-  int _nextMod(int i, int mod) => (i + 1) % mod;
+  void warnPlayer(int playerNumber) {
+    final index = playerNumber - 1;
+    _players[index].warn();
+  }
+
+  void unwarnPlayer(int playerNumber) {
+    final index = playerNumber - 1;
+    _players[index].unwarn();
+  }
 
   // region Private helpers
+  int _nextMod(int i, int mod) => (i + 1) % mod;
+
   int _nextAlivePlayer(int from) {
     for (var i = _nextMod(from, _players.length); i != from; i = _nextMod(i, _players.length)) {
       if (_players[i].isAlive) {

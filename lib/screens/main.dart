@@ -191,15 +191,15 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
-  void _onWarnPlayerTap(BuildContext context, int playerNumber) {
+  void _onWarnPlayerTap(BuildContext context, int playerNumber, GameController controller) {
+    controller.warnPlayer(playerNumber);
     showSnackBar(
       context,
       SnackBar(
-        // content: Text("Выдано предупреждение игроку $playerNumber"),
-        content: const Text("Предупреждения в разработке"),
+        content: Text("Выдано предупреждение игроку $playerNumber"),
         action: SnackBarAction(
           label: "Отменить",
-          onPressed: () {},
+          onPressed: () => controller.unwarnPlayer(playerNumber),
         ),
       ),
     );
@@ -221,12 +221,13 @@ class _MainScreenState extends State<MainScreen> {
       isAlive: isAlive,
       isSelected: controller.isPlayerSelected(playerNumber),
       isActive: isActive,
+      warnCount: controller.getPlayerWarnCount(playerNumber),
       onTap: isAlive || gameState.state == GameState.nightCheck
           ? () => _onPlayerButtonTap(context, controller, playerNumber)
           : null,
       longPressActions: [
         TextButton(
-          onPressed: () => _onWarnPlayerTap(context, playerNumber),
+          onPressed: () => _onWarnPlayerTap(context, playerNumber, controller),
           child: const Text("Предупреждение"),
         ),
       ],

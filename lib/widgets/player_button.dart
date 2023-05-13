@@ -9,6 +9,7 @@ class PlayerButton extends StatelessWidget {
   final bool isAlive;
   final bool isSelected;
   final bool isActive;
+  final int warnCount;
   final VoidCallback? onTap;
   final List<Widget> longPressActions;
   final bool showRole;
@@ -20,6 +21,7 @@ class PlayerButton extends StatelessWidget {
     required this.isAlive,
     required this.isSelected,
     this.isActive = false,
+    required this.warnCount,
     this.onTap,
     this.longPressActions = const [],
     this.showRole = false,
@@ -31,7 +33,11 @@ class PlayerButton extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: Text("Игрок $number"),
-        content: Text("Состояние: $isAliveText\nРоль: ${role.prettyName}"),
+        content: Text(
+          "Состояние: $isAliveText\n"
+          "Роль: ${role.prettyName}\n"
+          "Предупреждений: $warnCount",
+        ),
         actions: [
           ...longPressActions,
           TextButton(
@@ -93,27 +99,39 @@ class PlayerButton extends StatelessWidget {
     final cardText = "$number${_getRoleSuffix()}";
     return Padding(
       padding: const EdgeInsets.all(4),
-      child: ElevatedButton(
-        style: ButtonStyle(
-          shape: MaterialStateProperty.all(
-            RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+      child: Stack(
+        children: [
+          ElevatedButton(
+            style: ButtonStyle(
+              shape: MaterialStateProperty.all(
+                RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              side: borderColor != null
+                  ? MaterialStateProperty.all(
+                      BorderSide(
+                        color: borderColor,
+                        width: 1,
+                      ),
+                    )
+                  : null,
+              backgroundColor: MaterialStateProperty.all(_getBackgroundColor(context)),
+              foregroundColor: MaterialStateProperty.all(_getForegroundColor(context)),
+            ),
+            onPressed: onTap,
+            onLongPress: () => _onLongPress(context),
+            child: Center(child: Text(cardText)),
+          ),
+          Positioned(
+            top: 6,
+            right: 6,
+            child: Text(
+              "!" * warnCount,
+              style: const TextStyle(color: Colors.red),
             ),
           ),
-          side: borderColor != null
-              ? MaterialStateProperty.all(
-                  BorderSide(
-                    color: borderColor,
-                    width: 1,
-                  ),
-                )
-              : null,
-          backgroundColor: MaterialStateProperty.all(_getBackgroundColor(context)),
-          foregroundColor: MaterialStateProperty.all(_getForegroundColor(context)),
-        ),
-        onPressed: onTap,
-        onLongPress: () => _onLongPress(context),
-        child: Center(child: Text(cardText)),
+        ],
       ),
     );
   }
