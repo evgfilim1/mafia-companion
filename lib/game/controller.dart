@@ -271,7 +271,7 @@ class Game {
         break;
     }
     if (oldState == GameState.voting && _votes[_state.player!.number - 1] == null) {
-      _votes[nextState.player!.number - 1] = 0;
+      _votes[_state.player!.number - 1] = 0;
     }
     _state = nextState;
   }
@@ -443,12 +443,15 @@ class Game {
   List<int>? _getMaxVotesPlayers() {
     final votes = {..._votes};
     final aliveCount = players.aliveCount;
-    final votesTotal = totalVotes;
+    if (votes[_state.player!.number - 1] == null) {
+      votes[_state.player!.number - 1] = 0;
+    }
     if (votes.length + 1 == _selectedPlayers.length) {
       // All players except one was voted against
       // The rest of the votes will be given to the last player
-      votes[_selectedPlayers.last] = aliveCount - votesTotal;
+      votes[_selectedPlayers.last] = aliveCount - totalVotes;
     }
+    final votesTotal = votes.values.sum;
     if (votes.isEmpty || votesTotal <= aliveCount ~/ 2) {
       return null;
     }
