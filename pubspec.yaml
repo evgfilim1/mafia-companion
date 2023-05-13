@@ -17,7 +17,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 0.1.0-beta.1+4
 
 environment:
-  sdk: '>=2.19.0-444.6.beta <3.0.0'
+  sdk: '>=3.0.0 <4.0.0'
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -29,7 +29,7 @@ dependencies:
   flutter:
     sdk: flutter
   provider: ^6.0.5
-  vibration: ^1.7.6
+  vibration: ^1.7.7
   vibration_web: ^1.6.5  # adds web support for `vibration` package
   shared_preferences: ^2.1.1
   package_info_plus: ^4.0.0
