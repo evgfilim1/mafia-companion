@@ -24,7 +24,15 @@ class Player {
 
   bool get isAlive => _isAlive;
 
-  void kill() => _isAlive = false;
+  void kill() {
+    assert(isAlive, "Player is already dead");
+    _isAlive = false;
+  }
+
+  void revive() {
+    assert(!isAlive, "Player is already alive");
+    _isAlive = true;
+  }
 
   void warn() {
     warns++;

@@ -291,7 +291,15 @@ class Game {
     if (previousState == null) {
       throw StateError("Can't go to previous state");
     }
-    _state = _history.removeLast();
+    if (previousState.state.isAnyOf([GameState.dayLastWords, GameState.nightLastWords])) {
+      previousState.player!.revive(); // Finally, infinite lives!
+    }
+    if (previousState.state.isAnyOf(
+        [GameState.preVoting, GameState.voting, GameState.preFinalVoting, GameState.finalVoting])) {
+      _votes.remove(_state.player!.number - 1);
+    }
+    _history.removeLast();
+    _state = previousState;
   }
 
   void selectPlayer(int playerNumber) {
