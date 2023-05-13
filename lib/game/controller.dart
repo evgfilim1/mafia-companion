@@ -139,7 +139,7 @@ class Game {
         if (_state.player!.number - 1 == _selectedPlayers.last) {
           return const GameStateWithPlayer(state: GameState.preFinalVoting);
         }
-        final nextIndex = _nextSelectedPlayer(_state.player!.number - 1)!;
+        final nextIndex = _nextSelectedPlayerIndex(_state.player!.number - 1)!;
         return GameStateWithPlayer(
           state: GameState.excuse,
           player: _players[_selectedPlayers[nextIndex]],
@@ -166,7 +166,7 @@ class Game {
           }
           return const GameStateWithPlayer(state: GameState.nightKill);
         }
-        final nextIndex = _nextSelectedPlayer(_state.player!.number - 1)!;
+        final nextIndex = _nextSelectedPlayerIndex(_state.player!.number - 1)!;
         return GameStateWithPlayer(
           state: GameState.dayLastWords,
           player: _players[_selectedPlayers[nextIndex]],
@@ -235,7 +235,7 @@ class Game {
         break;
       case GameState.excuse:
         if (oldState == GameState.voting) {
-          final maxVotesPlayers = _getMaxVotesPlayers()!;
+          final maxVotesPlayers = _maxVotesPlayers!;
           _selectedPlayers.clear();
           _selectedPlayers.addAll(maxVotesPlayers);
         }
@@ -251,7 +251,7 @@ class Game {
         break;
       case GameState.dayLastWords:
         if (oldState != GameState.dayLastWords) {
-          final maxVotesPlayers = _getMaxVotesPlayers()!;
+          final maxVotesPlayers = _maxVotesPlayers!;
           _selectedPlayers.clear();
           _selectedPlayers.addAll(maxVotesPlayers);
           _votes.clear();
@@ -370,7 +370,7 @@ class Game {
     _selectedPlayers.clear();
   }
 
-  List<int> voteCandidates() {
+  List<int> get voteCandidates {
     if (!state.state.isAnyOf([
       GameState.preVoting,
       GameState.voting,
@@ -411,9 +411,9 @@ class Game {
   }
 
   GameStateWithPlayer _handleVoting() {
-    final maxVotesPlayers = _getMaxVotesPlayers();
+    final maxVotesPlayers = _maxVotesPlayers;
     if (maxVotesPlayers == null) {
-      final nextSelectedPlayer = _nextSelectedPlayer(_state.player!.number - 1)!;
+      final nextSelectedPlayer = _nextSelectedPlayerIndex(_state.player!.number - 1)!;
       return GameStateWithPlayer(
         state: _state.state,
         player: _players[nextSelectedPlayer],
@@ -442,13 +442,13 @@ class Game {
     );
   }
 
-  int? _nextSelectedPlayer(int from) {
+  int? _nextSelectedPlayerIndex(int from) {
     final nextIndex = _selectedPlayers.indexOf(from) + 1;
     assert(0 < nextIndex && nextIndex <= _selectedPlayers.length);
     return nextIndex != _selectedPlayers.length ? _selectedPlayers[nextIndex] : null;
   }
 
-  List<int>? _getMaxVotesPlayers() {
+  List<int>? get _maxVotesPlayers {
     final votes = {..._votes};
     final aliveCount = players.aliveCount;
     if (votes[_state.player!.number - 1] == null) {
@@ -472,14 +472,4 @@ class Game {
     return res;
   }
 // endregion
-}
-
-class GameController {
-  Game _game = Game();
-
-  Game get currentGame => _game;
-
-  void restart() {
-    _game = Game();
-  }
 }

@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:vibration/vibration.dart';
 
-import '../game/controller.dart';
 import '../game/player.dart';
 import '../game/states.dart';
+import '../game_controller.dart';
 import '../settings.dart';
 import '../utils.dart';
 import '../widgets/bottom_controls.dart';
@@ -27,7 +27,7 @@ class _MainScreenState extends State<MainScreen> {
   bool _showRole = false;
 
   void _pushRolesScreen(BuildContext context, GameController controller) {
-    final roles = Iterable.generate(10).map((i) => controller.currentGame.players.getRole(i + 1));
+    final roles = Iterable.generate(10).map((i) => controller.getPlayerRole(i + 1));
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -65,7 +65,7 @@ class _MainScreenState extends State<MainScreen> {
     GameController controller,
     SettingsModel settings,
   ) {
-    final gameState = controller.currentGame.state;
+    final gameState = controller.state;
     if (gameState.state == GameState.prepare) {
       return TextButton(
         onPressed: () => _pushRolesScreen(context, controller),
@@ -73,31 +73,30 @@ class _MainScreenState extends State<MainScreen> {
       );
     }
     if (gameState.state.isAnyOf([GameState.preVoting, GameState.preFinalVoting])) {
-      final selectedPlayers = controller.currentGame.voteCandidates();
+      final selectedPlayers = controller.voteCandidates;
       return Text(
         "Выставлены: ${selectedPlayers.join(", ")}",
         style: const TextStyle(fontSize: 20),
       );
     }
     if (gameState.state.isAnyOf([GameState.voting, GameState.finalVoting])) {
-      final selectedPlayers = controller.currentGame.voteCandidates();
+      final selectedPlayers = controller.voteCandidates;
       assert(selectedPlayers.isNotEmpty);
       final onlyOneSelected = selectedPlayers.length == 1;
-      final aliveCount = controller.currentGame.players.aliveCount;
+      final aliveCount = controller.alivePlayersCount;
       return Counter(
         min: onlyOneSelected ? aliveCount : 0,
         max: aliveCount -
-            controller.currentGame.totalVotes +
-            controller.currentGame.getPlayerVotes(gameState.player!.number),
-        onValueChanged: (value) =>
-            setState(() => controller.currentGame.vote(gameState.player!.number, value)),
+            controller.totalVotes +
+            controller.getPlayerVotes(gameState.player!.number),
+        onValueChanged: (value) => controller.vote(gameState.player!.number, value),
         value: onlyOneSelected
             ? aliveCount
-            : controller.currentGame.getPlayerVotes(gameState.player!.number),
+            : controller.getPlayerVotes(gameState.player!.number),
       );
     }
     if (gameState.state == GameState.finish) {
-      final winRole = controller.currentGame.citizenTeamWon! ? "мирных жителей" : "мафии";
+      final winRole = controller.citizenTeamWon! ? "мирных жителей" : "мафии";
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -105,7 +104,7 @@ class _MainScreenState extends State<MainScreen> {
           TextButton(
             onPressed: () async {
               if (await _showRestartGameDialog(context)) {
-                setState(() => controller.restart());
+                controller.restart();
               }
             },
             child: const Text("Начать заново", style: TextStyle(fontSize: 20)),
@@ -115,10 +114,10 @@ class _MainScreenState extends State<MainScreen> {
     }
     if (gameState.state == GameState.dropTableVoting) {
       return TextButton(
-        onPressed: () => setState(() {
-          controller.currentGame.deselectAllPlayers();
-          controller.currentGame.setNextState();
-        }),
+        onPressed: () {
+          controller.deselectAllPlayers();
+          controller.setNextState();
+        },
         child: const Text("Нет", style: TextStyle(fontSize: 20)),
       );
     }
@@ -140,7 +139,7 @@ class _MainScreenState extends State<MainScreen> {
     }
     if (timeLimit != null) {
       return PlayerTimer(
-        key: ValueKey(controller.currentGame.state),
+        key: ValueKey(controller.state),
         duration: timeLimit,
         onTimerTick: (duration) async {
           if (await Vibration.hasVibrator() != true) {
@@ -160,19 +159,17 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void _onPlayerButtonTap(BuildContext context, GameController controller, int playerNumber) {
-    final gameState = controller.currentGame.state;
+    final gameState = controller.state;
     if (gameState.state == GameState.nightCheck) {
       final String result;
       if (gameState.player!.role == PlayerRole.don) {
-        if (controller.currentGame.players.getRole(playerNumber) == PlayerRole.commissar) {
+        if (controller.getPlayerRole(playerNumber) == PlayerRole.commissar) {
           result = "КОМИССАР";
         } else {
           result = "НЕ комиссар";
         }
       } else if (gameState.player!.role == PlayerRole.commissar) {
-        if (controller.currentGame.players
-            .getRole(playerNumber)
-            .isAnyOf([PlayerRole.mafia, PlayerRole.don])) {
+        if (controller.getPlayerRole(playerNumber).isAnyOf([PlayerRole.mafia, PlayerRole.don])) {
           result = "МАФИЯ";
         } else {
           result = "НЕ мафия";
@@ -186,13 +183,11 @@ class _MainScreenState extends State<MainScreen> {
         content: Text("Игрок $playerNumber — $result"),
       );
     } else {
-      setState(() {
-        if (controller.currentGame.isPlayerSelected(playerNumber)) {
-          controller.currentGame.deselectPlayer(playerNumber);
-        } else {
-          controller.currentGame.selectPlayer(playerNumber);
-        }
-      });
+      if (controller.isPlayerSelected(playerNumber)) {
+        controller.deselectPlayer(playerNumber);
+      } else {
+        controller.selectPlayer(playerNumber);
+      }
     }
   }
 
@@ -213,18 +208,18 @@ class _MainScreenState extends State<MainScreen> {
 
   Widget _playerButtonBuilder(BuildContext context, int index, GameController controller) {
     final playerNumber = index + 1;
-    final isAlive = controller.currentGame.players.isAlive(playerNumber);
-    final currentPlayerRole = controller.currentGame.players.getRole(playerNumber);
-    final gameState = controller.currentGame.state;
+    final isAlive = controller.isPlayerAlive(playerNumber);
+    final currentPlayerRole = controller.getPlayerRole(playerNumber);
+    final gameState = controller.state;
     final isActive = gameState.player?.number == playerNumber ||
         gameState.state.isAnyOf([GameState.night0, GameState.nightKill]) &&
             isAlive &&
             (currentPlayerRole.isAnyOf([PlayerRole.mafia, PlayerRole.don]));
     return PlayerButton(
       number: playerNumber,
-      role: controller.currentGame.players.getRole(playerNumber),
+      role: controller.getPlayerRole(playerNumber),
       isAlive: isAlive,
-      isSelected: controller.currentGame.isPlayerSelected(playerNumber),
+      isSelected: controller.isPlayerSelected(playerNumber),
       isActive: isActive,
       onTap: isAlive || gameState.state == GameState.nightCheck
           ? () => _onPlayerButtonTap(context, controller, playerNumber)
@@ -242,15 +237,15 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<GameController>();
-    final gameState = controller.currentGame.state;
+    final gameState = controller.state;
     final isGameRunning = !gameState.state.isAnyOf([GameState.prepare, GameState.finish]);
-    final nextStateAssumption = controller.currentGame.nextStateAssumption;
+    final nextStateAssumption = controller.nextStateAssumption;
     final settings = context.watch<SettingsModel>();
-    final previousState = controller.currentGame.previousState;
+    final previousState = controller.previousState;
     return Scaffold(
       appBar: AppBar(
         title: isGameRunning
-            ? Text("День ${controller.currentGame.day}")
+            ? Text("День ${controller.day}")
             : const Text("Mafia companion"),
         actions: [
           IconButton(
@@ -263,7 +258,7 @@ class _MainScreenState extends State<MainScreen> {
             tooltip: "Перезапустить игру",
             onPressed: () async {
               if (await _showRestartGameDialog(context)) {
-                setState(() => controller.restart());
+                controller.restart();
               }
             },
           ),
@@ -312,7 +307,7 @@ class _MainScreenState extends State<MainScreen> {
               gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
                 maxCrossAxisExtent: 100,
               ),
-              itemCount: controller.currentGame.players.length,
+              itemCount: controller.totalPlayersCount,
               itemBuilder: (context, index) => _playerButtonBuilder(context, index, controller),
             ),
           ),
@@ -344,10 +339,10 @@ class _MainScreenState extends State<MainScreen> {
                         ? previousState?.prettyName ?? "(отмена невозможна)"
                         : "(отключено)",
                     onTapBack: settings.cancellable && previousState != null
-                        ? () => setState(() => controller.currentGame.setPreviousState())
+                        ? () => controller.setPreviousState()
                         : null,
                     onTapNext: nextStateAssumption != null
-                        ? () => setState(() => controller.currentGame.setNextState())
+                        ? () => controller.setNextState()
                         : null,
                     nextLabel: nextStateAssumption?.prettyName ?? "(игра окончена)",
                   ),

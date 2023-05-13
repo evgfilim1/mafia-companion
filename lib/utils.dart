@@ -154,8 +154,8 @@ extension GameStatePrettyString on GameStateWithPlayer {
   }
 }
 
-extension IsAnyOf on Object {
-  bool isAnyOf(Iterable values) => values.contains(this);
+extension IsAnyOf<T> on T {
+  bool isAnyOf(Iterable<T> values) => values.contains(this);
 }
 
 void showSimpleDialog({

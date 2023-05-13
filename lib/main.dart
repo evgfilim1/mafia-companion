@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 
-import 'game/controller.dart';
+import 'game_controller.dart';
 import 'screens/main.dart';
 import 'settings.dart';
 
@@ -41,7 +41,7 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       themeMode: settings.themeMode,
-      home: Provider<GameController>(
+      home: ChangeNotifierProvider<GameController>(
         create: (_) => GameController(),
         child: const MainScreen(),
       ),
