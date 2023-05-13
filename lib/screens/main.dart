@@ -5,12 +5,14 @@ import 'package:vibration/vibration.dart';
 import '../game/controller.dart';
 import '../game/player.dart';
 import '../game/states.dart';
+import '../settings.dart';
 import '../utils.dart';
 import '../widgets/bottom_controls.dart';
 import '../widgets/counter.dart';
 import '../widgets/player_button.dart';
 import '../widgets/player_timer.dart';
 import 'roles.dart';
+import 'settings.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({
@@ -58,7 +60,11 @@ class _MainScreenState extends State<MainScreen> {
     return res!;
   }
 
-  Widget? _getBottomTextWidget(BuildContext context, GameController controller) {
+  Widget? _getBottomTextWidget(
+    BuildContext context,
+    GameController controller,
+    SettingsModel settings,
+  ) {
     final gameState = controller.currentGame.state;
     if (gameState.state == GameState.prepare) {
       return TextButton(
@@ -114,7 +120,22 @@ class _MainScreenState extends State<MainScreen> {
         child: const Text("Нет", style: TextStyle(fontSize: 20)),
       );
     }
-    final timeLimit = timeLimits[gameState.state];
+    final Duration? timeLimit;
+    switch (settings.timerType) {
+      case TimerType.disabled:
+        timeLimit = null;
+        break;
+      case TimerType.plus5:
+        final t = timeLimits[gameState.state];
+        timeLimit = t != null ? t + const Duration(seconds: 5) : null;
+        break;
+      case TimerType.extended:
+        timeLimit = timeLimitsExtended[gameState.state] ?? timeLimits[gameState.state];
+        break;
+      case TimerType.strict:
+        timeLimit = timeLimits[gameState.state];
+        break;
+    }
     if (timeLimit != null) {
       return PlayerTimer(
         key: ValueKey(controller.currentGame.state),
@@ -222,18 +243,13 @@ class _MainScreenState extends State<MainScreen> {
     final gameState = controller.currentGame.state;
     final isGameRunning = !gameState.state.isAnyOf([GameState.prepare, GameState.finish]);
     final nextStateAssumption = controller.currentGame.nextStateAssumption;
+    final settings = context.watch<SettingsModel>();
     return Scaffold(
       appBar: AppBar(
         title: isGameRunning
             ? Text("День ${controller.currentGame.day}")
             : const Text("Mafia companion"),
         actions: [
-          if (isGameRunning)
-            IconButton(
-              icon: const Icon(Icons.person),
-              tooltip: "Роли",
-              onPressed: () => _pushRolesScreen(context, controller),
-            ),
           IconButton(
             onPressed: () => setState(() => _showRole = !_showRole),
             tooltip: "${!_showRole ? "Показать" : "Скрыть"} роли",
@@ -247,8 +263,43 @@ class _MainScreenState extends State<MainScreen> {
                 setState(() => controller.restart());
               }
             },
-          )
+          ),
         ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          children: [
+            DrawerHeader(
+              child: Center(
+                child: Text(
+                  "Mafia companion",
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.person),
+              title: const Text("Раздача ролей"),
+              onTap: () {
+                Navigator.pop(context);
+                _pushRolesScreen(context, controller);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text("Настройки"),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const SettingsScreen(),
+                  ),
+                );
+              },
+            )
+          ],
+        ),
       ),
       body: Column(
         children: [
@@ -277,7 +328,7 @@ class _MainScreenState extends State<MainScreen> {
                       ),
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 8.0),
-                        child: _getBottomTextWidget(context, controller),
+                        child: _getBottomTextWidget(context, controller, settings),
                       ),
                     ],
                   ),
@@ -286,7 +337,7 @@ class _MainScreenState extends State<MainScreen> {
                   bottom: 40,
                   width: MediaQuery.of(context).size.width,
                   child: BottomControlBar(
-                    backLabel: "(не реализовано)",
+                    backLabel: settings.cancellable ? "(не реализовано)" : "(отключено)",
                     onTapNext: nextStateAssumption != null
                         ? () => setState(() => controller.currentGame.nextState())
                         : null,

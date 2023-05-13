@@ -72,20 +72,29 @@ class GameStateWithPlayer {
 
 const timeLimits = {
   GameState.prepare: null,
-  GameState.night0: Duration(minutes: 1, seconds: 5),
-  GameState.night0CommissarCheck: Duration(seconds: 25),
-  GameState.speaking: Duration(minutes: 1, seconds: 5),
+  GameState.night0: Duration(minutes: 1),
+  GameState.night0CommissarCheck: Duration(seconds: 20),
+  GameState.speaking: Duration(minutes: 1),
   GameState.preVoting: null,
   GameState.voting: null,
-  GameState.excuse: Duration(seconds: 35),
+  GameState.excuse: Duration(seconds: 30),
   GameState.preFinalVoting: null,
   GameState.finalVoting: null,
   GameState.dropTableVoting: null,
-  GameState.dayLastWords: Duration(minutes: 1, seconds: 5),
+  GameState.dayLastWords: Duration(minutes: 1),
   GameState.nightKill: null,
-  GameState.nightCheck: Duration(seconds: 15),
-  GameState.nightLastWords: Duration(minutes: 1, seconds: 5),
+  GameState.nightCheck: Duration(seconds: 10),
+  GameState.nightLastWords: Duration(minutes: 1),
   GameState.finish: null,
+};
+
+const timeLimitsExtended = {
+  GameState.night0: Duration(minutes: 2),
+  GameState.speaking: Duration(minutes: 1, seconds: 30),
+  GameState.excuse: Duration(minutes: 1),
+  GameState.dayLastWords: Duration(minutes: 1, seconds: 30),
+  GameState.nightCheck: Duration(seconds: 30),
+  GameState.nightLastWords: Duration(minutes: 1, seconds: 30),
 };
 
 const validTransitions = {

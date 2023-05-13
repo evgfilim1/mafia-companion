@@ -1,11 +1,24 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 
 import 'game/controller.dart';
 import 'screens/main.dart';
+import 'settings.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final settings = await getSettings();
+  final packageInfo = await PackageInfo.fromPlatform();
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider<SettingsModel>(create: (_) => settings),
+        Provider<PackageInfo>(create: (_) => packageInfo),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
