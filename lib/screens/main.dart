@@ -115,7 +115,7 @@ class _MainScreenState extends State<MainScreen> {
       return TextButton(
         onPressed: () => setState(() {
           controller.currentGame.deselectAllPlayers();
-          controller.currentGame.nextState();
+          controller.currentGame.setNextState();
         }),
         child: const Text("Нет", style: TextStyle(fontSize: 20)),
       );
@@ -244,6 +244,7 @@ class _MainScreenState extends State<MainScreen> {
     final isGameRunning = !gameState.state.isAnyOf([GameState.prepare, GameState.finish]);
     final nextStateAssumption = controller.currentGame.nextStateAssumption;
     final settings = context.watch<SettingsModel>();
+    final previousState = controller.currentGame.previousState;
     return Scaffold(
       appBar: AppBar(
         title: isGameRunning
@@ -337,9 +338,14 @@ class _MainScreenState extends State<MainScreen> {
                   bottom: 40,
                   width: MediaQuery.of(context).size.width,
                   child: BottomControlBar(
-                    backLabel: settings.cancellable ? "(не реализовано)" : "(отключено)",
+                    backLabel: settings.cancellable
+                        ? previousState?.prettyName ?? "(отмена невозможна)"
+                        : "(отключено)",
+                    onTapBack: settings.cancellable && previousState != null
+                        ? () => setState(() => controller.currentGame.setPreviousState())
+                        : null,
                     onTapNext: nextStateAssumption != null
-                        ? () => setState(() => controller.currentGame.nextState())
+                        ? () => setState(() => controller.currentGame.setNextState())
                         : null,
                     nextLabel: nextStateAssumption?.prettyName ?? "(игра окончена)",
                   ),

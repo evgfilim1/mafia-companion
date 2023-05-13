@@ -48,6 +48,7 @@ class Game {
   final LinkedHashMap<int, int> _votes = LinkedHashMap();
   var _consequentDaysWithoutKills = 0; // TODO: use this
   int? _lastVotedPlayer;
+  final _history = <GameStateWithPlayer>[];
 
   Game() : this.withPlayers(generatePlayers());
 
@@ -188,7 +189,7 @@ class Game {
 
   /// Changes game state to next state assumed by [nextStateAssumption].
   /// Modifies internal game state.
-  void nextState() {
+  void setNextState() {
     final nextState = nextStateAssumption;
     if (nextState == null) {
       throw StateError("Game is over");
@@ -198,6 +199,10 @@ class Game {
       "Invalid or unspecified transition from ${_state.state} to ${nextState.state}",
     );
     final oldState = _state.state;
+    _history.add(_state);
+    if (oldState.isAnyOf([GameState.dayLastWords, GameState.nightLastWords])) {
+      _state.player!.kill();
+    }
     switch (nextState.state) {
       case GameState.prepare:
         throw AssertionError("Can't go to prepare state");
@@ -244,7 +249,6 @@ class Game {
           _selectedPlayers.addAll(maxVotesPlayers);
           _votes.clear();
         }
-        nextState.player!.kill();
         break;
       case GameState.nightKill:
         _day++;
@@ -253,7 +257,6 @@ class Game {
       case GameState.nightCheck:
         break;
       case GameState.nightLastWords:
-        nextState.player!.kill();
         break;
       case GameState.finish:
         _selectedPlayers.clear();
@@ -261,6 +264,24 @@ class Game {
         break;
     }
     _state = nextState;
+  }
+
+  /// Gets previous game state according to game internal state, and returns it.
+  /// Doesn't change internal state. May throw exceptions if game internal state is inconsistent.
+  /// Returns `null` if there is no previous state.
+  GameStateWithPlayer? get previousState {
+    if (_history.isEmpty) {
+      return null;
+    }
+    return _history.last;
+  }
+
+  void setPreviousState() {
+    final previousState = this.previousState;
+    if (previousState == null) {
+      throw StateError("Can't go to previous state");
+    }
+    _state = _history.removeLast();
   }
 
   void selectPlayer(int playerNumber) {

@@ -93,7 +93,6 @@ class SettingsScreen extends StatelessWidget {
             onChanged: (value) => settings.setTimerType(value),
           ),
           ListTile(
-            enabled: false,  // TODO: implement
             leading: const SizedBox(),
             title: const Text("Отмена действий"),
             subtitle: const Text("Экспериментальная функция, может работать некорректно"),
