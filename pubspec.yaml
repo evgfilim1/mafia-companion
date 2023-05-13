@@ -33,6 +33,7 @@ dependencies:
   vibration_web: ^1.6.5  # adds web support for `vibration` package
   shared_preferences: ^2.1.1
   package_info_plus: ^4.0.0
+  url_launcher: ^6.1.11
 
 dev_dependencies:
   flutter_test:

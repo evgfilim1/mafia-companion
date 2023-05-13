@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:vibration/vibration.dart';
 
 import '../game/player.dart';
@@ -91,9 +93,7 @@ class _MainScreenState extends State<MainScreen> {
             controller.totalVotes +
             controller.getPlayerVotes(gameState.player!.number),
         onValueChanged: (value) => controller.vote(gameState.player!.number, value),
-        value: onlyOneSelected
-            ? aliveCount
-            : controller.getPlayerVotes(gameState.player!.number),
+        value: onlyOneSelected ? aliveCount : controller.getPlayerVotes(gameState.player!.number),
       );
     }
     if (gameState.state == GameState.finish) {
@@ -247,9 +247,7 @@ class _MainScreenState extends State<MainScreen> {
     final previousState = controller.previousState;
     return Scaffold(
       appBar: AppBar(
-        title: isGameRunning
-            ? Text("День ${controller.day}")
-            : Text(packageInfo.appName),
+        title: isGameRunning ? Text("День ${controller.day}") : Text(packageInfo.appName),
         actions: [
           IconButton(
             onPressed: () => setState(() => _showRole = !_showRole),
@@ -285,6 +283,38 @@ class _MainScreenState extends State<MainScreen> {
                 Navigator.pop(context);
                 _pushRolesScreen(context, controller);
               },
+            ),
+            ListTile(
+              leading: const Icon(Icons.format_list_numbered),
+              title: const Text("Официальные правила"),
+              onTap: () => launchUrl(
+                Uri.parse("https://mafiaworldtour.com/fiim-rules"),
+                mode: LaunchMode.externalApplication, // it crashes for me otherwise for some reason
+              ).then((isOk) {
+                Navigator.pop(context);
+                if (isOk) {
+                  return;
+                }
+                showSnackBar(
+                  context,
+                  SnackBar(
+                    content: const Text("Не удалось открыть ссылку"),
+                    action: SnackBarAction(
+                        label: "Скопировать",
+                        onPressed: () {
+                          Clipboard.setData(
+                            const ClipboardData(text: "https://mafiaworldtour.com/fiim-rules"),
+                          );
+                          showSnackBar(
+                            context,
+                            const SnackBar(
+                              content: Text("Ссылка скопирована в буфер обмена"),
+                            ),
+                          );
+                        }),
+                  ),
+                );
+              }),
             ),
             ListTile(
               leading: const Icon(Icons.settings),
@@ -344,9 +374,7 @@ class _MainScreenState extends State<MainScreen> {
                     onTapBack: settings.cancellable && previousState != null
                         ? () => controller.setPreviousState()
                         : null,
-                    onTapNext: nextStateAssumption != null
-                        ? () => controller.setNextState()
-                        : null,
+                    onTapNext: nextStateAssumption != null ? () => controller.setNextState() : null,
                     nextLabel: nextStateAssumption?.prettyName ?? "(игра окончена)",
                   ),
                 )
