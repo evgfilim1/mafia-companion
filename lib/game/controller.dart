@@ -47,7 +47,7 @@ class Game {
   final List<int> _selectedPlayers = [];
   final LinkedHashMap<int, int> _votes = LinkedHashMap();
   var _consequentDaysWithoutKills = 0; // TODO: use this
-  int? _lastVotedPlayer;
+  final _accusations = <int, int>{};
   final _history = <GameStateWithPlayer>[];
 
   Game() : this.withPlayers(generatePlayers());
@@ -89,6 +89,13 @@ class Game {
 
   /// Checks if game is over.
   bool get isGameOver => _state.state == GameState.finish || citizenTeamWon != null;
+
+  int get totalVotes {
+    if (!_state.state.isAnyOf([GameState.voting, GameState.finalVoting])) {
+      throw StateError("Can't get total votes in state ${_state.state}");
+    }
+    return _votes.values.sum;
+  }
 
   /// Assumes next game state according to game internal state, and returns it.
   /// Doesn't change internal state. May throw exceptions if game internal state is inconsistent.
@@ -132,7 +139,7 @@ class Game {
         if (_state.player!.number - 1 == _selectedPlayers.last) {
           return const GameStateWithPlayer(state: GameState.preFinalVoting);
         }
-        final nextIndex = _nextSelectedPlayer(_state.player!.number - 1);
+        final nextIndex = _nextSelectedPlayer(_state.player!.number - 1)!;
         return GameStateWithPlayer(
           state: GameState.excuse,
           player: _players[_selectedPlayers[nextIndex]],
@@ -159,7 +166,7 @@ class Game {
           }
           return const GameStateWithPlayer(state: GameState.nightKill);
         }
-        final nextIndex = _nextSelectedPlayer(_state.player!.number - 1);
+        final nextIndex = _nextSelectedPlayer(_state.player!.number - 1)!;
         return GameStateWithPlayer(
           state: GameState.dayLastWords,
           player: _players[_selectedPlayers[nextIndex]],
@@ -212,7 +219,7 @@ class Game {
         break;
       case GameState.day:
         _selectedPlayers.clear();
-        _lastVotedPlayer = null;
+        _accusations.clear();
         break;
       case GameState.speaking:
         if (oldState != GameState.speaking) {
@@ -263,6 +270,9 @@ class Game {
         _votes.clear();
         break;
     }
+    if (oldState == GameState.voting && _votes[_state.player!.number - 1] == null) {
+      _votes[nextState.player!.number - 1] = 0;
+    }
     _state = nextState;
   }
 
@@ -300,14 +310,21 @@ class Game {
       return;
     }
     if (state.state == GameState.speaking) {
-      if (_lastVotedPlayer == state.player!.number) {
-        _selectedPlayers.removeAt(_selectedPlayers.length - 1);
+      final thisPlayerAccusation = _accusations[state.player!.number - 1];
+      if (thisPlayerAccusation != null) {
+        _selectedPlayers.remove(thisPlayerAccusation);
       }
-      _lastVotedPlayer = state.player!.number;
+      if (thisPlayerAccusation == index) {
+        _accusations.remove(state.player!.number - 1);
+      } else {
+        _selectedPlayers.add(index);
+        _accusations[state.player!.number - 1] = index;
+      }
     } else if (state.state == GameState.nightKill && _selectedPlayers.isNotEmpty) {
       _selectedPlayers.clear();
+    } else {
+      _selectedPlayers.add(index);
     }
-    _selectedPlayers.add(index);
   }
 
   bool isPlayerSelected(int playerNumber) {
@@ -323,10 +340,15 @@ class Game {
       return;
     }
     final index = playerNumber - 1;
-    if (state.state == GameState.speaking && _lastVotedPlayer == state.player!.number) {
-      _lastVotedPlayer = null;
+    if (state.state == GameState.speaking) {
+      final thisPlayerAccusation = _accusations[state.player!.number - 1];
+      if (thisPlayerAccusation == index) {
+        _accusations.remove(state.player!.number - 1);
+        _selectedPlayers.remove(index);
+      }
+    } else {
+      _selectedPlayers.remove(index);
     }
-    _selectedPlayers.remove(index);
   }
 
   void deselectAllPlayers() {
@@ -383,9 +405,10 @@ class Game {
   GameStateWithPlayer _handleVoting() {
     final maxVotesPlayers = _getMaxVotesPlayers();
     if (maxVotesPlayers == null) {
+      final nextSelectedPlayer = _nextSelectedPlayer(_state.player!.number - 1)!;
       return GameStateWithPlayer(
         state: _state.state,
-        player: _players[_selectedPlayers[_votes.length]],
+        player: _players[nextSelectedPlayer],
       );
     }
     if (maxVotesPlayers.length == 1) {
@@ -411,34 +434,29 @@ class Game {
     );
   }
 
-  int _nextSelectedPlayer(int from) {
+  int? _nextSelectedPlayer(int from) {
     final nextIndex = _selectedPlayers.indexOf(from) + 1;
-    assert(0 < nextIndex && nextIndex < _selectedPlayers.length);
-    return nextIndex;
+    assert(0 < nextIndex && nextIndex <= _selectedPlayers.length);
+    return nextIndex != _selectedPlayers.length ? _selectedPlayers[nextIndex] : null;
   }
 
   List<int>? _getMaxVotesPlayers() {
     final votes = {..._votes};
     final aliveCount = players.aliveCount;
+    final votesTotal = totalVotes;
     if (votes.length + 1 == _selectedPlayers.length) {
       // All players except one was voted against
       // The rest of the votes will be given to the last player
-      votes[_selectedPlayers.last] = aliveCount - votes.values.sum;
+      votes[_selectedPlayers.last] = aliveCount - votesTotal;
     }
-    if (votes.isEmpty || votes.values.sum <= aliveCount ~/ 2) {
+    if (votes.isEmpty || votesTotal <= aliveCount ~/ 2) {
       return null;
     }
-    var max = 0;
-    final res = <int>[];
-    for (final entry in votes.entries) {
-      if (entry.value > max) {
-        max = entry.value;
-        res.clear();
-      }
-      if (entry.value == max) {
-        res.add(entry.key);
-      }
+    final max = votes.values.maxItem;
+    if (aliveCount - votesTotal >= max) {
+      return null;
     }
+    final res = votes.entries.where((e) => e.value == max).map((e) => e.key).toUnmodifiableList();
     assert(res.isNotEmpty);
     return res;
   }

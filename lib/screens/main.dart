@@ -86,7 +86,9 @@ class _MainScreenState extends State<MainScreen> {
       final aliveCount = controller.currentGame.players.aliveCount;
       return Counter(
         min: onlyOneSelected ? aliveCount : 0,
-        max: aliveCount, // TODO: more smart maximum
+        max: aliveCount -
+            controller.currentGame.totalVotes +
+            controller.currentGame.getPlayerVotes(gameState.player!.number),
         onValueChanged: (value) =>
             setState(() => controller.currentGame.vote(gameState.player!.number, value)),
         value: onlyOneSelected
