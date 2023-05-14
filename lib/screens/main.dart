@@ -17,6 +17,18 @@ import '../widgets/player_timer.dart';
 import 'roles.dart';
 import 'settings.dart';
 
+enum PlayerActions {
+  warnPlus("Дать предупреждение"),
+  warnMinus("Снять предупреждение"),
+  kill("Убить"),
+  revive("Воскресить"),
+  ;
+
+  final String text;
+
+  const PlayerActions(this.text);
+}
+
 class MainScreen extends StatefulWidget {
   const MainScreen({
     super.key,
@@ -204,6 +216,44 @@ class _MainScreenState extends State<MainScreen> {
         ),
       ),
     );
+  }
+
+  void _onPlayerActionsTap(
+    BuildContext context,
+    int playerNumber,
+    GameController controller,
+  ) async {
+    final res = await showChoiceDialog(
+      context: context,
+      items: PlayerActions.values,
+      itemToString: (i) => i.text,
+      title: Text("Действия для игрока $playerNumber"),
+      selectedIndex: null,
+    );
+    if (res == null) {
+      return;
+    }
+    if (!context.mounted) {
+      throw StateError("Context is not mounted");
+    }
+    switch (res) {
+      case PlayerActions.warnPlus:
+        _onWarnPlayerTap(context, playerNumber, controller);
+        break;
+      case PlayerActions.warnMinus:
+        controller.unwarnPlayer(playerNumber);
+        break;
+      case PlayerActions.kill:
+        if (controller.isPlayerAlive(playerNumber)) {
+          controller.killPlayer(playerNumber);
+        }
+        break;
+      case PlayerActions.revive:
+        if (!controller.isPlayerAlive(playerNumber)) {
+          controller.revivePlayer(playerNumber);
+        }
+        break;
+    }
     Navigator.pop(context);
   }
 
@@ -228,8 +278,8 @@ class _MainScreenState extends State<MainScreen> {
           : null,
       longPressActions: [
         TextButton(
-          onPressed: () => _onWarnPlayerTap(context, playerNumber, controller),
-          child: const Text("Предупреждение"),
+          onPressed: () => _onPlayerActionsTap(context, playerNumber, controller),
+          child: const Text("Действия"),
         ),
       ],
       showRole: _showRole,

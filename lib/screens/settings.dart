@@ -27,24 +27,12 @@ class _ChoiceListTile<T> extends StatelessWidget {
   String _itemToString(T item) => itemToString == null ? item.toString() : itemToString!(item);
 
   void _onTileClick(BuildContext context) async {
-    final res = await showDialog<T>(
+    final res = await showChoiceDialog(
       context: context,
-      builder: (context) => SimpleDialog(
-        title: title,
-        children: [
-          for (var i = 0; i < items.length; i++)
-            SimpleDialogOption(
-              onPressed: () => Navigator.pop(context, items[i]!),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(_itemToString(items[i])),
-                  if (i == index) const Icon(Icons.check),
-                ],
-              ),
-            ),
-        ],
-      ),
+      items: items,
+      itemToString: _itemToString,
+      title: title,
+      selectedIndex: index,
     );
     if (res != null) {
       onChanged(res);

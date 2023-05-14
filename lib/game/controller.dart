@@ -36,6 +36,10 @@ class PlayersView {
   bool get isCommissarAlive => isAlive(commissarNumber);
 
   int getWarnCount(int number) => _players[number - 1].warns;
+
+  void kill(int number) => _players[number - 1].kill();
+
+  void revive(int number) => _players[number - 1].revive();
 }
 
 /// Game controller. Manages game state and players. Doesn't know about UI.

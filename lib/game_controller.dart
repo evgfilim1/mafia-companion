@@ -79,4 +79,14 @@ class GameController with ChangeNotifier {
     _game.unwarnPlayer(player);
     notifyListeners();
   }
+
+  void killPlayer(int player) {
+    _game.players.kill(player);
+    notifyListeners();
+  }
+
+  void revivePlayer(int player) {
+    _game.players.revive(player);
+    notifyListeners();
+  }
 }
