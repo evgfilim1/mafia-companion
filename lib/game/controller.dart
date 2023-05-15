@@ -70,31 +70,29 @@ class Game {
 
   Iterable<PlayerEvent> get log => _logger;
 
-  /// Checks if citizen team won, returns null if game is not over.
-  bool? get citizenTeamWon {
-    var mafiaCount = 0;
-    var citizenCount = 0;
-    for (final player in _players) {
-      if (!player.isAlive) {
-        continue;
-      }
-      if (player.role.isAnyOf([PlayerRole.mafia, PlayerRole.don])) {
-        mafiaCount++;
+  /// Assumes team that will win if game ends right now. Returns [PlayerRole.mafia],
+  /// [PlayerRole.citizen] or `null` if the game can't end right now.
+  PlayerRole? get winTeamAssumption {
+    var aliveMafia = players.aliveMafiaCount + (players.isDonAlive ? 1 : 0);
+    var aliveCitizens = players.aliveCount - aliveMafia;
+    if (_state.state.isAnyOf([GameState.dayLastWords, GameState.nightLastWords])) {
+      if (_state.player!.role.isAnyOf([PlayerRole.mafia, PlayerRole.don])) {
+        aliveMafia--;
       } else {
-        citizenCount++;
+        aliveCitizens--;
       }
     }
-    if (mafiaCount == 0) {
-      return true;
+    if (aliveMafia == 0) {
+      return PlayerRole.citizen;
     }
-    if (citizenCount <= mafiaCount) {
-      return false;
+    if (aliveCitizens <= aliveMafia) {
+      return PlayerRole.mafia;
     }
     return null;
   }
 
   /// Checks if game is over.
-  bool get isGameOver => _state.state == GameState.finish || citizenTeamWon != null;
+  bool get isGameOver => _state.state == GameState.finish || winTeamAssumption != null;
 
   int get totalVotes {
     if (!_state.state.isAnyOf([GameState.voting, GameState.finalVoting])) {
@@ -467,13 +465,13 @@ class Game {
   List<int>? get _maxVotesPlayers {
     final votes = {..._votes};
     final aliveCount = players.aliveCount;
-    if (votes[_state.player!.number - 1] == null) {
+    if (_state.player != null && votes[_state.player!.number - 1] == null) {
       votes[_state.player!.number - 1] = 0;
     }
     if (votes.length + 1 == _selectedPlayers.length) {
       // All players except one was voted against
       // The rest of the votes will be given to the last player
-      votes[_selectedPlayers.last] = aliveCount - totalVotes;
+      votes[_selectedPlayers.last] = aliveCount - votes.values.sum;
     }
     final votesTotal = votes.values.sum;
     if (votes.isEmpty || votesTotal <= aliveCount ~/ 2) {

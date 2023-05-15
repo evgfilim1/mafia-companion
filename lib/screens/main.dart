@@ -109,7 +109,8 @@ class _MainScreenState extends State<MainScreen> {
       );
     }
     if (gameState.state == GameState.finish) {
-      final winRole = controller.citizenTeamWon! ? "мирных жителей" : "мафии";
+      final winRole =
+          controller.winTeamAssumption! == PlayerRole.citizen ? "мирных жителей" : "мафии";
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [

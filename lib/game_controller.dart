@@ -25,7 +25,7 @@ class GameController with ChangeNotifier {
 
   int getPlayerVotes(int player) => _game.getPlayerVotes(player);
 
-  bool? get citizenTeamWon => _game.citizenTeamWon;
+  PlayerRole? get winTeamAssumption => _game.winTeamAssumption;
 
   void restart() {
     _game = Game();
