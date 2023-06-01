@@ -174,6 +174,9 @@ class _MainScreenState extends State<MainScreen> {
   void _onPlayerButtonTap(BuildContext context, GameController controller, int playerNumber) {
     final gameState = controller.state;
     if (gameState is GameStateNightCheck) {
+      if (!gameState.player.isAlive) {
+        return; // It's useless to allow dead players check others
+      }
       final String result;
       if (gameState.player.role == PlayerRole.don) {
         if (controller.getPlayer(playerNumber).role == PlayerRole.sheriff) {
