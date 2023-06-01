@@ -158,8 +158,8 @@ extension PlayerRolePrettyString on PlayerRole {
         return "Мафия";
       case PlayerRole.don:
         return "Дон";
-      case PlayerRole.commissar:
-        return "Комиссар";
+      case PlayerRole.sheriff:
+        return "Шериф";
     }
   }
 }
@@ -171,8 +171,8 @@ extension GameStatePrettyString on BaseGameState {
         return "Ожидание игроков...";
       case GameStateWithPlayers(stage: GameStage.night0):
         return "Первая ночь";
-      case GameStateWithPlayer(stage: GameStage.night0CommissarCheck):
-        return "Комиссар осматривает стол";
+      case GameStateWithPlayer(stage: GameStage.night0SheriffCheck):
+        return "Шериф осматривает стол";
       case GameStateSpeaking(stage: GameStage.speaking, player: final player):
         return "Речь игрока ${player.number}";
       case GameStateWithPlayers(stage: GameStage.preVoting):
@@ -195,7 +195,7 @@ extension GameStatePrettyString on BaseGameState {
         if (player.role == PlayerRole.don) {
           return "Ночь, ход Дона";
         }
-        return "Ночь, ход Комиссара";
+        return "Ночь, ход Шерифа";
       case GameStateWithPlayer(stage: GameStage.nightLastWords, player: final player):
         return "Последние слова игрока ${player.number}";
       case GameStateFinish():

@@ -176,12 +176,12 @@ class _MainScreenState extends State<MainScreen> {
     if (gameState is GameStateNightCheck) {
       final String result;
       if (gameState.player.role == PlayerRole.don) {
-        if (controller.getPlayer(playerNumber).role == PlayerRole.commissar) {
-          result = "КОМИССАР";
+        if (controller.getPlayer(playerNumber).role == PlayerRole.sheriff) {
+          result = "ШЕРИФ";
         } else {
-          result = "НЕ комиссар";
+          result = "НЕ шериф";
         }
-      } else if (gameState.player.role == PlayerRole.commissar) {
+      } else if (gameState.player.role == PlayerRole.sheriff) {
         if (controller.getPlayer(playerNumber).role.isMafia) {
           result = "МАФИЯ";
         } else {

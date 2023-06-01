@@ -34,7 +34,7 @@ class PlayersView with IterableMixin<Player> {
 
   Player get don => _players.firstWhere((player) => player.role == PlayerRole.don);
 
-  Player get commissar => _players.firstWhere((player) => player.role == PlayerRole.commissar);
+  Player get sheriff => _players.firstWhere((player) => player.role == PlayerRole.sheriff);
 
   List<Player> get citizen =>
       _players.where((player) => player.role == PlayerRole.citizen).toUnmodifiableList();
@@ -126,11 +126,11 @@ class Game {
         return GameStateWithPlayers(stage: GameStage.night0, day: 0, players: players.mafiaTeam);
       case GameStage.night0:
         return GameStateWithPlayer(
-          stage: GameStage.night0CommissarCheck,
+          stage: GameStage.night0SheriffCheck,
           day: 0,
-          player: players.commissar,
+          player: players.sheriff,
         );
-      case GameStage.night0CommissarCheck:
+      case GameStage.night0SheriffCheck:
         return GameStateSpeaking(
           player: players[0],
           day: state.day + 1,
@@ -249,7 +249,7 @@ class Game {
         if (state.player.role == PlayerRole.don) {
           return GameStateNightCheck(
             day: state.day,
-            player: players.commissar,
+            player: players.sheriff,
             thisNightKilledPlayer: state.thisNightKilledPlayer,
           );
         }

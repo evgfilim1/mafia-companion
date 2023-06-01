@@ -86,8 +86,8 @@ class PlayerButton extends StatelessWidget {
       return "М";
     } else if (role == PlayerRole.don) {
       return "ДМ";
-    } else if (role == PlayerRole.commissar) {
-      return "К";
+    } else if (role == PlayerRole.sheriff) {
+      return "Ш";
     } else {
       throw AssertionError("Unknown role: $role");
     }

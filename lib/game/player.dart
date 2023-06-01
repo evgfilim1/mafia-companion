@@ -3,15 +3,15 @@ import '../utils.dart';
 enum PlayerRole {
   mafia,
   don,
-  commissar,
+  sheriff,
   citizen,
   ;
 
   /// Returns true if this role is one of [PlayerRole.mafia] or [PlayerRole.don]
   bool get isMafia => isAnyOf(const [PlayerRole.mafia, PlayerRole.don]);
 
-  /// Returns true if this role is one of [PlayerRole.citizen] or [PlayerRole.commissar]
-  bool get isCitizen => isAnyOf(const [PlayerRole.citizen, PlayerRole.commissar]);
+  /// Returns true if this role is one of [PlayerRole.citizen] or [PlayerRole.sheriff]
+  bool get isCitizen => isAnyOf(const [PlayerRole.citizen, PlayerRole.sheriff]);
 }
 
 class Player {
@@ -53,12 +53,12 @@ List<Player> generatePlayers({
   Map<PlayerRole, int> roles = const {
     PlayerRole.citizen: 6,
     PlayerRole.mafia: 2,
-    PlayerRole.commissar: 1,
+    PlayerRole.sheriff: 1,
     PlayerRole.don: 1,
   },
 }) {
-  if (roles[PlayerRole.commissar]! + roles[PlayerRole.don]! != 2) {
-    throw ArgumentError("Only one commissar and one don are allowed");
+  if (roles[PlayerRole.sheriff]! + roles[PlayerRole.don]! != 2) {
+    throw ArgumentError("Only one sheriff and one don are allowed");
   }
   if (roles[PlayerRole.mafia]! < 1) {
     throw ArgumentError("At least one mafia is required");

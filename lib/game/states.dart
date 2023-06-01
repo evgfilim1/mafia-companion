@@ -9,8 +9,8 @@ enum GameStage {
   /// First night, nobody dies
   night0,
 
-  /// Commissar wakes up and looks on the players, but doesn't check anyone
-  night0CommissarCheck,
+  /// Sheriff wakes up and looks on the players, but doesn't check anyone
+  night0SheriffCheck,
 
   /// Players speak during day and make accusations
   speaking,
@@ -39,7 +39,7 @@ enum GameStage {
   /// Further nights, mafia kills
   nightKill,
 
-  /// Further nights, don and commissar check
+  /// Further nights, don and sheriff check
   nightCheck,
 
   /// Last words of player who was killed during night
@@ -85,7 +85,7 @@ class GameState extends BaseGameState {
 
 /// Represents game state with related player.
 ///
-/// [stage] can be [GameStage.night0CommissarCheck] or [GameStage.nightLastWords].
+/// [stage] can be [GameStage.night0SheriffCheck] or [GameStage.nightLastWords].
 class GameStateWithPlayer extends BaseGameState {
   final Player player;
 
@@ -93,7 +93,7 @@ class GameStateWithPlayer extends BaseGameState {
     required super.stage,
     required super.day,
     required this.player,
-  }) : assert(stage == GameStage.night0CommissarCheck || stage == GameStage.nightLastWords);
+  }) : assert(stage == GameStage.night0SheriffCheck || stage == GameStage.nightLastWords);
 
   @override
   bool operator ==(Object other) =>
@@ -308,7 +308,7 @@ class GameStateFinish extends BaseGameState {
 const timeLimits = {
   // GameStage.prepare: null,
   GameStage.night0: Duration(minutes: 1),
-  GameStage.night0CommissarCheck: Duration(seconds: 20),
+  GameStage.night0SheriffCheck: Duration(seconds: 20),
   GameStage.speaking: Duration(minutes: 1),
   // GameStage.preVoting: null,
   // GameStage.voting: null,
@@ -334,8 +334,8 @@ const timeLimitsExtended = {
 
 const validTransitions = {
   GameStage.prepare: [GameStage.night0],
-  GameStage.night0: [GameStage.night0CommissarCheck],
-  GameStage.night0CommissarCheck: [GameStage.speaking],
+  GameStage.night0: [GameStage.night0SheriffCheck],
+  GameStage.night0SheriffCheck: [GameStage.speaking],
   GameStage.speaking: [GameStage.speaking, GameStage.preVoting, GameStage.nightKill],
   GameStage.preVoting: [GameStage.voting, GameStage.dayLastWords],
   GameStage.voting: [GameStage.voting, GameStage.excuse, GameStage.dayLastWords],
