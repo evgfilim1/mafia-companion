@@ -40,6 +40,13 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   bool _showRole = false;
+  final _notesController = TextEditingController();
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
+  }
 
   void _pushRolesScreen(BuildContext context, GameController controller) {
     final roles = Iterable.generate(10).map((i) => controller.getPlayer(i + 1).role);
@@ -317,6 +324,20 @@ class _MainScreenState extends State<MainScreen> {
       appBar: AppBar(
         title: isGameRunning ? Text("День ${controller.state.day}") : Text(packageInfo.appName),
         actions: [
+          IconButton(
+            onPressed: () {
+              showSimpleDialog(
+                context: context,
+                title: const Text("Заметки"),
+                content: TextField(
+                  controller: _notesController,
+                  maxLines: null,
+                ),
+              );
+            },
+            tooltip: "Заметки",
+            icon: const Icon(Icons.sticky_note_2),
+          ),
           IconButton(
             onPressed: () => setState(() => _showRole = !_showRole),
             tooltip: "${!_showRole ? "Показать" : "Скрыть"} роли",
