@@ -436,12 +436,8 @@ class _MainScreenState extends State<MainScreen> {
                   bottom: 40,
                   width: MediaQuery.of(context).size.width,
                   child: BottomControlBar(
-                    backLabel: settings.cancellable
-                        ? previousState?.prettyName ?? "(отмена невозможна)"
-                        : "(отключено)",
-                    onTapBack: settings.cancellable && previousState != null
-                        ? () => controller.setPreviousState()
-                        : null,
+                    backLabel: previousState?.prettyName ?? "(отмена невозможна)",
+                    onTapBack: previousState != null ? () => controller.setPreviousState() : null,
                     onTapNext: nextStateAssumption != null ? () => controller.setNextState() : null,
                     nextLabel: nextStateAssumption?.prettyName ?? "(игра окончена)",
                   ),

@@ -88,16 +88,6 @@ class SettingsScreen extends StatelessWidget {
             onChanged: (value) => settings.setTimerType(value),
           ),
           ListTile(
-            leading: const SizedBox(),
-            title: const Text("Отмена действий"),
-            subtitle: const Text("Экспериментальная функция, может работать некорректно"),
-            trailing: Switch(
-              value: settings.cancellable,
-              onChanged: (value) => settings.setCancellable(value),
-            ),
-            onTap: () => settings.setCancellable(!settings.cancellable),
-          ),
-          ListTile(
             leading: const Icon(Icons.info),
             title: const Text("О приложении"),
             subtitle: Text("${packageInfo.appName} $appVersion"),
