@@ -186,7 +186,7 @@ extension GameStatePrettyString on BaseGameState {
       case GameStateVoting(stage: GameStage.finalVoting, player: final player):
         return "Повторное голосование против игрока ${player.number}";
       case GameStateWithPlayers(stage: GameStage.dropTableVoting):
-        return "Убить всех?"; // FIXME
+        return "Голосование за подъём стола";
       case GameStateWithCurrentPlayer(stage: GameStage.dayLastWords, player: final player):
         return "Последние слова игрока ${player.number}";
       case GameStateNightKill():

@@ -131,7 +131,7 @@ class _MainScreenState extends State<MainScreen> {
           controller.deselectAllPlayers();
           controller.setNextState();
         },
-        child: const Text("Нет", style: TextStyle(fontSize: 20)),
+        child: const Text("Оставить всех в живых", style: TextStyle(fontSize: 20)),
       );
     }
     final Duration? timeLimit;
