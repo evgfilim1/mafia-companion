@@ -7,6 +7,7 @@ import '../utils.dart';
 class PlayerTimer extends StatefulWidget {
   /// The duration of the timer.
   final Duration duration;
+
   /// Called when the timer ticks.
   final ValueChanged<Duration>? onTimerTick;
 

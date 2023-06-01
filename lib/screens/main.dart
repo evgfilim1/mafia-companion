@@ -42,7 +42,7 @@ class _MainScreenState extends State<MainScreen> {
   bool _showRole = false;
 
   void _pushRolesScreen(BuildContext context, GameController controller) {
-    final roles = Iterable.generate(10).map((i) => controller.getPlayerRole(i + 1));
+    final roles = Iterable.generate(10).map((i) => controller.getPlayer(i + 1).role);
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -81,34 +81,33 @@ class _MainScreenState extends State<MainScreen> {
     SettingsModel settings,
   ) {
     final gameState = controller.state;
-    if (gameState.state == GameState.prepare) {
+    if (gameState.stage == GameStage.prepare) {
       return TextButton(
         onPressed: () => _pushRolesScreen(context, controller),
         child: const Text("Раздача ролей", style: TextStyle(fontSize: 20)),
       );
     }
-    if (gameState.state.isAnyOf([GameState.preVoting, GameState.preFinalVoting])) {
+    if (gameState.stage.isAnyOf([GameStage.preVoting, GameStage.preFinalVoting])) {
       final selectedPlayers = controller.voteCandidates;
       return Text(
         "Выставлены: ${selectedPlayers.join(", ")}",
         style: const TextStyle(fontSize: 20),
       );
     }
-    if (gameState.state.isAnyOf([GameState.voting, GameState.finalVoting])) {
+    if (gameState is GameStateVoting) {
       final selectedPlayers = controller.voteCandidates;
       assert(selectedPlayers.isNotEmpty);
       final onlyOneSelected = selectedPlayers.length == 1;
       final aliveCount = controller.alivePlayersCount;
+      final currentPlayerVotes = gameState.currentPlayerVotes ?? 0;
       return Counter(
         min: onlyOneSelected ? aliveCount : 0,
-        max: aliveCount -
-            controller.totalVotes +
-            controller.getPlayerVotes(gameState.player!.number),
-        onValueChanged: (value) => controller.vote(gameState.player!.number, value),
-        value: onlyOneSelected ? aliveCount : controller.getPlayerVotes(gameState.player!.number),
+        max: aliveCount - controller.totalVotes,
+        onValueChanged: (value) => controller.vote(gameState.player.number, value),
+        value: onlyOneSelected ? aliveCount : currentPlayerVotes,
       );
     }
-    if (gameState.state == GameState.finish) {
+    if (gameState.stage == GameStage.finish) {
       final winRole =
           controller.winTeamAssumption! == PlayerRole.citizen ? "мирных жителей" : "мафии";
       return Column(
@@ -126,7 +125,7 @@ class _MainScreenState extends State<MainScreen> {
         ],
       );
     }
-    if (gameState.state == GameState.dropTableVoting) {
+    if (gameState.stage == GameStage.dropTableVoting) {
       return TextButton(
         onPressed: () {
           controller.deselectAllPlayers();
@@ -141,14 +140,14 @@ class _MainScreenState extends State<MainScreen> {
         timeLimit = null;
         break;
       case TimerType.plus5:
-        final t = timeLimits[gameState.state];
+        final t = timeLimits[gameState.stage];
         timeLimit = t != null ? t + const Duration(seconds: 5) : null;
         break;
       case TimerType.extended:
-        timeLimit = timeLimitsExtended[gameState.state] ?? timeLimits[gameState.state];
+        timeLimit = timeLimitsExtended[gameState.stage] ?? timeLimits[gameState.stage];
         break;
       case TimerType.strict:
-        timeLimit = timeLimits[gameState.state];
+        timeLimit = timeLimits[gameState.stage];
         break;
     }
     if (timeLimit != null) {
@@ -174,16 +173,16 @@ class _MainScreenState extends State<MainScreen> {
 
   void _onPlayerButtonTap(BuildContext context, GameController controller, int playerNumber) {
     final gameState = controller.state;
-    if (gameState.state == GameState.nightCheck) {
+    if (gameState is GameStateNightCheck) {
       final String result;
-      if (gameState.player!.role == PlayerRole.don) {
-        if (controller.getPlayerRole(playerNumber) == PlayerRole.commissar) {
+      if (gameState.player.role == PlayerRole.don) {
+        if (controller.getPlayer(playerNumber).role == PlayerRole.commissar) {
           result = "КОМИССАР";
         } else {
           result = "НЕ комиссар";
         }
-      } else if (gameState.player!.role == PlayerRole.commissar) {
-        if (controller.getPlayerRole(playerNumber).isAnyOf([PlayerRole.mafia, PlayerRole.don])) {
+      } else if (gameState.player.role == PlayerRole.commissar) {
+        if (controller.getPlayer(playerNumber).role.isMafia) {
           result = "МАФИЯ";
         } else {
           result = "НЕ мафия";
@@ -197,11 +196,7 @@ class _MainScreenState extends State<MainScreen> {
         content: Text("Игрок $playerNumber — $result"),
       );
     } else {
-      if (controller.isPlayerSelected(playerNumber)) {
-        controller.deselectPlayer(playerNumber);
-      } else {
-        controller.selectPlayer(playerNumber);
-      }
+      controller.togglePlayerSelected(playerNumber);
     }
   }
 
@@ -245,12 +240,12 @@ class _MainScreenState extends State<MainScreen> {
         controller.unwarnPlayer(playerNumber);
         break;
       case PlayerActions.kill:
-        if (controller.isPlayerAlive(playerNumber)) {
+        if (controller.getPlayer(playerNumber).isAlive) {
           controller.killPlayer(playerNumber);
         }
         break;
       case PlayerActions.revive:
-        if (!controller.isPlayerAlive(playerNumber)) {
+        if (!controller.getPlayer(playerNumber).isAlive) {
           controller.revivePlayer(playerNumber);
         }
         break;
@@ -260,21 +255,36 @@ class _MainScreenState extends State<MainScreen> {
 
   Widget _playerButtonBuilder(BuildContext context, int index, GameController controller) {
     final playerNumber = index + 1;
-    final isAlive = controller.isPlayerAlive(playerNumber);
-    final currentPlayerRole = controller.getPlayerRole(playerNumber);
+    final isAlive = controller.getPlayer(playerNumber).isAlive;
     final gameState = controller.state;
-    final isActive = gameState.player?.number == playerNumber ||
-        gameState.state.isAnyOf([GameState.night0, GameState.nightKill]) &&
-            isAlive &&
-            (currentPlayerRole.isAnyOf([PlayerRole.mafia, PlayerRole.don]));
+    final isActive = switch (gameState) {
+      GameState() || GameStateFinish() => false,
+      GameStateWithPlayer(player: final player) ||
+      GameStateSpeaking(player: final player) ||
+      GameStateWithCurrentPlayer(player: final player) ||
+      GameStateVoting(player: final player) ||
+      GameStateNightCheck(player: final player) =>
+        player.number == playerNumber,
+      GameStateWithPlayers(players: final players) ||
+      GameStateNightKill(mafiaTeam: final players) =>
+        players.any((p) => p.number == playerNumber),
+    };
+    final isSelected = switch (gameState) {
+      GameStateSpeaking(accusations: final accusations) =>
+        accusations.containsValue(controller.getPlayer(playerNumber)),
+      GameStateNightKill(thisNightKilledPlayer: final thisNightKilledPlayer) ||
+      GameStateNightCheck(thisNightKilledPlayer: final thisNightKilledPlayer) =>
+        thisNightKilledPlayer == controller.getPlayer(playerNumber),
+      _ => false,
+    };
     return PlayerButton(
       number: playerNumber,
-      role: controller.getPlayerRole(playerNumber),
+      role: controller.getPlayer(playerNumber).role,
       isAlive: isAlive,
-      isSelected: controller.isPlayerSelected(playerNumber),
+      isSelected: isSelected,
       isActive: isActive,
       warnCount: controller.getPlayerWarnCount(playerNumber),
-      onTap: isAlive || gameState.state == GameState.nightCheck
+      onTap: isAlive || gameState.stage == GameStage.nightCheck
           ? () => _onPlayerButtonTap(context, controller, playerNumber)
           : null,
       longPressActions: [
@@ -291,14 +301,14 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     final controller = context.watch<GameController>();
     final gameState = controller.state;
-    final isGameRunning = !gameState.state.isAnyOf([GameState.prepare, GameState.finish]);
+    final isGameRunning = !gameState.stage.isAnyOf([GameStage.prepare, GameStage.finish]);
     final nextStateAssumption = controller.nextStateAssumption;
     final settings = context.watch<SettingsModel>();
     final packageInfo = context.watch<PackageInfo>();
     final previousState = controller.previousState;
     return Scaffold(
       appBar: AppBar(
-        title: isGameRunning ? Text("День ${controller.day}") : Text(packageInfo.appName),
+        title: isGameRunning ? Text("День ${controller.state.day}") : Text(packageInfo.appName),
         actions: [
           IconButton(
             onPressed: () => setState(() => _showRole = !_showRole),

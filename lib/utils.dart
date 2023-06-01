@@ -10,14 +10,26 @@ extension RandomItem<T> on List<T> {
   T get randomItem => this[Random().nextInt(length)];
 }
 
-extension MinMaxItem<T extends Comparable> on Iterable<T> {
-  T get maxItem => reduce((value, element) => value.compareTo(element) > 0 ? value : element);
+extension MinMaxItemComparable<T extends Comparable> on Iterable<T> {
+  static int _compare<T extends Comparable>(T a, T b) => a.compareTo(b);
 
-  T get minItem => reduce((value, element) => value.compareTo(element) < 0 ? value : element);
+  T max([Comparator<T>? comparator]) =>
+      reduce((value, element) => (comparator ?? _compare)(value, element) > 0 ? value : element);
+
+  T min([Comparator<T>? comparator]) =>
+      reduce((value, element) => (comparator ?? _compare)(value, element) < 0 ? value : element);
+}
+
+extension MinMaxItem<T> on Iterable<T> {
+  T max(Comparator<T> comparator) =>
+      reduce((value, element) => comparator(value, element) > 0 ? value : element);
+
+  T min(Comparator<T> comparator) =>
+      reduce((value, element) => comparator(value, element) < 0 ? value : element);
 }
 
 extension ToUnmodifiableList<T> on Iterable<T> {
-  List<T> toUnmodifiableList() => List.unmodifiable(this);
+  List<T> toUnmodifiableList() => List<T>.unmodifiable(this);
 }
 
 extension FirstWhereOrNull<T> on Iterable<T> {
@@ -152,41 +164,44 @@ extension PlayerRolePrettyString on PlayerRole {
   }
 }
 
-extension GameStatePrettyString on GameStateWithPlayer {
+extension GameStatePrettyString on BaseGameState {
   String get prettyName {
-    switch (state) {
-      case GameState.prepare:
+    switch (this) {
+      case GameState(stage: GameStage.prepare):
         return "Ожидание игроков...";
-      case GameState.night0:
+      case GameStateWithPlayers(stage: GameStage.night0):
         return "Первая ночь";
-      case GameState.night0CommissarCheck:
+      case GameStateWithPlayer(stage: GameStage.night0CommissarCheck):
         return "Комиссар осматривает стол";
-      case GameState.day:
-        return "Начало дня";
-      case GameState.speaking:
-        return "Речь игрока ${player!.number}";
-      case GameState.preVoting:
+      case GameStateSpeaking(stage: GameStage.speaking, player: final player):
+        return "Речь игрока ${player.number}";
+      case GameStateWithPlayers(stage: GameStage.preVoting):
         return "Голосование";
-      case GameState.voting:
-        return "Голосование против игрока ${player!.number}";
-      case GameState.excuse:
-        return "Повторная речь игрока ${player!.number}";
-      case GameState.preFinalVoting:
+      case GameStateVoting(stage: GameStage.voting, player: final player):
+        return "Голосование против игрока ${player.number}";
+      case GameStateWithCurrentPlayer(stage: GameStage.excuse, player: final player):
+        return "Повторная речь игрока ${player.number}";
+      case GameStateWithPlayers(stage: GameStage.preFinalVoting):
         return "Повторное голосование";
-      case GameState.finalVoting:
-        return "Повторное голосование против игрока ${player!.number}";
-      case GameState.dropTableVoting:
-        return "Убить всех?";
-      case GameState.dayLastWords:
-        return "Последние слова игрока ${player!.number}";
-      case GameState.nightKill:
+      case GameStateVoting(stage: GameStage.finalVoting, player: final player):
+        return "Повторное голосование против игрока ${player.number}";
+      case GameStateWithPlayers(stage: GameStage.dropTableVoting):
+        return "Убить всех?"; // FIXME
+      case GameStateWithCurrentPlayer(stage: GameStage.dayLastWords, player: final player):
+        return "Последние слова игрока ${player.number}";
+      case GameStateNightKill():
         return "Ночь, ход Мафии";
-      case GameState.nightCheck:
-        return "Ночь, ход ${player!.role.prettyName}а";
-      case GameState.nightLastWords:
-        return "Последние слова игрока ${player!.number}";
-      case GameState.finish:
+      case GameStateNightCheck(stage: GameStage.nightCheck, player: final player):
+        if (player.role == PlayerRole.don) {
+          return "Ночь, ход Дона";
+        }
+        return "Ночь, ход Комиссара";
+      case GameStateWithPlayer(stage: GameStage.nightLastWords, player: final player):
+        return "Последние слова игрока ${player.number}";
+      case GameStateFinish():
         return "Игра окончена";
+      default:
+        throw AssertionError("Unknown game state: $this");
     }
   }
 }

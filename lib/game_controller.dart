@@ -7,23 +7,19 @@ import 'game/states.dart';
 class GameController with ChangeNotifier {
   Game _game = Game();
 
-  GameStateWithPlayer get state => _game.state;
+  BaseGameState get state => _game.state;
 
-  int get day => _game.day;
+  BaseGameState? get nextStateAssumption => _game.nextStateAssumption;
 
-  GameStateWithPlayer? get nextStateAssumption => _game.nextStateAssumption;
+  BaseGameState? get previousState => _game.previousState;
 
-  GameStateWithPlayer? get previousState => _game.previousState;
-
-  int get totalPlayersCount => _game.players.length;
+  int get totalPlayersCount => _game.players.count;
 
   int get alivePlayersCount => _game.players.aliveCount;
 
   List<int> get voteCandidates => _game.voteCandidates;
 
   int get totalVotes => _game.totalVotes;
-
-  int getPlayerVotes(int player) => _game.getPlayerVotes(player);
 
   PlayerRole? get winTeamAssumption => _game.winTeamAssumption;
 
@@ -32,24 +28,15 @@ class GameController with ChangeNotifier {
     notifyListeners();
   }
 
-  PlayerRole getPlayerRole(int player) => _game.players.getRole(player);
-
-  bool isPlayerAlive(int player) => _game.players.isAlive(player);
+  Player getPlayer(int number) => _game.players.getByNumber(number);
 
   void vote(int player, int count) {
     _game.vote(player, count);
     notifyListeners();
   }
 
-  void selectPlayer(int player) {
-    _game.selectPlayer(player);
-    notifyListeners();
-  }
-
-  bool isPlayerSelected(int player) => _game.isPlayerSelected(player);
-
-  void deselectPlayer(int player) {
-    _game.deselectPlayer(player);
+  void togglePlayerSelected(int player) {
+    _game.togglePlayerSelected(player);
     notifyListeners();
   }
 
@@ -69,14 +56,14 @@ class GameController with ChangeNotifier {
   }
 
   void warnPlayer(int player) {
-    _game.warnPlayer(player);
+    _game.players.warn(player);
     notifyListeners();
   }
 
   int getPlayerWarnCount(int player) => _game.players.getWarnCount(player);
 
   void unwarnPlayer(int player) {
-    _game.unwarnPlayer(player);
+    _game.players.unwarn(player);
     notifyListeners();
   }
 

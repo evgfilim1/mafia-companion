@@ -66,15 +66,10 @@ class SettingsScreen extends StatelessWidget {
             leading: const Icon(Icons.color_lens),
             title: const Text("Тема"),
             items: ThemeMode.values,
-            itemToString: (item) {
-              switch (item) {
-                case ThemeMode.system:
-                  return "Системная";
-                case ThemeMode.light:
-                  return "Светлая";
-                case ThemeMode.dark:
-                  return "Тёмная";
-              }
+            itemToString: (item) => switch (item) {
+              ThemeMode.system => "Системная",
+              ThemeMode.light => "Светлая",
+              ThemeMode.dark => "Тёмная",
             },
             index: settings.themeMode.index,
             onChanged: (value) => settings.setThemeMode(value),
@@ -83,17 +78,11 @@ class SettingsScreen extends StatelessWidget {
             leading: const Icon(Icons.timer),
             title: const Text("Режим таймера"),
             items: TimerType.values,
-            itemToString: (item) {
-              switch (item) {
-                case TimerType.strict:
-                  return "Строгий";
-                case TimerType.plus5:
-                  return "+5 секунд";
-                case TimerType.extended:
-                  return "Увеличенный";
-                case TimerType.disabled:
-                  return "Отключен";
-              }
+            itemToString: (item) => switch (item) {
+              TimerType.strict => "Строгий",
+              TimerType.plus5 => "+5 секунд",
+              TimerType.extended => "Увеличенный",
+              TimerType.disabled => "Отключен",
             },
             index: settings.timerType.index,
             onChanged: (value) => settings.setTimerType(value),

@@ -12,7 +12,7 @@ class Counter extends StatelessWidget {
     required this.max,
     required this.onValueChanged,
     required this.value,
-  })  : assert(min <= value && value <= max);
+  }) : assert(min <= value && value <= max);
 
   VoidCallback? _onButtonPressedFactory({required bool increment}) {
     final delta = increment ? 1 : -1;

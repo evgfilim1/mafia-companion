@@ -6,44 +6,47 @@ enum PlayerRole {
   commissar,
   citizen,
   ;
+
+  /// Returns true if this role is one of [PlayerRole.mafia] or [PlayerRole.don]
+  bool get isMafia => isAnyOf(const [PlayerRole.mafia, PlayerRole.don]);
+
+  /// Returns true if this role is one of [PlayerRole.citizen] or [PlayerRole.commissar]
+  bool get isCitizen => isAnyOf(const [PlayerRole.citizen, PlayerRole.commissar]);
 }
 
 class Player {
-  bool _isAlive = true;
   final PlayerRole role;
-  var _warns = 0;
   final int number;
+  final bool isAlive;
 
-  Player({required this.role, required this.number});
+  const Player({
+    required this.role,
+    required this.number,
+    this.isAlive = true,
+  });
 
-  Player.randomRole({required int number})
-      : this(
-          role: PlayerRole.values.randomItem,
-          number: number,
-        );
+  Player copyWith({
+    PlayerRole? role,
+    int? number,
+    bool? isAlive,
+  }) =>
+      Player(
+        isAlive: isAlive ?? this.isAlive,
+        role: role ?? this.role,
+        number: number ?? this.number,
+      );
 
-  bool get isAlive => _isAlive;
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Player &&
+          runtimeType == other.runtimeType &&
+          role == other.role &&
+          number == other.number &&
+          isAlive == other.isAlive;
 
-  int get warns => _warns;
-
-  void kill() {
-    assert(isAlive, "Player is already dead");
-    _isAlive = false;
-  }
-
-  void revive() {
-    assert(!isAlive, "Player is already alive");
-    _isAlive = true;
-  }
-
-  void warn() => _warns++;
-
-  void unwarn() {
-    if (_warns == 0) {
-      return;
-    }
-    _warns--;
-  }
+  @override
+  int get hashCode => Object.hash(role, number, isAlive);
 }
 
 List<Player> generatePlayers({
@@ -54,6 +57,15 @@ List<Player> generatePlayers({
     PlayerRole.don: 1,
   },
 }) {
+  if (roles[PlayerRole.commissar]! + roles[PlayerRole.don]! != 2) {
+    throw ArgumentError("Only one commissar and one don are allowed");
+  }
+  if (roles[PlayerRole.mafia]! < 1) {
+    throw ArgumentError("At least one mafia is required");
+  }
+  if (roles[PlayerRole.mafia]! >= roles[PlayerRole.citizen]!) {
+    throw ArgumentError("Too many mafia");
+  }
   final playerRoles = roles.entries
       .expand((entry) => List.filled(entry.value, entry.key))
       .toList(growable: false)

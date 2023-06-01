@@ -8,11 +8,15 @@ enum TimerType {
   disabled,
 }
 
+const defaultTimerType = TimerType.plus5;
+const defaultThemeMode = ThemeMode.system;
+const defaultCancellable = false;
+
 Future<SettingsModel> getSettings() async {
   final prefs = await SharedPreferences.getInstance();
-  final timerTypeString = prefs.getString("timerType") ?? "plus5";
-  final cancellable = prefs.getBool("cancellable") ?? false;
-  final theme = prefs.getString("theme") ?? "system";
+  final timerTypeString = prefs.getString("timerType") ?? defaultTimerType.name;
+  final cancellable = prefs.getBool("cancellable") ?? defaultCancellable;
+  final theme = prefs.getString("theme") ?? defaultThemeMode.name;
 
   final TimerType timerType;
   switch (timerTypeString) {
@@ -29,7 +33,9 @@ Future<SettingsModel> getSettings() async {
       timerType = TimerType.disabled;
       break;
     default:
-      throw Exception("Unknown timer type: $timerTypeString");
+      assert(false, "Unknown timer type: $timerTypeString"); // fail for debug builds
+      timerType = defaultTimerType; // use default for release builds
+      break;
   }
 
   final ThemeMode themeMode;
@@ -44,7 +50,9 @@ Future<SettingsModel> getSettings() async {
       themeMode = ThemeMode.dark;
       break;
     default:
-      throw Exception("Unknown theme mode: $theme");
+      assert(false, "Unknown theme mode: $theme"); // fail for debug builds
+      themeMode = defaultThemeMode; // use default for release builds
+      break;
   }
 
   return SettingsModel(
@@ -56,33 +64,9 @@ Future<SettingsModel> getSettings() async {
 
 Future<void> saveSettings(SettingsModel settings) async {
   final prefs = await SharedPreferences.getInstance();
-  final String timerTypeString;
-  switch (settings.timerType) {
-    case TimerType.strict:
-      timerTypeString = "strict";
-      break;
-    case TimerType.plus5:
-      timerTypeString = "plus5";
-      break;
-    case TimerType.extended:
-      timerTypeString = "extended";
-      break;
-    case TimerType.disabled:
-      timerTypeString = "disabled";
-      break;
-  }
-  final String theme;
-  switch (settings.themeMode) {
-    case ThemeMode.system:
-      theme = "system";
-      break;
-    case ThemeMode.light:
-      theme = "light";
-      break;
-    case ThemeMode.dark:
-      theme = "dark";
-      break;
-  }
+  final timerTypeString = settings.timerType.name;
+  final theme = settings.themeMode.name;
+
   await prefs.setString("timerType", timerTypeString);
   await prefs.setBool("cancellable", settings.cancellable);
   await prefs.setString("theme", theme);
