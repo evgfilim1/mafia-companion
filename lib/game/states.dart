@@ -345,7 +345,12 @@ const validTransitions = {
   GameStage.dropTableVoting: [GameStage.dayLastWords, GameStage.nightKill],
   GameStage.dayLastWords: [GameStage.dayLastWords, GameStage.nightKill, GameStage.finish],
   GameStage.nightKill: [GameStage.nightCheck],
-  GameStage.nightCheck: [GameStage.nightCheck, GameStage.nightLastWords, GameStage.speaking],
+  GameStage.nightCheck: [
+    GameStage.nightCheck,
+    GameStage.nightLastWords,
+    GameStage.speaking,
+    GameStage.finish,
+  ],
   GameStage.nightLastWords: [GameStage.speaking, GameStage.finish],
   GameStage.finish: [],
 };

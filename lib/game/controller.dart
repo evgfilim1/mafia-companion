@@ -467,6 +467,12 @@ class Game {
         player: thisNightKilledPlayer,
       );
     }
+    if (_consequentDaysWithoutKills >= 3) {
+      return GameStateFinish(
+        day: state.day,
+        winner: null,
+      );
+    }
     return GameStateSpeaking(
       day: state.day + 1,
       player: players.getByNumber(_firstSpeakingPlayerNumber),
@@ -528,6 +534,16 @@ class Game {
       }
     }
     return result.number;
+  }
+
+  int get _consequentDaysWithoutKills {
+    final lastKillDay = _history
+        .where((e) =>
+            (e is GameStateWithPlayer && e.stage == GameStage.nightLastWords) ||
+            (e is GameStateWithCurrentPlayer && e.stage == GameStage.dayLastWords))
+        .lastOrNull
+        ?.day;
+    return _state.day - (lastKillDay ?? 0);
   }
 // endregion
 }

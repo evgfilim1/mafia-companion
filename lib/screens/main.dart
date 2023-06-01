@@ -107,13 +107,17 @@ class _MainScreenState extends State<MainScreen> {
         value: onlyOneSelected ? aliveCount : currentPlayerVotes,
       );
     }
-    if (gameState.stage == GameStage.finish) {
-      final winRole =
-          controller.winTeamAssumption! == PlayerRole.citizen ? "мирных жителей" : "мафии";
+    if (gameState case GameStateFinish(winner: final winner)) {
+      final resultText = switch (winner) {
+        PlayerRole.citizen => "Победа команды мирных жителей",
+        PlayerRole.mafia => "Победа команды мафии",
+        null => "Ничья",
+        _ => throw AssertionError(),
+      };
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text("Победа команды $winRole", style: const TextStyle(fontSize: 20)),
+          Text(resultText, style: const TextStyle(fontSize: 20)),
           TextButton(
             onPressed: () async {
               if (await _showRestartGameDialog(context)) {
