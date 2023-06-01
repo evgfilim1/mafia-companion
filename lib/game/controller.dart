@@ -48,15 +48,11 @@ class PlayersView with IterableMixin<Player> {
   List<Player> get citizenTeam =>
       _players.where((player) => player.role.isCitizen).toUnmodifiableList();
 
-  void warn(int number) => _warns.update(number, (value) => value + 1, ifAbsent: () => 1);
+  void warn(int number) => _warns.update(number - 1, (value) => value + 1, ifAbsent: () => 1);
 
   int getWarnCount(int number) => _warns[number - 1] ?? 0;
 
-  void unwarn(int number) {
-    if (_warns.containsKey(number)) {
-      _warns.update(number, (value) => value - 1);
-    }
-  }
+  void unwarn(int number) => _warns.update(number - 1, (value) => value - 1, ifAbsent: () => 0);
 
   void kill(int number) => _players[number - 1] = _players[number - 1].copyWith(isAlive: false);
 
