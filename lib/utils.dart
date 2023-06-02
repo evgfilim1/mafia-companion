@@ -214,6 +214,7 @@ void showSimpleDialog({
   required BuildContext context,
   required Widget title,
   required Widget content,
+  List<Widget> actions = const [],
 }) {
   showDialog(
     context: context,
@@ -221,6 +222,7 @@ void showSimpleDialog({
       title: title,
       content: content,
       actions: [
+        ...actions,
         TextButton(
           onPressed: () => Navigator.pop(context),
           child: const Text("ОК"),

@@ -333,6 +333,14 @@ class _MainScreenState extends State<MainScreen> {
                   controller: _notesController,
                   maxLines: null,
                 ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      _notesController.clear();
+                    },
+                    child: const Text("Очистить"),
+                  ),
+                ],
               );
             },
             tooltip: "Заметки",
