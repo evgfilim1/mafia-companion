@@ -114,6 +114,14 @@ class _MainScreenState extends State<MainScreen> {
         value: onlyOneSelected ? aliveCount : currentPlayerVotes,
       );
     }
+    if (gameState is GameStateDropTableVoting) {
+      return Counter(
+        min: 0,
+        max: controller.alivePlayersCount,
+        onValueChanged: (value) => controller.vote(null, value),
+        value: gameState.votesForDropTable,
+      );
+    }
     if (gameState case GameStateFinish(winner: final winner)) {
       final resultText = switch (winner) {
         PlayerRole.citizen => "Победа команды мирных жителей",
@@ -134,15 +142,6 @@ class _MainScreenState extends State<MainScreen> {
             child: const Text("Начать заново", style: TextStyle(fontSize: 20)),
           ),
         ],
-      );
-    }
-    if (gameState.stage == GameStage.dropTableVoting) {
-      return TextButton(
-        onPressed: () {
-          controller.deselectAllPlayers();
-          controller.setNextState();
-        },
-        child: const Text("Оставить всех в живых", style: TextStyle(fontSize: 20)),
       );
     }
     final Duration? timeLimit;
@@ -280,7 +279,8 @@ class _MainScreenState extends State<MainScreen> {
       GameStateNightCheck(player: final player) =>
         player.number == playerNumber,
       GameStateWithPlayers(players: final players) ||
-      GameStateNightKill(mafiaTeam: final players) =>
+      GameStateNightKill(mafiaTeam: final players) ||
+      GameStateDropTableVoting(players: final players) =>
         players.any((p) => p.number == playerNumber),
     };
     final isSelected = switch (gameState) {

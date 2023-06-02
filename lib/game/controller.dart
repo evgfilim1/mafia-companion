@@ -201,8 +201,8 @@ class Game {
       case GameStage.finalVoting:
         return _handleVoting();
       case GameStage.dropTableVoting:
-        final state = _state as GameStateWithPlayers;
-        if (state.players.isEmpty) {
+        final state = _state as GameStateDropTableVoting;
+        if (state.votesForDropTable <= players.aliveCount ~/ 2) {
           return GameStateNightKill(
             day: state.day,
             mafiaTeam: players.mafiaTeam,
@@ -342,18 +342,6 @@ class Game {
     }
   }
 
-  void deselectAllPlayers() {
-    if (_state.stage != GameStage.dropTableVoting || _state is! GameStateWithPlayers) {
-      return;
-    }
-    final state = _state as GameStateWithPlayers;
-    _state = GameStateWithPlayers(
-      stage: GameStage.dropTableVoting,
-      day: state.day,
-      players: Iterable<Player>.generate(0).toUnmodifiableList(),
-    );
-  }
-
   List<int> get voteCandidates {
     if (!state.stage.isAnyOf([
       GameStage.preVoting,
@@ -374,9 +362,27 @@ class Game {
     throw AssertionError("Unexpected state type: ${_state.runtimeType}");
   }
 
-  void vote(int playerNumber, int count) {
+  /// Vote for [playerNumber] with [count] votes. [playerNumber] is ignored (can be `null`) if
+  /// game [state] is [GameStateDropTableVoting].
+  void vote(int? playerNumber, int count) {
+    if (_state is GameStateDropTableVoting) {
+      final state = _state as GameStateDropTableVoting;
+      _state = GameStateDropTableVoting(
+        day: state.day,
+        players: state.players,
+        votesForDropTable: count,
+      );
+      return;
+    }
     if (_state is! GameStateVoting) {
       return;
+    }
+    if (playerNumber == null) {
+      throw ArgumentError.value(
+        playerNumber,
+        "playerNumber",
+        "You must specify player number to vote for",
+      );
     }
     final state = _state as GameStateVoting;
     _state = GameStateVoting(
@@ -446,10 +452,10 @@ class Game {
       );
     }
     // TODO: https://mafiaworldtour.com/fiim-rules 4.4.12.2
-    return GameStateWithPlayers(
-      stage: GameStage.dropTableVoting,
+    return GameStateDropTableVoting(
       day: state.day,
       players: maxVotesPlayers,
+      votesForDropTable: 0,
     );
   }
 

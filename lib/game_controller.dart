@@ -30,18 +30,13 @@ class GameController with ChangeNotifier {
 
   Player getPlayer(int number) => _game.players.getByNumber(number);
 
-  void vote(int player, int count) {
+  void vote(int? player, int count) {
     _game.vote(player, count);
     notifyListeners();
   }
 
   void togglePlayerSelected(int player) {
     _game.togglePlayerSelected(player);
-    notifyListeners();
-  }
-
-  void deselectAllPlayers() {
-    _game.deselectAllPlayers();
     notifyListeners();
   }
 

@@ -136,7 +136,8 @@ class GameStateSpeaking extends BaseGameState {
   int get hashCode => Object.hash(stage, day, player, accusations);
 }
 
-/// Represents state with current [player] and [votes]. Votes is a count of votes for each player.
+/// Represents state with current [player] and [votes]. [votes] is a count of votes for each player,
+/// or `null` if player wasn't voted against yet.
 ///
 /// [stage] can be [GameStage.voting] or [GameStage.finalVoting].
 class GameStateVoting extends BaseGameState {
@@ -166,10 +167,36 @@ class GameStateVoting extends BaseGameState {
   int get hashCode => Object.hash(stage, day, player, votes);
 }
 
+/// Represents state with [players] and [votesForDropTable].
+///
+/// [stage] is always [GameStage.dropTableVoting].
+class GameStateDropTableVoting extends BaseGameState {
+  final List<Player> players;
+  final int votesForDropTable;
+
+  const GameStateDropTableVoting({
+    required super.day,
+    required this.players,
+    required this.votesForDropTable,
+  }) : super(stage: GameStage.dropTableVoting);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is GameStateDropTableVoting &&
+          runtimeType == other.runtimeType &&
+          stage == other.stage &&
+          day == other.day &&
+          players == other.players &&
+          votesForDropTable == other.votesForDropTable;
+
+  @override
+  int get hashCode => Object.hash(stage, day, players, votesForDropTable);
+}
+
 /// Represents game state with related [players].
 ///
-/// [stage] can be [GameStage.night0], [GameStage.preVoting], [GameStage.preFinalVoting] or
-/// [GameStage.dropTableVoting].
+/// [stage] can be [GameStage.night0], [GameStage.preVoting] or [GameStage.preFinalVoting].
 class GameStateWithPlayers extends BaseGameState {
   final List<Player> players;
 
@@ -179,8 +206,7 @@ class GameStateWithPlayers extends BaseGameState {
     required this.players,
   }) : assert(stage == GameStage.night0 ||
             stage == GameStage.preVoting ||
-            stage == GameStage.preFinalVoting ||
-            stage == GameStage.dropTableVoting);
+            stage == GameStage.preFinalVoting);
 
   @override
   bool operator ==(Object other) =>
