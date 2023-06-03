@@ -316,160 +316,185 @@ class _MainScreenState extends State<MainScreen> {
     final settings = context.watch<SettingsModel>();
     final packageInfo = context.watch<PackageInfo>();
     final previousState = controller.previousState;
-    return Scaffold(
-      appBar: AppBar(
-        title: isGameRunning ? Text("День ${controller.state.day}") : Text(packageInfo.appName),
-        actions: [
-          IconButton(
-            onPressed: () {
-              showSimpleDialog(
-                context: context,
-                title: const Text("Заметки"),
-                content: TextField(
-                  controller: _notesController,
-                  maxLines: null,
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: _notesController.clear,
-                    child: const Text("Очистить"),
-                  ),
-                ],
-              );
-            },
-            tooltip: "Заметки",
-            icon: const Icon(Icons.sticky_note_2),
-          ),
-          IconButton(
-            onPressed: () => setState(() => _showRole = !_showRole),
-            tooltip: "${!_showRole ? "Показать" : "Скрыть"} роли",
-            icon: const Icon(Icons.person_search),
-          ),
-          IconButton(
-            icon: const Icon(Icons.restart_alt),
-            tooltip: "Перезапустить игру",
-            onPressed: () async {
-              if (await _showRestartGameDialog(context)) {
-                controller.restart();
-              }
-            },
-          ),
-        ],
-      ),
-      drawer: Drawer(
-        child: ListView(
-          children: [
-            DrawerHeader(
-              child: Center(
-                child: Text(
-                  packageInfo.appName,
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
+    return WillPopScope(
+      onWillPop: () async {
+        if (controller.state.stage == GameStage.prepare) {
+          return true;
+        }
+        final res = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text("Выход из игры"),
+            content: const Text("Вы уверены, что хотите выйти из игры? Все данные будут потеряны."),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text("Нет"),
               ),
-            ),
-            ListTile(
-              leading: const Icon(Icons.person),
-              title: const Text("Раздача ролей"),
-              onTap: () {
-                Navigator.pop(context);
-                _pushRolesScreen(context, controller);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.format_list_numbered),
-              title: const Text("Официальные правила"),
-              onTap: () => launchUrl(
-                Uri.parse("https://mafiaworldtour.com/fiim-rules"),
-                mode: LaunchMode.externalApplication, // it crashes for me otherwise for some reason
-              ).then((isOk) {
-                Navigator.pop(context);
-                if (isOk) {
-                  return;
-                }
-                showSnackBar(
-                  context,
-                  SnackBar(
-                    content: const Text("Не удалось открыть ссылку"),
-                    action: SnackBarAction(
-                      label: "Скопировать",
-                      onPressed: () {
-                        Clipboard.setData(
-                          const ClipboardData(text: "https://mafiaworldtour.com/fiim-rules"),
-                        );
-                        showSnackBar(
-                          context,
-                          const SnackBar(
-                            content: Text("Ссылка скопирована в буфер обмена"),
-                          ),
-                        );
-                      },
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text("Да"),
+              ),
+            ],
+          ),
+        );
+        return res ?? false;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: isGameRunning ? Text("День ${controller.state.day}") : Text(packageInfo.appName),
+          actions: [
+            IconButton(
+              onPressed: () {
+                showSimpleDialog(
+                  context: context,
+                  title: const Text("Заметки"),
+                  content: TextField(
+                    controller: _notesController,
+                    maxLines: null,
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: _notesController.clear,
+                      child: const Text("Очистить"),
                     ),
-                  ),
-                );
-              }),
-            ),
-            ListTile(
-              leading: const Icon(Icons.settings),
-              title: const Text("Настройки"),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute<void>(
-                    builder: (context) => const SettingsScreen(),
-                  ),
+                  ],
                 );
               },
-            )
+              tooltip: "Заметки",
+              icon: const Icon(Icons.sticky_note_2),
+            ),
+            IconButton(
+              onPressed: () => setState(() => _showRole = !_showRole),
+              tooltip: "${!_showRole ? "Показать" : "Скрыть"} роли",
+              icon: const Icon(Icons.person_search),
+            ),
+            IconButton(
+              icon: const Icon(Icons.restart_alt),
+              tooltip: "Перезапустить игру",
+              onPressed: () async {
+                if (await _showRestartGameDialog(context)) {
+                  controller.restart();
+                }
+              },
+            ),
           ],
         ),
-      ),
-      body: Column(
-        children: [
-          SizedBox(
-            height: 200, // maxCrossAxisExtent * 2
-            child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-                maxCrossAxisExtent: 100,
-              ),
-              itemCount: controller.totalPlayersCount,
-              itemBuilder: (context, index) => _playerButtonBuilder(context, index, controller),
-            ),
-          ),
-          Expanded(
-            child: Stack(
-              alignment: Alignment.bottomCenter,
-              children: [
-                Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        gameState.prettyName,
-                        style: const TextStyle(fontSize: 32),
-                        textAlign: TextAlign.center,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: _getBottomTextWidget(context, controller, settings),
-                      ),
-                    ],
+        drawer: Drawer(
+          child: ListView(
+            children: [
+              DrawerHeader(
+                child: Center(
+                  child: Text(
+                    packageInfo.appName,
+                    style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ),
-                Positioned(
-                  bottom: 40,
-                  width: MediaQuery.of(context).size.width,
-                  child: BottomControlBar(
-                    backLabel: previousState?.prettyName ?? "(отмена невозможна)",
-                    onTapBack: previousState != null ? controller.setPreviousState : null,
-                    onTapNext: nextStateAssumption != null ? controller.setNextState : null,
-                    nextLabel: nextStateAssumption?.prettyName ?? "(игра окончена)",
-                  ),
-                )
-              ],
-            ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.person),
+                title: const Text("Раздача ролей"),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pushRolesScreen(context, controller);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.format_list_numbered),
+                title: const Text("Официальные правила"),
+                onTap: () => launchUrl(
+                  Uri.parse("https://mafiaworldtour.com/fiim-rules"),
+                  mode: LaunchMode.externalApplication, // it crashes for me otherwise for some reason
+                ).then((isOk) {
+                  Navigator.pop(context);
+                  if (isOk) {
+                    return;
+                  }
+                  showSnackBar(
+                    context,
+                    SnackBar(
+                      content: const Text("Не удалось открыть ссылку"),
+                      action: SnackBarAction(
+                        label: "Скопировать",
+                        onPressed: () {
+                          Clipboard.setData(
+                            const ClipboardData(text: "https://mafiaworldtour.com/fiim-rules"),
+                          );
+                          showSnackBar(
+                            context,
+                            const SnackBar(
+                              content: Text("Ссылка скопирована в буфер обмена"),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  );
+                }),
+              ),
+              ListTile(
+                leading: const Icon(Icons.settings),
+                title: const Text("Настройки"),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (context) => const SettingsScreen(),
+                    ),
+                  );
+                },
+              )
+            ],
           ),
-        ],
+        ),
+        body: Column(
+          children: [
+            SizedBox(
+              height: 200, // maxCrossAxisExtent * 2
+              child: GridView.builder(
+                gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+                  maxCrossAxisExtent: 100,
+                ),
+                itemCount: controller.totalPlayersCount,
+                itemBuilder: (context, index) => _playerButtonBuilder(context, index, controller),
+              ),
+            ),
+            Expanded(
+              child: Stack(
+                alignment: Alignment.bottomCenter,
+                children: [
+                  Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          gameState.prettyName,
+                          style: const TextStyle(fontSize: 32),
+                          textAlign: TextAlign.center,
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: _getBottomTextWidget(context, controller, settings),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 40,
+                    width: MediaQuery.of(context).size.width,
+                    child: BottomControlBar(
+                      backLabel: previousState?.prettyName ?? "(отмена невозможна)",
+                      onTapBack: previousState != null ? controller.setPreviousState : null,
+                      onTapNext: nextStateAssumption != null ? controller.setNextState : null,
+                      nextLabel: nextStateAssumption?.prettyName ?? "(игра окончена)",
+                    ),
+                  )
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
