@@ -323,12 +323,11 @@ class Game {
       return;
     }
     if (state is GameStateSpeaking) {
-      if (state.accusations.containsValue(player)) {
-        return;
-      }
       if (state.accusations[state.player] == player) {
+        // toggle (deselect) player
         state.accusations.remove(state.player);
-      } else {
+      } else if (!state.accusations.containsValue(player)) {
+        // player is not yet selected
         state.accusations[state.player] = player;
       }
       return;
