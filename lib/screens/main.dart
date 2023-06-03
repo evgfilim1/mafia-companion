@@ -1,21 +1,22 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:package_info_plus/package_info_plus.dart';
-import 'package:provider/provider.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:vibration/vibration.dart';
+import "package:flutter/material.dart";
+import "package:flutter/services.dart";
+import "package:package_info_plus/package_info_plus.dart";
+import "package:provider/provider.dart";
+import "package:url_launcher/url_launcher.dart";
+import "package:vibration/vibration.dart";
 
-import '../game/player.dart';
-import '../game/states.dart';
-import '../game_controller.dart';
-import '../settings.dart';
-import '../utils.dart';
-import '../widgets/bottom_controls.dart';
-import '../widgets/counter.dart';
-import '../widgets/player_button.dart';
-import '../widgets/player_timer.dart';
-import 'roles.dart';
-import 'settings.dart';
+import "../game/player.dart";
+import "../game/states.dart";
+import "../game_controller.dart";
+import "../settings.dart";
+import "../utils/extensions.dart";
+import "../utils/ui.dart";
+import "../widgets/bottom_controls.dart";
+import "../widgets/counter.dart";
+import "../widgets/player_button.dart";
+import "../widgets/player_timer.dart";
+import "roles.dart";
+import "settings.dart";
 
 enum PlayerActions {
   warnPlus("Дать предупреждение"),
@@ -49,11 +50,10 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void _pushRolesScreen(BuildContext context, GameController controller) {
-    final roles = Iterable.generate(10).map((i) => controller.getPlayer(i + 1).role);
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => RolesScreen(roles: roles.toList()),
+      MaterialPageRoute<void>(
+        builder: (context) => RolesScreen(players: controller.players),
       ),
     );
   }
@@ -103,7 +103,7 @@ class _MainScreenState extends State<MainScreen> {
     }
     if (gameState is GameStateVoting) {
       final selectedPlayers = controller.voteCandidates;
-      assert(selectedPlayers.isNotEmpty);
+      assert(selectedPlayers.isNotEmpty, "No vote candidates (bug?)");
       final onlyOneSelected = selectedPlayers.length == 1;
       final aliveCount = controller.alivePlayersCount;
       final currentPlayerVotes = gameState.currentPlayerVotes ?? 0;
@@ -148,17 +148,13 @@ class _MainScreenState extends State<MainScreen> {
     switch (settings.timerType) {
       case TimerType.disabled:
         timeLimit = null;
-        break;
       case TimerType.plus5:
         final t = timeLimits[gameState.stage];
         timeLimit = t != null ? t + const Duration(seconds: 5) : null;
-        break;
       case TimerType.extended:
         timeLimit = timeLimitsExtended[gameState.stage] ?? timeLimits[gameState.stage];
-        break;
       case TimerType.strict:
         timeLimit = timeLimits[gameState.stage];
-        break;
     }
     if (timeLimit != null) {
       return PlayerTimer(
@@ -169,11 +165,13 @@ class _MainScreenState extends State<MainScreen> {
             return;
           }
           if (duration == Duration.zero) {
-            Vibration.vibrate(duration: 100);
-            await Future.delayed(const Duration(milliseconds: 300)); // 100 vibration + 200 pause
-            Vibration.vibrate(duration: 100);
+            await Vibration.vibrate(duration: 100);
+            await Future<void>.delayed(
+              const Duration(milliseconds: 300),
+            ); // 100 vibration + 200 pause
+            await Vibration.vibrate(duration: 100);
           } else if (duration <= const Duration(seconds: 5)) {
-            Vibration.vibrate(duration: 20);
+            await Vibration.vibrate(duration: 20);
           }
         },
       );
@@ -189,13 +187,13 @@ class _MainScreenState extends State<MainScreen> {
       }
       final String result;
       if (gameState.player.role == PlayerRole.don) {
-        if (controller.getPlayer(playerNumber).role == PlayerRole.sheriff) {
+        if (controller.getPlayerByNumber(playerNumber).role == PlayerRole.sheriff) {
           result = "ШЕРИФ";
         } else {
           result = "НЕ шериф";
         }
       } else if (gameState.player.role == PlayerRole.sheriff) {
-        if (controller.getPlayer(playerNumber).role.isMafia) {
+        if (controller.getPlayerByNumber(playerNumber).role.isMafia) {
           result = "МАФИЯ";
         } else {
           result = "НЕ мафия";
@@ -227,7 +225,7 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-  void _onPlayerActionsTap(
+  Future<void> _onPlayerActionsTap(
     BuildContext context,
     int playerNumber,
     GameController controller,
@@ -242,33 +240,31 @@ class _MainScreenState extends State<MainScreen> {
     if (res == null) {
       return;
     }
+    // https://dart-lang.github.io/linter/lints/use_build_context_synchronously.html
+    // ignore: use_build_context_synchronously
     if (!context.mounted) {
       throw StateError("Context is not mounted");
     }
     switch (res) {
       case PlayerActions.warnPlus:
         _onWarnPlayerTap(context, playerNumber, controller);
-        break;
       case PlayerActions.warnMinus:
         controller.unwarnPlayer(playerNumber);
-        break;
       case PlayerActions.kill:
-        if (controller.getPlayer(playerNumber).isAlive) {
+        if (controller.getPlayerByNumber(playerNumber).isAlive) {
           controller.killPlayer(playerNumber);
         }
-        break;
       case PlayerActions.revive:
-        if (!controller.getPlayer(playerNumber).isAlive) {
+        if (!controller.getPlayerByNumber(playerNumber).isAlive) {
           controller.revivePlayer(playerNumber);
         }
-        break;
     }
     Navigator.pop(context);
   }
 
   Widget _playerButtonBuilder(BuildContext context, int index, GameController controller) {
     final playerNumber = index + 1;
-    final isAlive = controller.getPlayer(playerNumber).isAlive;
+    final isAlive = controller.getPlayerByNumber(playerNumber).isAlive;
     final gameState = controller.state;
     final isActive = switch (gameState) {
       GameState() || GameStateFinish() => false,
@@ -285,15 +281,15 @@ class _MainScreenState extends State<MainScreen> {
     };
     final isSelected = switch (gameState) {
       GameStateSpeaking(accusations: final accusations) =>
-        accusations.containsValue(controller.getPlayer(playerNumber)),
+        accusations.containsValue(controller.getPlayerByNumber(playerNumber)),
       GameStateNightKill(thisNightKilledPlayer: final thisNightKilledPlayer) ||
       GameStateNightCheck(thisNightKilledPlayer: final thisNightKilledPlayer) =>
-        thisNightKilledPlayer == controller.getPlayer(playerNumber),
+        thisNightKilledPlayer == controller.getPlayerByNumber(playerNumber),
       _ => false,
     };
     return PlayerButton(
       number: playerNumber,
-      role: controller.getPlayer(playerNumber).role,
+      role: controller.getPlayerByNumber(playerNumber).role,
       isAlive: isAlive,
       isSelected: isSelected,
       isActive: isActive,
@@ -335,9 +331,7 @@ class _MainScreenState extends State<MainScreen> {
                 ),
                 actions: [
                   TextButton(
-                    onPressed: () {
-                      _notesController.clear();
-                    },
+                    onPressed: _notesController.clear,
                     child: const Text("Очистить"),
                   ),
                 ],
@@ -397,18 +391,19 @@ class _MainScreenState extends State<MainScreen> {
                   SnackBar(
                     content: const Text("Не удалось открыть ссылку"),
                     action: SnackBarAction(
-                        label: "Скопировать",
-                        onPressed: () {
-                          Clipboard.setData(
-                            const ClipboardData(text: "https://mafiaworldtour.com/fiim-rules"),
-                          );
-                          showSnackBar(
-                            context,
-                            const SnackBar(
-                              content: Text("Ссылка скопирована в буфер обмена"),
-                            ),
-                          );
-                        }),
+                      label: "Скопировать",
+                      onPressed: () {
+                        Clipboard.setData(
+                          const ClipboardData(text: "https://mafiaworldtour.com/fiim-rules"),
+                        );
+                        showSnackBar(
+                          context,
+                          const SnackBar(
+                            content: Text("Ссылка скопирована в буфер обмена"),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 );
               }),
@@ -420,7 +415,7 @@ class _MainScreenState extends State<MainScreen> {
                 Navigator.pop(context);
                 Navigator.push(
                   context,
-                  MaterialPageRoute(
+                  MaterialPageRoute<void>(
                     builder: (context) => const SettingsScreen(),
                   ),
                 );
@@ -455,7 +450,7 @@ class _MainScreenState extends State<MainScreen> {
                         textAlign: TextAlign.center,
                       ),
                       Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        padding: const EdgeInsets.symmetric(vertical: 8),
                         child: _getBottomTextWidget(context, controller, settings),
                       ),
                     ],
@@ -466,8 +461,8 @@ class _MainScreenState extends State<MainScreen> {
                   width: MediaQuery.of(context).size.width,
                   child: BottomControlBar(
                     backLabel: previousState?.prettyName ?? "(отмена невозможна)",
-                    onTapBack: previousState != null ? () => controller.setPreviousState() : null,
-                    onTapNext: nextStateAssumption != null ? () => controller.setNextState() : null,
+                    onTapBack: previousState != null ? controller.setPreviousState : null,
+                    onTapNext: nextStateAssumption != null ? controller.setNextState : null,
                     nextLabel: nextStateAssumption?.prettyName ?? "(игра окончена)",
                   ),
                 )

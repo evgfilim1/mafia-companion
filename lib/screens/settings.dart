@@ -1,10 +1,10 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
-import 'package:package_info_plus/package_info_plus.dart';
-import 'package:provider/provider.dart';
+import "package:flutter/foundation.dart";
+import "package:flutter/material.dart";
+import "package:package_info_plus/package_info_plus.dart";
+import "package:provider/provider.dart";
 
-import '../settings.dart';
-import '../utils.dart';
+import "../settings.dart";
+import "../utils/ui.dart";
 
 class _ChoiceListTile<T> extends StatelessWidget {
   final Widget? leading;
@@ -26,7 +26,7 @@ class _ChoiceListTile<T> extends StatelessWidget {
 
   String _itemToString(T item) => itemToString == null ? item.toString() : itemToString!(item);
 
-  void _onTileClick(BuildContext context) async {
+  Future<void> _onTileClick(BuildContext context) async {
     final res = await showChoiceDialog(
       context: context,
       items: items,
@@ -40,14 +40,12 @@ class _ChoiceListTile<T> extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: leading,
-      title: title,
-      subtitle: Text(_itemToString(items[index])),
-      onTap: () => _onTileClick(context),
-    );
-  }
+  Widget build(BuildContext context) => ListTile(
+        leading: leading,
+        title: title,
+        subtitle: Text(_itemToString(items[index])),
+        onTap: () => _onTileClick(context),
+      );
 }
 
 class SettingsScreen extends StatelessWidget {
@@ -72,7 +70,7 @@ class SettingsScreen extends StatelessWidget {
               ThemeMode.dark => "Тёмная",
             },
             index: settings.themeMode.index,
-            onChanged: (value) => settings.setThemeMode(value),
+            onChanged: settings.setThemeMode,
           ),
           _ChoiceListTile(
             leading: const Icon(Icons.timer),
@@ -85,7 +83,7 @@ class SettingsScreen extends StatelessWidget {
               TimerType.disabled => "Отключен",
             },
             index: settings.timerType.index,
-            onChanged: (value) => settings.setTimerType(value),
+            onChanged: settings.setTimerType,
           ),
           ListTile(
             leading: const Icon(Icons.info),

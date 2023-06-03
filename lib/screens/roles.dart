@@ -1,14 +1,14 @@
-import 'package:flutter/material.dart';
+import "package:flutter/material.dart";
 
-import '../game/player.dart';
-import '../utils.dart';
+import "../game/player.dart";
+import "../utils/ui.dart";
 
 class RolesScreen extends StatefulWidget {
-  final List<PlayerRole> roles;
+  final List<Player> players;
 
   const RolesScreen({
     super.key,
-    required this.roles,
+    required this.players,
   });
 
   @override
@@ -17,26 +17,27 @@ class RolesScreen extends StatefulWidget {
 
 class _RolesScreenState extends State<RolesScreen> {
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Раздача ролей"),
-      ),
-      body: PageView.builder(
-        itemCount: widget.roles.length,
-        itemBuilder: (context, index) {
-          final role = widget.roles[index];
-          return Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text("Игрок #${index + 1}", style: const TextStyle(fontSize: 48)),
-                Text("Твоя роль — ${role.prettyName}", style: const TextStyle(fontSize: 20)),
-              ],
-            ),
-          );
-        },
-      ),
-    );
-  }
+  Widget build(BuildContext context) => Scaffold(
+        appBar: AppBar(
+          title: const Text("Раздача ролей"),
+        ),
+        body: PageView.builder(
+          itemCount: widget.players.length,
+          itemBuilder: (context, index) {
+            final player = widget.players[index];
+            return Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text("Игрок #${player.number}", style: const TextStyle(fontSize: 48)),
+                  Text(
+                    "Твоя роль — ${player.role.prettyName}",
+                    style: const TextStyle(fontSize: 20),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      );
 }

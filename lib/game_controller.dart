@@ -1,8 +1,9 @@
-import 'package:flutter/material.dart';
+import "package:flutter/material.dart";
 
-import 'game/controller.dart';
-import 'game/player.dart';
-import 'game/states.dart';
+import "game/controller.dart";
+import "game/player.dart";
+import "game/states.dart";
+import "utils/extensions.dart";
 
 class GameController with ChangeNotifier {
   Game _game = Game();
@@ -28,7 +29,9 @@ class GameController with ChangeNotifier {
     notifyListeners();
   }
 
-  Player getPlayer(int number) => _game.players.getByNumber(number);
+  Player getPlayerByNumber(int number) => _game.players.getByNumber(number);
+
+  List<Player> get players => _game.players.toUnmodifiableList();
 
   void vote(int? player, int count) {
     _game.vote(player, count);

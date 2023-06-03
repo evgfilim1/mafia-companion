@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import "package:flutter/material.dart";
 
 class BottomControlBar extends StatelessWidget {
   final VoidCallback? onTapBack;
@@ -15,33 +15,31 @@ class BottomControlBar extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceAround,
-      children: [
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: GameControl(
-              onTap: onTapBack,
-              icon: Icons.arrow_back,
-              label: backLabel,
+  Widget build(BuildContext context) => Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: GameControl(
+                onTap: onTapBack,
+                icon: Icons.arrow_back,
+                label: backLabel,
+              ),
             ),
           ),
-        ),
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: GameControl(
-              onTap: onTapNext,
-              icon: Icons.arrow_forward,
-              label: nextLabel,
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(8),
+              child: GameControl(
+                onTap: onTapNext,
+                icon: Icons.arrow_forward,
+                label: nextLabel,
+              ),
             ),
           ),
-        ),
-      ],
-    );
-  }
+        ],
+      );
 }
 
 class GameControl extends StatelessWidget {

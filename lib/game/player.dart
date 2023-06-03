@@ -1,4 +1,6 @@
-import '../utils.dart';
+import "package:flutter/foundation.dart";
+
+import "../utils/extensions.dart";
 
 enum PlayerRole {
   mafia,
@@ -14,6 +16,7 @@ enum PlayerRole {
   bool get isCitizen => isAnyOf(const [PlayerRole.citizen, PlayerRole.sheriff]);
 }
 
+@immutable
 class Player {
   final PlayerRole role;
   final int number;

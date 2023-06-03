@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
+import "package:flutter/material.dart";
 
-import '../game/player.dart';
-import '../utils.dart';
+import "../game/player.dart";
+import "../utils/ui.dart";
 
 class PlayerButton extends StatelessWidget {
   final int number;
@@ -29,7 +29,7 @@ class PlayerButton extends StatelessWidget {
 
   void _onLongPress(BuildContext context) {
     final isAliveText = isAlive ? "Жив" : "Мёртв";
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
         title: Text("Игрок $number"),

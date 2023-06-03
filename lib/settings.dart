@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import "package:flutter/material.dart";
+import "package:shared_preferences/shared_preferences.dart";
 
 enum TimerType {
   strict,
@@ -20,16 +20,12 @@ Future<SettingsModel> getSettings() async {
   switch (timerTypeString) {
     case "strict":
       timerType = TimerType.strict;
-      break;
     case "plus5":
       timerType = TimerType.plus5;
-      break;
     case "extended":
       timerType = TimerType.extended;
-      break;
     case "disabled":
       timerType = TimerType.disabled;
-      break;
     default:
       assert(false, "Unknown timer type: $timerTypeString"); // fail for debug builds
       timerType = defaultTimerType; // use default for release builds
@@ -40,13 +36,10 @@ Future<SettingsModel> getSettings() async {
   switch (theme) {
     case "system":
       themeMode = ThemeMode.system;
-      break;
     case "light":
       themeMode = ThemeMode.light;
-      break;
     case "dark":
       themeMode = ThemeMode.dark;
-      break;
     default:
       assert(false, "Unknown theme mode: $theme"); // fail for debug builds
       themeMode = defaultThemeMode; // use default for release builds

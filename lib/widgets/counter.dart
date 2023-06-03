@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import "package:flutter/material.dart";
 
 class Counter extends StatelessWidget {
   final int value;
@@ -12,7 +12,7 @@ class Counter extends StatelessWidget {
     required this.max,
     required this.onValueChanged,
     required this.value,
-  }) : assert(min <= value && value <= max);
+  }) : assert(min <= value && value <= max, "value must be in range [min, max]");
 
   VoidCallback? _onButtonPressedFactory({required bool increment}) {
     final delta = increment ? 1 : -1;
@@ -26,23 +26,21 @@ class Counter extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        IconButton(
-          onPressed: _onButtonPressedFactory(increment: false),
-          icon: const Icon(Icons.remove),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-          child: Text("$value", style: const TextStyle(fontSize: 28)),
-        ),
-        IconButton(
-          onPressed: _onButtonPressedFactory(increment: true),
-          icon: const Icon(Icons.add),
-        ),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            onPressed: _onButtonPressedFactory(increment: false),
+            icon: const Icon(Icons.remove),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text("$value", style: const TextStyle(fontSize: 28)),
+          ),
+          IconButton(
+            onPressed: _onButtonPressedFactory(increment: true),
+            icon: const Icon(Icons.add),
+          ),
+        ],
+      );
 }

@@ -1,6 +1,8 @@
-import 'dart:collection';
+import "dart:collection";
 
-import 'player.dart';
+import "package:flutter/foundation.dart";
+
+import "player.dart";
 
 enum GameStage {
   /// Initial stage, game is not started yet, giving roles
@@ -64,12 +66,13 @@ sealed class BaseGameState {
 /// Represents sole game state without any additional data.
 ///
 /// [stage] is always [GameStage.prepare].
+@immutable
 class GameState extends BaseGameState {
   const GameState({
     required super.stage,
     required super.day,
-  })  : assert(stage == GameStage.prepare),
-        assert(day >= 0);
+  })  : assert(stage == GameStage.prepare, "Invalid stage for GameState: $stage"),
+        assert(day >= 0, "Invalid day for GameState: $day");
 
   @override
   bool operator ==(Object other) =>
@@ -86,6 +89,7 @@ class GameState extends BaseGameState {
 /// Represents game state with related player.
 ///
 /// [stage] can be [GameStage.night0SheriffCheck] or [GameStage.nightLastWords].
+@immutable
 class GameStateWithPlayer extends BaseGameState {
   final Player player;
 
@@ -93,7 +97,10 @@ class GameStateWithPlayer extends BaseGameState {
     required super.stage,
     required super.day,
     required this.player,
-  }) : assert(stage == GameStage.night0SheriffCheck || stage == GameStage.nightLastWords);
+  }) : assert(
+          stage == GameStage.night0SheriffCheck || stage == GameStage.nightLastWords,
+          "Invalid stage for GameStateWithPlayer: $stage",
+        );
 
   @override
   bool operator ==(Object other) =>
@@ -112,6 +119,7 @@ class GameStateWithPlayer extends BaseGameState {
 /// to accused player.
 ///
 /// [stage] is always [GameStage.speaking].
+@immutable
 class GameStateSpeaking extends BaseGameState {
   final Player player;
   final LinkedHashMap<Player, Player> accusations;
@@ -140,6 +148,7 @@ class GameStateSpeaking extends BaseGameState {
 /// or `null` if player wasn't voted against yet.
 ///
 /// [stage] can be [GameStage.voting] or [GameStage.finalVoting].
+@immutable
 class GameStateVoting extends BaseGameState {
   final Player player;
   final LinkedHashMap<Player, int?> votes;
@@ -151,7 +160,10 @@ class GameStateVoting extends BaseGameState {
     required this.player,
     required this.votes,
     required this.currentPlayerVotes,
-  }) : assert(stage == GameStage.voting || stage == GameStage.finalVoting);
+  }) : assert(
+          stage == GameStage.voting || stage == GameStage.finalVoting,
+          "Invalid stage for GameStateVoting: $stage",
+        );
 
   @override
   bool operator ==(Object other) =>
@@ -170,6 +182,7 @@ class GameStateVoting extends BaseGameState {
 /// Represents state with [players] and [votesForDropTable].
 ///
 /// [stage] is always [GameStage.dropTableVoting].
+@immutable
 class GameStateDropTableVoting extends BaseGameState {
   final List<Player> players;
   final int votesForDropTable;
@@ -197,6 +210,7 @@ class GameStateDropTableVoting extends BaseGameState {
 /// Represents game state with related [players].
 ///
 /// [stage] can be [GameStage.night0], [GameStage.preVoting] or [GameStage.preFinalVoting].
+@immutable
 class GameStateWithPlayers extends BaseGameState {
   final List<Player> players;
 
@@ -204,9 +218,12 @@ class GameStateWithPlayers extends BaseGameState {
     required super.stage,
     required super.day,
     required this.players,
-  }) : assert(stage == GameStage.night0 ||
-            stage == GameStage.preVoting ||
-            stage == GameStage.preFinalVoting);
+  }) : assert(
+          stage == GameStage.night0 ||
+              stage == GameStage.preVoting ||
+              stage == GameStage.preFinalVoting,
+          "Invalid stage for GameStateWithPlayers: $stage",
+        );
 
   @override
   bool operator ==(Object other) =>
@@ -224,6 +241,7 @@ class GameStateWithPlayers extends BaseGameState {
 /// Represents night kill game state.
 ///
 /// [stage] is always [GameStage.nightKill].
+@immutable
 class GameStateNightKill extends BaseGameState {
   final List<Player> mafiaTeam;
   final Player? thisNightKilledPlayer;
@@ -251,6 +269,7 @@ class GameStateNightKill extends BaseGameState {
 /// Represents night check game state.
 ///
 /// [stage] is always [GameStage.nightCheck].
+@immutable
 class GameStateNightCheck extends BaseGameState {
   final Player player;
   final Player? thisNightKilledPlayer;
@@ -278,6 +297,7 @@ class GameStateNightCheck extends BaseGameState {
 /// Represents game state with related [players] and current [playerIndex].
 ///
 /// [stage] can be [GameStage.excuse] or [GameStage.dayLastWords].
+@immutable
 class GameStateWithCurrentPlayer extends BaseGameState {
   final List<Player> players;
   final int playerIndex;
@@ -287,8 +307,14 @@ class GameStateWithCurrentPlayer extends BaseGameState {
     required super.day,
     required this.players,
     required this.playerIndex,
-  })  : assert(stage == GameStage.excuse || stage == GameStage.dayLastWords),
-        assert(0 <= playerIndex && playerIndex < players.length);
+  })  : assert(
+          stage == GameStage.excuse || stage == GameStage.dayLastWords,
+          "Invalid stage for GameStateWithCurrentPlayer: $stage",
+        ),
+        assert(
+          0 <= playerIndex && playerIndex < players.length,
+          "Invalid playerIndex for GameStateWithCurrentPlayer: $playerIndex",
+        );
 
   @override
   bool operator ==(Object other) =>
@@ -310,6 +336,7 @@ class GameStateWithCurrentPlayer extends BaseGameState {
 /// [PlayerRole.citizen] or `null` if the game is tied.
 ///
 /// [stage] is always [GameStage.finish].
+@immutable
 class GameStateFinish extends BaseGameState {
   final PlayerRole? winner;
 
@@ -378,5 +405,5 @@ const validTransitions = {
     GameStage.finish,
   ],
   GameStage.nightLastWords: [GameStage.speaking, GameStage.finish],
-  GameStage.finish: [],
+  GameStage.finish: <GameStage>[],
 };

@@ -1,8 +1,8 @@
-import 'dart:async';
+import "dart:async";
 
-import 'package:flutter/material.dart';
+import "package:flutter/material.dart";
 
-import '../utils.dart';
+import "../utils/countdown.dart";
 
 class PlayerTimer extends StatefulWidget {
   /// The duration of the timer.
@@ -69,7 +69,7 @@ class _PlayerTimerState extends State<PlayerTimer> {
           return;
         }
         final bool newVisibility;
-        if (_timer?.isPaused != false || _timer?.isFinished != false) {
+        if ((_timer?.isPaused ?? true) || (_timer?.isFinished ?? true)) {
           timer.cancel();
           newVisibility = true;
         } else {
@@ -86,7 +86,7 @@ class _PlayerTimerState extends State<PlayerTimer> {
     final VoidCallback? buttonCallback;
     if (timeLeft == Duration.zero) {
       buttonCallback = null;
-    } else if (_timer?.isPaused == true) {
+    } else if (_timer?.isPaused ?? false) {
       buttonCallback = () => setState(() => _timer?.resume());
     } else {
       buttonCallback = () => setState(() => _timer?.pause());
@@ -107,7 +107,7 @@ class _PlayerTimerState extends State<PlayerTimer> {
           children: [
             IconButton(
               onPressed: buttonCallback,
-              icon: Icon(_timer?.isPaused == true ? Icons.play_arrow : Icons.pause),
+              icon: Icon((_timer?.isPaused ?? false) ? Icons.play_arrow : Icons.pause),
             ),
             IconButton(
               onPressed: _initTimer,
