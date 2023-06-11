@@ -108,18 +108,20 @@ class _MainScreenState extends State<MainScreen> {
       final aliveCount = controller.alivePlayersCount;
       final currentPlayerVotes = gameState.currentPlayerVotes ?? 0;
       return Counter(
+        key: ValueKey(gameState.player.number),
         min: onlyOneSelected ? aliveCount : 0,
         max: aliveCount - controller.totalVotes,
         onValueChanged: (value) => controller.vote(gameState.player.number, value),
-        value: onlyOneSelected ? aliveCount : currentPlayerVotes,
+        initialValue: onlyOneSelected ? aliveCount : currentPlayerVotes,
       );
     }
     if (gameState is GameStateDropTableVoting) {
       return Counter(
+        key: const ValueKey("dropTableVoting"),
         min: 0,
         max: controller.alivePlayersCount,
         onValueChanged: (value) => controller.vote(null, value),
-        value: gameState.votesForDropTable,
+        initialValue: gameState.votesForDropTable,
       );
     }
     if (gameState case GameStateFinish(winner: final winner)) {

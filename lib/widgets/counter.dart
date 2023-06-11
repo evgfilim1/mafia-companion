@@ -1,28 +1,45 @@
 import "package:flutter/material.dart";
 
-class Counter extends StatelessWidget {
-  final int value;
+class Counter extends StatefulWidget {
+  final int initialValue;
   final int min;
   final int max;
-  final ValueChanged<int> onValueChanged;
+  final ValueChanged<int>? onValueChanged;
 
   const Counter({
     super.key,
     required this.min,
     required this.max,
-    required this.onValueChanged,
-    required this.value,
-  }) : assert(min <= value && value <= max, "value must be in range [min, max]");
+    this.onValueChanged,
+    required this.initialValue,
+  }) : assert(min <= initialValue && initialValue <= max, "value must be in range [min, max]");
+
+  @override
+  State<Counter> createState() => _CounterState();
+}
+
+class _CounterState extends State<Counter> {
+  late int _value;
+
+  @override
+  void initState() {
+    super.initState();
+    _value = widget.initialValue;
+  }
 
   VoidCallback? _onButtonPressedFactory({required bool increment}) {
     final delta = increment ? 1 : -1;
-    if (increment && value >= max) {
+    if (increment && _value >= widget.max) {
       return null;
     }
-    if (!increment && value <= min) {
+    if (!increment && _value <= widget.min) {
       return null;
     }
-    return () => onValueChanged(value + delta);
+    final newValue = _value + delta;
+    return () => setState(() {
+      _value = newValue;
+      widget.onValueChanged?.call(newValue);
+    });
   }
 
   @override
@@ -35,7 +52,7 @@ class Counter extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Text("$value", style: const TextStyle(fontSize: 28)),
+            child: Text("$_value", style: const TextStyle(fontSize: 28)),
           ),
           IconButton(
             onPressed: _onButtonPressedFactory(increment: true),
