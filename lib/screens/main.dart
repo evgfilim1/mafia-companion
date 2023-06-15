@@ -406,7 +406,8 @@ class _MainScreenState extends State<MainScreen> {
                 title: const Text("Официальные правила"),
                 onTap: () => launchUrl(
                   Uri.parse("https://mafiaworldtour.com/fiim-rules"),
-                  mode: LaunchMode.externalApplication, // it crashes for me otherwise for some reason
+                  mode:
+                      LaunchMode.externalApplication, // it crashes for me otherwise for some reason
                 ).then((isOk) {
                   Navigator.pop(context);
                   if (isOk) {
