@@ -17,17 +17,17 @@ Widget _buildWidget({
     MaterialApp(
       home: Center(
         child: PlayerButton(
-            number: number,
-            role: role,
-            isAlive: isAlive,
-            isSelected: isSelected,
-            isActive: isActive,
-            warnCount: warnCount,
-            onTap: onTap,
-            longPressActions: longPressActions,
-            showRole: showRole,
-          ),
+          number: number,
+          role: role,
+          isAlive: isAlive,
+          isSelected: isSelected,
+          isActive: isActive,
+          warnCount: warnCount,
+          onTap: onTap,
+          longPressActions: longPressActions,
+          showRole: showRole,
         ),
+      ),
     );
 
 void main() {
@@ -46,20 +46,24 @@ void main() {
       expect(find.text("!!"), findsOneWidget);
     });
 
-    testWidgets("Test onTap callback called", (tester) async {
-      final button = _buildWidget(
-        number: 1,
-        role: PlayerRole.citizen,
-        isAlive: true,
-        isSelected: false,
-        warnCount: 0,
-        onTap: expectAsync0(() {}, count: 1),
-      );
-      await tester.pumpWidget(button);
+    testWidgets(
+      "Test onTap callback called",
+      (tester) async {
+        final button = _buildWidget(
+          number: 1,
+          role: PlayerRole.citizen,
+          isAlive: true,
+          isSelected: false,
+          warnCount: 0,
+          onTap: expectAsync0(() {}, count: 1),
+        );
+        await tester.pumpWidget(button);
 
-      await tester.tap(find.text("1"));
-      await tester.pump();
-    }, timeout: const Timeout(Duration(seconds: 5)),);
+        await tester.tap(find.text("1"));
+        await tester.pump();
+      },
+      timeout: const Timeout(Duration(seconds: 5)),
+    );
 
     testWidgets("Test long press menu", (tester) async {
       final button = _buildWidget(

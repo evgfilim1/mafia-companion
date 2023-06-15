@@ -37,9 +37,9 @@ class _CounterState extends State<Counter> {
     }
     final newValue = _value + delta;
     return () => setState(() {
-      _value = newValue;
-      widget.onValueChanged?.call(newValue);
-    });
+          _value = newValue;
+          widget.onValueChanged?.call(newValue);
+        });
   }
 
   @override
