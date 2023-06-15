@@ -89,10 +89,52 @@ void main() {
         reason: "Votes of both players weren't counted correctly",
       );
     });
+
+    test("No deaths for 3 days is a tie", () {
+      final game = Game.withPlayers(players)
+        // night0, night0Sheriff, 3x (10x speaking, nightKill, 2x nightCheck), finish
+        ..forwardUntilStage(GameStage.finish, maxIterations: 42);
+      expect(
+        game.state,
+        isA<GameStateFinish>().having((state) => state.winner, "winner", null),
+      );
+    });
+
+    test("No voting on day 1 when only one is accused", () {
+      final game = Game.withPlayers(players)
+        ..forwardUntilStage(GameStage.speaking)
+        ..togglePlayerSelected(4);
+      expect(
+        game.state,
+        isA<GameStateSpeaking>().having((state) => state.accusations, "accusations", hasLength(1)),
+      );
+      expect(
+        () => game.forwardUntilStage(GameStage.nightKill, maxIterations: 10),
+        returnsNormally,
+      );
+      expect(game.state, isA<GameStateNightKill>());
+    });
+
+    test("Additional speech when voting between two players is tied", () {
+      final game = Game.withPlayers(players)
+        ..forwardUntilStage(GameStage.speaking)
+        ..togglePlayerSelected(4)
+        ..setNextState()
+        ..togglePlayerSelected(8)
+        ..forwardUntilStage(GameStage.voting)
+        ..vote(4, 5)
+        ..setNextState();
+      expect(
+        game.state,
+        isA<GameStateWithCurrentPlayer>()
+            .having((state) => state.stage, "stage", GameStage.excuse)
+            .having((state) => state.players, "players", hasLength(2)),
+      );
+    });
   });
 
   group("Game scenarios", () {
-    test("No vote game", () {
+    test("No citizen vote game", () {
       final game = Game.withPlayers(players)
         ..forwardUntilStage(GameStage.nightKill)
         ..togglePlayerSelected(4)
