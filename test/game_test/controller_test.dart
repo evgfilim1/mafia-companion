@@ -29,7 +29,7 @@ extension _GameSkipStates on Game {
 }
 
 void main() {
-  group("Game", () {
+  group("Game consistency", () {
     test("Selecting a player at night kills him", () {
       final game = Game.withPlayers(players)
         ..forwardUntilStage(GameStage.nightKill)
@@ -51,6 +51,43 @@ void main() {
       );
       game.setNextState();
       expect(game.players.getByNumber(4).isAlive, false);
+    });
+  });
+
+  group("Game rules", () {
+    test("Only one player can vote against not more than one player", () {
+      final game = Game.withPlayers(players)
+        ..forwardUntilStage(GameStage.speaking)
+        ..togglePlayerSelected(4)
+        ..togglePlayerSelected(5);
+
+      expect(
+        game.state,
+        isA<GameStateSpeaking>()
+            .having((state) => state.accusations, "accusations", hasLength(1))
+            .having(
+              (state) => state.accusations.values.first.number,
+              "accusations.values.first.number",
+              5,
+            ),
+        reason: "Player #1 wasn't able to change his vote",
+      );
+
+      game
+        ..setNextState()
+        ..togglePlayerSelected(5);
+      expect(
+        game.state,
+        isA<GameStateSpeaking>().having((state) => state.accusations, "accusations", hasLength(1)),
+        reason: "Player #2 was able to vote against #5 despite #1 already voted against him",
+      );
+
+      game.togglePlayerSelected(4);
+      expect(
+        game.state,
+        isA<GameStateSpeaking>().having((state) => state.accusations, "accusations", hasLength(2)),
+        reason: "Votes of both players weren't counted correctly",
+      );
     });
   });
 
