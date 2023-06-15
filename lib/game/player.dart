@@ -60,11 +60,16 @@ List<Player> generatePlayers({
     PlayerRole.don: 1,
   },
 }) {
-  if (roles[PlayerRole.sheriff]! + roles[PlayerRole.don]! != 2) {
-    throw ArgumentError("Only one sheriff and one don are allowed");
+  for (final role in PlayerRole.values) {
+    if (!roles.containsKey(role)) {
+      throw ArgumentError("Role $role is not defined in the role map");
+    }
   }
-  if (roles[PlayerRole.mafia]! < 1) {
-    throw ArgumentError("At least one mafia is required");
+  if (roles[PlayerRole.sheriff]! != 1) {
+    throw ArgumentError("Only one sheriff is allowed");
+  }
+  if (roles[PlayerRole.don]! != 1) {
+    throw ArgumentError("Only one don is allowed");
   }
   if (roles[PlayerRole.mafia]! >= roles[PlayerRole.citizen]!) {
     throw ArgumentError("Too many mafia");
