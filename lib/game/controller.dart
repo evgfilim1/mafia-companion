@@ -72,7 +72,7 @@ class Game {
   /// Creates new game with given players.
   Game.withPlayers(List<Player> players)
       : players = PlayersView(
-          players
+          List.of(players, growable: false)
             ..sort((a, b) => a.number.compareTo(b.number))
             ..toUnmodifiableList(),
         );
