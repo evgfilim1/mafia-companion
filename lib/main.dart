@@ -1,3 +1,4 @@
+import "package:dynamic_color/dynamic_color.dart";
 import "package:flutter/material.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import "package:provider/provider.dart";
@@ -31,24 +32,32 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsModel>();
     const seedColor = Colors.purple;
-    return MaterialApp(
-      title: "Mafia companion",
-      theme: ThemeData(
-        colorSchemeSeed: seedColor,
-        brightness: Brightness.light,
-        useMaterial3: true,
+    return DynamicColorBuilder(
+      builder: (light, dark) => MaterialApp(
+        title: "Mafia companion",
+        theme: ThemeData(
+          colorScheme: (settings.colorSchemeType == ColorSchemeType.system ? light : null) ??
+              ColorScheme.fromSeed(
+                seedColor: seedColor,
+                brightness: Brightness.light,
+              ),
+          useMaterial3: true,
+        ),
+        darkTheme: ThemeData(
+          colorScheme: (settings.colorSchemeType == ColorSchemeType.system ? dark : null) ??
+              ColorScheme.fromSeed(
+                seedColor: seedColor,
+                brightness: Brightness.dark,
+              ),
+          useMaterial3: true,
+        ),
+        themeMode: settings.themeMode,
+        routes: {
+          "/": (context) => const MainScreen(),
+          "/roles": (context) => const RolesScreen(),
+          "/settings": (context) => const SettingsScreen(),
+        },
       ),
-      darkTheme: ThemeData(
-        colorSchemeSeed: seedColor,
-        brightness: Brightness.dark,
-        useMaterial3: true,
-      ),
-      themeMode: settings.themeMode,
-      routes: {
-        "/": (context) => const MainScreen(),
-        "/roles": (context) => const RolesScreen(),
-        "/settings": (context) => const SettingsScreen(),
-      },
     );
   }
 }

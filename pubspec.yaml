@@ -26,6 +26,7 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  dynamic_color: ^1.6.5
   flutter:
     sdk: flutter
   package_info_plus: ^4.0.0

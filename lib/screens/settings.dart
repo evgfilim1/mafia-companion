@@ -73,6 +73,17 @@ class SettingsScreen extends StatelessWidget {
             onChanged: settings.setThemeMode,
           ),
           _ChoiceListTile(
+            leading: const Icon(Icons.color_lens),
+            title: const Text("Цветовая схема"),
+            items: ColorSchemeType.values,
+            itemToString: (item) => switch (item) {
+              ColorSchemeType.system => "Системная",
+              ColorSchemeType.app => "Приложения",
+            },
+            index: settings.colorSchemeType.index,
+            onChanged: settings.setColorSchemeType,
+          ),
+          _ChoiceListTile(
             leading: const Icon(Icons.timer),
             title: const Text("Режим таймера"),
             items: TimerType.values,
