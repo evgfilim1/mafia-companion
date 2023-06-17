@@ -6,6 +6,7 @@ import "package:provider/provider.dart";
 import "game_controller.dart";
 import "screens/main.dart";
 import "screens/roles.dart";
+import "screens/seat_randomizer.dart";
 import "screens/settings.dart";
 import "settings.dart";
 
@@ -56,6 +57,7 @@ class MyApp extends StatelessWidget {
           "/": (context) => const MainScreen(),
           "/roles": (context) => const RolesScreen(),
           "/settings": (context) => const SettingsScreen(),
+          "/seats": (context) => const SeatRandomizerScreen(),
         },
       ),
     );

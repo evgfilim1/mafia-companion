@@ -78,9 +78,18 @@ class _MainScreenState extends State<MainScreen> {
   ) {
     final gameState = controller.state;
     if (gameState.stage == GameStage.prepare) {
-      return TextButton(
-        onPressed: () => Navigator.pushNamed(context, "/roles"),
-        child: const Text("Раздача ролей", style: TextStyle(fontSize: 20)),
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextButton(
+            onPressed: () => Navigator.pushNamed(context, "/seats"),
+            child: const Text("Случайная рассадка", style: TextStyle(fontSize: 20)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pushNamed(context, "/roles"),
+            child: const Text("Раздача ролей", style: TextStyle(fontSize: 20)),
+          ),
+        ],
       );
     }
     if (gameState.stage.isAnyOf([GameStage.preVoting, GameStage.preFinalVoting])) {
@@ -381,6 +390,14 @@ class _MainScreenState extends State<MainScreen> {
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ),
+              ),
+              ListTile(
+                leading: const Icon(Icons.group),
+                title: const Text("Случайная рассадка"),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.pushNamed(context, "/seats");
+                },
               ),
               ListTile(
                 leading: const Icon(Icons.person),
