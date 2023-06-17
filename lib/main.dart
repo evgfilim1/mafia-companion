@@ -4,6 +4,8 @@ import "package:provider/provider.dart";
 
 import "game_controller.dart";
 import "screens/main.dart";
+import "screens/roles.dart";
+import "screens/settings.dart";
 import "settings.dart";
 
 void main() async {
@@ -13,8 +15,9 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider<SettingsModel>(create: (_) => settings),
-        Provider<PackageInfo>(create: (_) => packageInfo),
+        ChangeNotifierProvider<SettingsModel>.value(value: settings),
+        Provider<PackageInfo>.value(value: packageInfo),
+        ChangeNotifierProvider<GameController>(create: (context) => GameController()),
       ],
       child: const MyApp(),
     ),
@@ -41,10 +44,11 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       themeMode: settings.themeMode,
-      home: ChangeNotifierProvider<GameController>(
-        create: (_) => GameController(),
-        child: const MainScreen(),
-      ),
+      routes: {
+        "/": (context) => const MainScreen(),
+        "/roles": (context) => const RolesScreen(),
+        "/settings": (context) => const SettingsScreen(),
+      },
     );
   }
 }

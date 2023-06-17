@@ -15,8 +15,6 @@ import "../widgets/bottom_controls.dart";
 import "../widgets/counter.dart";
 import "../widgets/player_button.dart";
 import "../widgets/player_timer.dart";
-import "roles.dart";
-import "settings.dart";
 
 enum PlayerActions {
   warnPlus("Дать предупреждение"),
@@ -47,15 +45,6 @@ class _MainScreenState extends State<MainScreen> {
   void dispose() {
     _notesController.dispose();
     super.dispose();
-  }
-
-  void _pushRolesScreen(BuildContext context, GameController controller) {
-    Navigator.push(
-      context,
-      MaterialPageRoute<void>(
-        builder: (context) => RolesScreen(players: controller.players),
-      ),
-    );
   }
 
   Future<bool> _showRestartGameDialog(BuildContext context) async {
@@ -90,7 +79,7 @@ class _MainScreenState extends State<MainScreen> {
     final gameState = controller.state;
     if (gameState.stage == GameStage.prepare) {
       return TextButton(
-        onPressed: () => _pushRolesScreen(context, controller),
+        onPressed: () => Navigator.pushNamed(context, "/roles"),
         child: const Text("Раздача ролей", style: TextStyle(fontSize: 20)),
       );
     }
@@ -398,7 +387,7 @@ class _MainScreenState extends State<MainScreen> {
                 title: const Text("Раздача ролей"),
                 onTap: () {
                   Navigator.pop(context);
-                  _pushRolesScreen(context, controller);
+                  Navigator.pushNamed(context, "/roles");
                 },
               ),
               ListTile(
@@ -440,12 +429,7 @@ class _MainScreenState extends State<MainScreen> {
                 title: const Text("Настройки"),
                 onTap: () {
                   Navigator.pop(context);
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute<void>(
-                      builder: (context) => const SettingsScreen(),
-                    ),
-                  );
+                  Navigator.pushNamed(context, "/settings");
                 },
               )
             ],
