@@ -61,9 +61,9 @@ class _MainScreenState extends State<MainScreen> {
         }
       } else if (role == PlayerRole.sheriff) {
         if (controller.getPlayerByNumber(playerNumber).role.isMafia) {
-          result = "МАФИЯ";
+          result = "МАФИЯ 👎";
         } else {
-          result = "НЕ мафия";
+          result = "НЕ мафия 👍";
         }
       } else {
         throw AssertionError();
