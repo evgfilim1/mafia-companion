@@ -1,5 +1,6 @@
 import "package:dynamic_color/dynamic_color.dart";
 import "package:flutter/material.dart";
+import "package:flutter_localizations/flutter_localizations.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import "package:provider/provider.dart";
 
@@ -59,6 +60,14 @@ class MyApp extends StatelessWidget {
           "/settings": (context) => const SettingsScreen(),
           "/seats": (context) => const SeatRandomizerScreen(),
         },
+        localizationsDelegates: const [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: const [
+          Locale("ru"),
+        ],
       ),
     );
   }
