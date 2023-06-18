@@ -4,9 +4,7 @@ import "../game/player.dart";
 import "../utils/ui.dart";
 
 class PlayerButton extends StatelessWidget {
-  final int number;
-  final PlayerRole role;
-  final bool isAlive;
+  final Player player;
   final bool isSelected;
   final bool isActive;
   final int warnCount;
@@ -16,9 +14,7 @@ class PlayerButton extends StatelessWidget {
 
   const PlayerButton({
     super.key,
-    required this.number,
-    required this.role,
-    required this.isAlive,
+    required this.player,
     required this.isSelected,
     this.isActive = false,
     required this.warnCount,
@@ -28,14 +24,14 @@ class PlayerButton extends StatelessWidget {
   });
 
   void _onLongPress(BuildContext context) {
-    final isAliveText = isAlive ? "Жив" : "Мёртв";
+    final isAliveText = player.isAlive ? "Жив" : "Мёртв";
     showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text("Игрок $number"),
+        title: Text("Игрок ${player.number}"),
         content: Text(
           "Состояние: $isAliveText\n"
-          "Роль: ${role.prettyName}\n"
+          "Роль: ${player.role.prettyName}\n"
           "Предупреждений: $warnCount",
         ),
         actions: [
@@ -60,7 +56,7 @@ class PlayerButton extends StatelessWidget {
   }
 
   Color? _getBackgroundColor(BuildContext context) {
-    if (!isAlive) {
+    if (!player.isAlive) {
       return Colors.red.withOpacity(0.25);
     }
     return null;
@@ -70,7 +66,7 @@ class PlayerButton extends StatelessWidget {
     if (isSelected) {
       return Colors.green;
     }
-    if (!isAlive) {
+    if (!player.isAlive) {
       return Colors.red;
     }
     return null;
@@ -80,23 +76,23 @@ class PlayerButton extends StatelessWidget {
     if (!showRole) {
       return "";
     }
-    if (role == PlayerRole.citizen) {
+    if (player.role == PlayerRole.citizen) {
       return "";
-    } else if (role == PlayerRole.mafia) {
+    } else if (player.role == PlayerRole.mafia) {
       return "М";
-    } else if (role == PlayerRole.don) {
+    } else if (player.role == PlayerRole.don) {
       return "ДМ";
-    } else if (role == PlayerRole.sheriff) {
+    } else if (player.role == PlayerRole.sheriff) {
       return "Ш";
     } else {
-      throw AssertionError("Unknown role: $role");
+      throw AssertionError("Unknown role: ${player.role}");
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final borderColor = _getBorderColor(context);
-    final cardText = "$number${_getRoleSuffix()}";
+    final cardText = "${player.number}${_getRoleSuffix()}";
     return Padding(
       padding: const EdgeInsets.all(4),
       child: Stack(
