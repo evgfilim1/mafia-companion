@@ -143,7 +143,7 @@ class _MainScreenState extends State<MainScreen> {
       GameStateWithPlayers(players: final players) ||
       GameStateNightKill(mafiaTeam: final players) ||
       GameStateDropTableVoting(players: final players) =>
-        players.contains(currentPlayer),
+        players.any((p) => p.number == currentPlayer.number),
     };
     final isSelected = switch (gameState) {
       GameStateSpeaking(accusations: final accusations) => accusations.containsValue(currentPlayer),
