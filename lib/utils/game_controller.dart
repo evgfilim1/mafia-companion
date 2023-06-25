@@ -1,9 +1,9 @@
 import "package:flutter/material.dart";
 
-import "game/controller.dart";
-import "game/player.dart";
-import "game/states.dart";
-import "utils/extensions.dart";
+import "../game/controller.dart";
+import "../game/player.dart";
+import "../game/states.dart";
+import "extensions.dart";
 
 class GameController with ChangeNotifier {
   Game _game = Game();

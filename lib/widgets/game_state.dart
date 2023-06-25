@@ -4,8 +4,8 @@ import "package:vibration/vibration.dart";
 
 import "../game/player.dart";
 import "../game/states.dart";
-import "../game_controller.dart";
 import "../utils/extensions.dart";
+import "../utils/game_controller.dart";
 import "../utils/settings.dart";
 import "../utils/ui.dart";
 import "counter.dart";

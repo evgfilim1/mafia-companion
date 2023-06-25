@@ -4,11 +4,11 @@ import "package:flutter_localizations/flutter_localizations.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import "package:provider/provider.dart";
 
-import "game_controller.dart";
 import "screens/main.dart";
 import "screens/roles.dart";
 import "screens/seat_randomizer.dart";
 import "screens/settings.dart";
+import "utils/game_controller.dart";
 import "utils/settings.dart";
 
 void main() async {

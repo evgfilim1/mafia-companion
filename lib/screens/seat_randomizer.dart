@@ -1,8 +1,8 @@
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 
-import "../game_controller.dart";
 import "../utils/extensions.dart";
+import "../utils/game_controller.dart";
 import "../utils/ui.dart";
 
 class SeatRandomizerScreen extends StatefulWidget {

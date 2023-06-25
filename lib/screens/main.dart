@@ -4,8 +4,8 @@ import "package:provider/provider.dart";
 
 import "../game/player.dart";
 import "../game/states.dart";
-import "../game_controller.dart";
 import "../utils/extensions.dart";
+import "../utils/game_controller.dart";
 import "../utils/ui.dart";
 import "../widgets/app_drawer.dart";
 import "../widgets/bottom_controls.dart";

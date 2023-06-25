@@ -1,7 +1,7 @@
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 
-import "../game_controller.dart";
+import "../utils/game_controller.dart";
 import "../utils/ui.dart";
 
 class RolesScreen extends StatelessWidget {
