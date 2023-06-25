@@ -3,7 +3,7 @@ import "package:flutter/material.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import "package:provider/provider.dart";
 
-import "../settings.dart";
+import "../utils/settings.dart";
 import "../utils/ui.dart";
 
 class _ChoiceListTile<T> extends StatelessWidget {

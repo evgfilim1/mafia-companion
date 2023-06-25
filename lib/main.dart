@@ -9,7 +9,7 @@ import "screens/main.dart";
 import "screens/roles.dart";
 import "screens/seat_randomizer.dart";
 import "screens/settings.dart";
-import "settings.dart";
+import "utils/settings.dart";
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
