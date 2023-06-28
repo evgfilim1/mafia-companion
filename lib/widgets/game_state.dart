@@ -110,9 +110,8 @@ class BottomGameStateWidget extends StatelessWidget {
               final restartGame = await showDialog<bool>(
                 context: context,
                 builder: (context) => const RestartGameDialog(),
-              ) ??
-                  false;
-              if (restartGame) {
+              );
+              if (restartGame ?? false) {
                 controller.restart();
                 if (context.mounted) {
                   showSnackBar(context, const SnackBar(content: Text("Игра перезапущена")));

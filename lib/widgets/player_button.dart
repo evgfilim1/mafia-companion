@@ -93,42 +93,39 @@ class PlayerButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final borderColor = _getBorderColor(context);
     final cardText = "${player.number}${_getRoleSuffix()}";
-    return Padding(
-      padding: const EdgeInsets.all(4),
-      child: Stack(
-        children: [
-          ElevatedButton(
-            style: ButtonStyle(
-              shape: MaterialStateProperty.all(
-                RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
+    return Stack(
+      children: [
+        ElevatedButton(
+          style: ButtonStyle(
+            shape: MaterialStateProperty.all(
+              RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
-              side: borderColor != null
-                  ? MaterialStateProperty.all(
-                      BorderSide(
-                        color: borderColor,
-                        width: 1,
-                      ),
-                    )
-                  : null,
-              backgroundColor: MaterialStateProperty.all(_getBackgroundColor(context)),
-              foregroundColor: MaterialStateProperty.all(_getForegroundColor(context)),
             ),
-            onPressed: onTap,
-            onLongPress: () => _onLongPress(context),
-            child: Center(child: Text(cardText)),
+            side: borderColor != null
+                ? MaterialStateProperty.all(
+                    BorderSide(
+                      color: borderColor,
+                      width: 1,
+                    ),
+                  )
+                : null,
+            backgroundColor: MaterialStateProperty.all(_getBackgroundColor(context)),
+            foregroundColor: MaterialStateProperty.all(_getForegroundColor(context)),
           ),
-          Positioned(
-            top: 6,
-            right: 6,
-            child: Text(
-              "!" * warnCount,
-              style: const TextStyle(color: Colors.red),
-            ),
+          onPressed: onTap,
+          onLongPress: () => _onLongPress(context),
+          child: Center(child: Text(cardText, textAlign: TextAlign.center)),
+        ),
+        Positioned(
+          top: 6,
+          right: 6,
+          child: Text(
+            "!" * warnCount,
+            style: const TextStyle(color: Colors.red),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

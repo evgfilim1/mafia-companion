@@ -15,9 +15,6 @@ class AppDrawer extends StatelessWidget {
       Uri.parse(url),
       mode: LaunchMode.externalApplication, // it crashes for me otherwise for some reason
     );
-    // https://dart-lang.github.io/linter/lints/use_build_context_synchronously.html
-    // False positive on `!context.mounted` here
-    // ignore: use_build_context_synchronously
     if (isOk || !context.mounted) {
       return;
     }
