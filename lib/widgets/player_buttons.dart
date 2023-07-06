@@ -61,18 +61,21 @@ class PlayerButtons extends OrientationDependentWidget {
     }
   }
 
-  void _onWarnPlayerTap(BuildContext context, int playerNumber) {
-    final controller = context.read<GameController>()..warnPlayer(playerNumber);
-    showSnackBar(
+  Future<void> _onWarnPlayerTap(BuildContext context, int playerNumber) async {
+    final controller = context.read<GameController>();
+    final reason = await showSnackBar(
       context,
       SnackBar(
         content: Text("Выдано предупреждение игроку $playerNumber"),
         action: SnackBarAction(
           label: "Отменить",
-          onPressed: () => controller.unwarnPlayer(playerNumber),
+          onPressed: () {},
         ),
       ),
     );
+    if (reason != SnackBarClosedReason.action) {
+      controller.warnPlayer(playerNumber);
+    }
   }
 
   Future<void> _onPlayerActionsTap(BuildContext context, Player player) async {

@@ -1,3 +1,5 @@
+import "dart:async";
+
 import "package:flutter/material.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import "package:provider/provider.dart";
@@ -38,7 +40,7 @@ class _MainScreenState extends State<MainScreen> {
     );
     if (context.mounted && (restartGame ?? false)) {
       context.read<GameController>().restart();
-      showSnackBar(context, const SnackBar(content: Text("Игра перезапущена")));
+      unawaited(showSnackBar(context, const SnackBar(content: Text("Игра перезапущена"))));
     }
   }
 
@@ -115,19 +117,19 @@ class _RotatableMainScreenBody extends OrientationDependentWidget {
 
   @override
   Widget buildPortrait(BuildContext context) => Column(
-      children: [
-        PlayerButtons(showRoles: showRoles),
-        const Flexible(child: _MainScreenMainBodyContent()),
-      ],
-    );
+        children: [
+          PlayerButtons(showRoles: showRoles),
+          const Flexible(child: _MainScreenMainBodyContent()),
+        ],
+      );
 
   @override
   Widget buildLandscape(BuildContext context) => Row(
-      children: [
-        PlayerButtons(showRoles: showRoles),
-        const Flexible(child: _MainScreenMainBodyContent()),
-      ],
-    );
+        children: [
+          PlayerButtons(showRoles: showRoles),
+          const Flexible(child: _MainScreenMainBodyContent()),
+        ],
+      );
 }
 
 class _MainScreenMainBodyContent extends StatelessWidget {
@@ -152,4 +154,3 @@ class _MainScreenMainBodyContent extends StatelessWidget {
     );
   }
 }
-

@@ -1,3 +1,5 @@
+import "dart:async";
+
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 import "package:vibration/vibration.dart";
@@ -114,7 +116,9 @@ class BottomGameStateWidget extends StatelessWidget {
               if (restartGame ?? false) {
                 controller.restart();
                 if (context.mounted) {
-                  showSnackBar(context, const SnackBar(content: Text("Игра перезапущена")));
+                  unawaited(
+                    showSnackBar(context, const SnackBar(content: Text("Игра перезапущена"))),
+                  );
                 }
               }
             },

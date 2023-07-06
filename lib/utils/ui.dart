@@ -62,12 +62,16 @@ extension GameStatePrettyString on BaseGameState {
 
 typedef ConverterFunction<T, R> = R Function(T value);
 
-void showSnackBar(BuildContext context, SnackBar snackBar, {bool dismissPrevious = true}) {
+Future<SnackBarClosedReason> showSnackBar(
+  BuildContext context,
+  SnackBar snackBar, {
+  bool dismissPrevious = true,
+}) {
   final messenger = ScaffoldMessenger.of(context);
   if (dismissPrevious) {
     messenger.hideCurrentSnackBar();
   }
-  messenger.showSnackBar(snackBar);
+  return messenger.showSnackBar(snackBar).closed;
 }
 
 /// Shows a simple dialog with a list of [items] and returns the selected item.

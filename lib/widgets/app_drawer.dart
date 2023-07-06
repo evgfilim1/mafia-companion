@@ -1,3 +1,5 @@
+import "dart:async";
+
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:package_info_plus/package_info_plus.dart";
@@ -18,21 +20,23 @@ class AppDrawer extends StatelessWidget {
     if (isOk || !context.mounted) {
       return;
     }
-    showSnackBar(
-      context,
-      SnackBar(
-        content: const Text("Не удалось открыть ссылку"),
-        action: SnackBarAction(
-          label: "Скопировать",
-          onPressed: () {
-            Clipboard.setData(const ClipboardData(text: url));
-            showSnackBar(
-              context,
-              const SnackBar(
-                content: Text("Ссылка скопирована в буфер обмена"),
-              ),
-            );
-          },
+    unawaited(
+      showSnackBar(
+        context,
+        SnackBar(
+          content: const Text("Не удалось открыть ссылку"),
+          action: SnackBarAction(
+            label: "Скопировать",
+            onPressed: () {
+              Clipboard.setData(const ClipboardData(text: url));
+              showSnackBar(
+                context,
+                const SnackBar(
+                  content: Text("Ссылка скопирована в буфер обмена"),
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
