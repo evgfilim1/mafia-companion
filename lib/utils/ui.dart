@@ -27,31 +27,40 @@ extension GameStatePrettyString on BaseGameState {
         return "Первая ночь";
       case GameStateWithPlayer(stage: GameStage.night0SheriffCheck):
         return "Шериф осматривает стол";
-      case GameStateSpeaking(stage: GameStage.speaking, player: final player):
-        return "Речь игрока ${player.number}";
+      case GameStateSpeaking(stage: GameStage.speaking, currentPlayerNumber: final playerNumber):
+        return "Речь игрока $playerNumber";
       case GameStateWithPlayers(stage: GameStage.preVoting):
         return "Голосование";
-      case GameStateVoting(stage: GameStage.voting, player: final player):
-        return "Голосование против игрока ${player.number}";
-      case GameStateWithCurrentPlayer(stage: GameStage.excuse, player: final player):
-        return "Повторная речь игрока ${player.number}";
+      case GameStateVoting(stage: GameStage.voting, currentPlayerNumber: final playerNumber):
+        return "Голосование против игрока $playerNumber";
+      case GameStateWithCurrentPlayer(
+          stage: GameStage.excuse,
+          currentPlayerNumber: final playerNumber,
+        ):
+        return "Повторная речь игрока $playerNumber";
       case GameStateWithPlayers(stage: GameStage.preFinalVoting):
         return "Повторное голосование";
-      case GameStateVoting(stage: GameStage.finalVoting, player: final player):
-        return "Повторное голосование против игрока ${player.number}";
+      case GameStateVoting(stage: GameStage.finalVoting, currentPlayerNumber: final playerNumber):
+        return "Повторное голосование против игрока $playerNumber";
       case GameStateDropTableVoting():
         return "Голосование за подъём стола";
-      case GameStateWithCurrentPlayer(stage: GameStage.dayLastWords, player: final player):
-        return "Последние слова игрока ${player.number}";
+      case GameStateWithCurrentPlayer(
+          stage: GameStage.dayLastWords,
+          currentPlayerNumber: final playerNumber,
+        ):
+        return "Последние слова игрока $playerNumber";
       case GameStateNightKill():
         return "Ночь, ход Мафии";
-      case GameStateNightCheck(stage: GameStage.nightCheck, player: final player):
-        if (player.role == PlayerRole.don) {
+      case GameStateNightCheck(stage: GameStage.nightCheck, activePlayerRole: final playerRole):
+        if (playerRole == PlayerRole.don) {
           return "Ночь, ход Дона";
         }
         return "Ночь, ход Шерифа";
-      case GameStateWithPlayer(stage: GameStage.nightLastWords, player: final player):
-        return "Последние слова игрока ${player.number}";
+      case GameStateWithPlayer(
+          stage: GameStage.nightLastWords,
+          currentPlayerNumber: final playerNumber,
+        ):
+        return "Последние слова игрока $playerNumber";
       case GameStateFinish():
         return "Игра окончена";
       default:

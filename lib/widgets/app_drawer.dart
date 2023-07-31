@@ -21,6 +21,7 @@ class AppDrawer extends StatelessWidget {
       return;
     }
     unawaited(
+      // ignore: use_build_context_synchronously
       showSnackBar(
         context,
         SnackBar(
@@ -85,7 +86,7 @@ class AppDrawer extends StatelessWidget {
               Navigator.pop(context);
               Navigator.pushNamed(context, "/settings");
             },
-          )
+          ),
         ],
       ),
     );

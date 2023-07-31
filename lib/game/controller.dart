@@ -86,8 +86,15 @@ class Game {
     var aliveMafia = players.aliveMafiaCount;
     var aliveCitizens = players.aliveCount - aliveMafia;
     if (_state
-        case GameStateWithPlayer(stage: GameStage.nightLastWords, player: final player) ||
-            GameStateWithCurrentPlayer(stage: GameStage.dayLastWords, player: final player)) {
+        case GameStateWithPlayer(
+              stage: GameStage.nightLastWords,
+              currentPlayerNumber: final playerNumber,
+            ) ||
+            GameStateWithCurrentPlayer(
+              stage: GameStage.dayLastWords,
+              currentPlayerNumber: final playerNumber,
+            )) {
+      final player = players.getByNumber(playerNumber);
       if (player.role.isMafia) {
         aliveMafia--;
       } else {
@@ -120,83 +127,92 @@ class Game {
     switch (_state.stage) {
       // TODO: Dart 3 pattern matching
       case GameStage.prepare:
-        return GameStateWithPlayers(stage: GameStage.night0, day: 0, players: players.mafiaTeam);
+        return GameStateWithPlayers(
+          stage: GameStage.night0,
+          day: 0,
+          playerNumbers: players.mafiaTeam.map((player) => player.number).toUnmodifiableList(),
+        );
       case GameStage.night0:
         return GameStateWithPlayer(
           stage: GameStage.night0SheriffCheck,
           day: 0,
-          player: players.sheriff,
+          currentPlayerNumber: players.sheriff.number,
         );
       case GameStage.night0SheriffCheck:
         return GameStateSpeaking(
-          player: players[0],
+          currentPlayerNumber: players[0].number,
           day: state.day + 1,
           accusations: LinkedHashMap(),
         );
       case GameStage.speaking:
         final state = _state as GameStateSpeaking;
-        final next = _nextAlivePlayer(fromNumber: state.player.number);
+        final next = _nextAlivePlayer(fromNumber: state.currentPlayerNumber);
         if (next.number == _firstSpeakingPlayerNumber) {
           if (state.accusations.isEmpty || state.day == 1 && state.accusations.length == 1) {
             return GameStateNightKill(
               day: state.day,
-              mafiaTeam: players.mafiaTeam,
-              thisNightKilledPlayer: null,
+              mafiaTeam: players.mafiaTeam.map((player) => player.number).toUnmodifiableList(),
+              thisNightKilledPlayerNumber: null,
             );
           }
           return GameStateWithPlayers(
             stage: GameStage.preVoting,
             day: state.day,
-            players: state.accusations.values.toUnmodifiableList(),
+            playerNumbers: state.accusations.values.toUnmodifiableList(),
           );
         }
+        assert(next.isAlive, "Next player must be alive");
         return GameStateSpeaking(
-          player: next,
+          currentPlayerNumber: next.number,
           day: state.day,
           accusations: LinkedHashMap.of(state.accusations),
         );
       case GameStage.preVoting:
         final state = _state as GameStateWithPlayers;
-        final firstPlayer = state.players.first;
-        if (state.players.length == 1) {
+        final firstPlayer = state.playerNumbers.first;
+        if (state.playerNumbers.length == 1) {
           return GameStateWithCurrentPlayer(
             stage: GameStage.dayLastWords,
             day: state.day,
-            players: [firstPlayer],
-            playerIndex: 0,
+            playerNumbers: [firstPlayer],
+            currentPlayerIndex: 0,
           );
         }
         return GameStateVoting(
           stage: GameStage.voting,
           day: state.day,
-          player: firstPlayer,
-          votes: LinkedHashMap.fromEntries(state.players.map((player) => MapEntry(player, null))),
+          currentPlayerNumber: firstPlayer,
+          votes: LinkedHashMap.fromEntries(
+            state.playerNumbers.map((player) => MapEntry(player, null)),
+          ),
           currentPlayerVotes: null,
         );
       case GameStage.voting:
         return _handleVoting();
       case GameStage.excuse:
         final state = _state as GameStateWithCurrentPlayer;
-        if (state.playerIndex == state.players.length - 1) {
+        if (state.currentPlayerIndex == state.playerNumbers.length - 1) {
           return GameStateWithPlayers(
             stage: GameStage.preFinalVoting,
             day: state.day,
-            players: state.players,
+            playerNumbers: state.playerNumbers,
           );
         }
         return GameStateWithCurrentPlayer(
           stage: GameStage.excuse,
           day: state.day,
-          players: state.players,
-          playerIndex: state.playerIndex + 1,
+          playerNumbers: state.playerNumbers,
+          currentPlayerIndex: state.currentPlayerIndex + 1,
         );
       case GameStage.preFinalVoting:
         final state = _state as GameStateWithPlayers;
         return GameStateVoting(
           stage: GameStage.finalVoting,
           day: state.day,
-          player: state.players.first,
-          votes: LinkedHashMap.fromEntries(state.players.map((player) => MapEntry(player, null))),
+          currentPlayerNumber: state.playerNumbers.first,
+          votes: LinkedHashMap.fromEntries(
+            state.playerNumbers.map((player) => MapEntry(player, null)),
+          ),
           currentPlayerVotes: null,
         );
       case GameStage.finalVoting:
@@ -206,48 +222,51 @@ class Game {
         if (state.votesForDropTable <= players.aliveCount ~/ 2) {
           return GameStateNightKill(
             day: state.day,
-            mafiaTeam: players.mafiaTeam,
-            thisNightKilledPlayer: null,
+            mafiaTeam: players.mafiaTeam.map((player) => player.number).toUnmodifiableList(),
+            thisNightKilledPlayerNumber: null,
           );
         }
         return GameStateWithCurrentPlayer(
           stage: GameStage.dayLastWords,
           day: state.day,
-          players: state.players,
-          playerIndex: 0,
+          playerNumbers: state.playerNumbers,
+          currentPlayerIndex: 0,
         );
       case GameStage.dayLastWords:
         final state = _state as GameStateWithCurrentPlayer;
-        if (state.playerIndex == state.players.length - 1) {
+        if (state.currentPlayerIndex == state.playerNumbers.length - 1) {
           if (isGameOver) {
             return GameStateFinish(day: state.day, winner: winTeamAssumption);
           }
           return GameStateNightKill(
             day: state.day,
-            mafiaTeam: players.mafiaTeam,
-            thisNightKilledPlayer: null,
+            mafiaTeam: players.mafiaTeam.map((player) => player.number).toUnmodifiableList(),
+            thisNightKilledPlayerNumber: null,
           );
         }
         return GameStateWithCurrentPlayer(
           stage: GameStage.dayLastWords,
           day: state.day,
-          players: state.players,
-          playerIndex: state.playerIndex + 1,
+          playerNumbers: state.playerNumbers,
+          currentPlayerIndex: state.currentPlayerIndex + 1,
         );
       case GameStage.nightKill:
         final state = _state as GameStateNightKill;
         return GameStateNightCheck(
           day: state.day,
-          player: players.don,
-          thisNightKilledPlayer: state.thisNightKilledPlayer,
+          activePlayerNumber: players.don.number,
+          activePlayerRole: PlayerRole.don,
+          thisNightKilledPlayerNumber: state.thisNightKilledPlayerNumber,
         );
       case GameStage.nightCheck:
         final state = _state as GameStateNightCheck;
-        if (state.player.role == PlayerRole.don) {
+        final player = players.getByNumber(state.activePlayerNumber);
+        if (player.role == PlayerRole.don) {
           return GameStateNightCheck(
             day: state.day,
-            player: players.sheriff,
-            thisNightKilledPlayer: state.thisNightKilledPlayer,
+            activePlayerNumber: players.sheriff.number,
+            activePlayerRole: PlayerRole.sheriff,
+            thisNightKilledPlayerNumber: state.thisNightKilledPlayerNumber,
           );
         }
         return _handleEndOfNight();
@@ -256,7 +275,7 @@ class Game {
           return GameStateFinish(day: state.day, winner: winTeamAssumption);
         }
         return GameStateSpeaking(
-          player: players.getByNumber(_firstSpeakingPlayerNumber),
+          currentPlayerNumber: _firstSpeakingPlayerNumber,
           day: state.day + 1,
           accusations: LinkedHashMap(),
         );
@@ -280,13 +299,19 @@ class Game {
     _history.add(_state);
     // if (oldState.stage.isAnyOf([GameStage.dayLastWords, GameStage.nightLastWords])) {
     if (oldState
-        case GameStateWithCurrentPlayer(stage: GameStage.dayLastWords, player: final player) ||
-            GameStateWithPlayer(stage: GameStage.nightLastWords, player: final player)) {
-      players.kill(player.number);
+        case GameStateWithCurrentPlayer(
+              stage: GameStage.dayLastWords,
+              currentPlayerNumber: final playerNumber,
+            ) ||
+            GameStateWithPlayer(
+              stage: GameStage.nightLastWords,
+              currentPlayerNumber: final playerNumber,
+            )) {
+      players.kill(playerNumber);
     }
     if (oldState is GameStateVoting) {
       final state = _state as GameStateVoting;
-      state.votes[state.player] = state.currentPlayerVotes ?? 0;
+      state.votes[state.currentPlayerNumber] = state.currentPlayerVotes ?? 0;
     }
     _state = nextState;
   }
@@ -307,9 +332,15 @@ class Game {
       throw StateError("Can't go to previous state");
     }
     if (previousState
-        case GameStateWithPlayer(stage: GameStage.nightLastWords, player: final player) ||
-            GameStateWithCurrentPlayer(stage: GameStage.dayLastWords, player: final player)) {
-      players.revive(player.number);
+        case GameStateWithPlayer(
+              stage: GameStage.nightLastWords,
+              currentPlayerNumber: final playerNumber,
+            ) ||
+            GameStateWithCurrentPlayer(
+              stage: GameStage.dayLastWords,
+              currentPlayerNumber: final playerNumber,
+            )) {
+      players.revive(playerNumber);
     }
     _history.removeLast();
     _state = previousState;
@@ -323,12 +354,12 @@ class Game {
       return;
     }
     if (state is GameStateSpeaking) {
-      if (state.accusations[state.player] == player) {
+      if (state.accusations[state.currentPlayerNumber] == playerNumber) {
         // toggle (deselect) player
-        state.accusations.remove(state.player);
-      } else if (!state.accusations.containsValue(player)) {
+        state.accusations.remove(state.currentPlayerNumber);
+      } else if (!state.accusations.containsValue(playerNumber)) {
         // player is not yet selected
-        state.accusations[state.player] = player;
+        state.accusations[state.currentPlayerNumber] = playerNumber;
       }
       return;
     }
@@ -336,7 +367,8 @@ class Game {
       _state = GameStateNightKill(
         day: state.day,
         mafiaTeam: state.mafiaTeam,
-        thisNightKilledPlayer: state.thisNightKilledPlayer == player ? null : player,
+        thisNightKilledPlayerNumber:
+            state.thisNightKilledPlayerNumber == playerNumber ? null : playerNumber,
       );
       return;
     }
@@ -353,11 +385,11 @@ class Game {
     }
     if (_state is GameStateWithPlayers) {
       final state = _state as GameStateWithPlayers;
-      return state.players.map((e) => e.number).toUnmodifiableList();
+      return state.playerNumbers;
     }
     if (_state is GameStateVoting) {
       final state = _state as GameStateVoting;
-      return state.votes.keys.map((e) => e.number).toUnmodifiableList();
+      return state.votes.keys.toList();
     }
     throw AssertionError("Unexpected state type: ${_state.runtimeType}");
   }
@@ -369,7 +401,7 @@ class Game {
       final state = _state as GameStateDropTableVoting;
       _state = GameStateDropTableVoting(
         day: state.day,
-        players: state.players,
+        playerNumbers: state.playerNumbers,
         votesForDropTable: count,
       );
       return;
@@ -388,7 +420,7 @@ class Game {
     _state = GameStateVoting(
       stage: state.stage,
       day: state.day,
-      player: state.player,
+      currentPlayerNumber: state.currentPlayerNumber,
       votes: state.votes,
       currentPlayerVotes: count,
     );
@@ -417,21 +449,23 @@ class Game {
     final maxVotesPlayers = _maxVotesPlayers;
     final state = _state as GameStateVoting;
     if (maxVotesPlayers == null) {
-      Player? nextPlayer;
+      int? nextPlayerNumber;
       for (final p in state.votes.keys) {
-        if (state.votes[p] == null && p != state.player) {
-          nextPlayer = p;
+        if (state.votes[p] == null && p != state.currentPlayerNumber) {
+          nextPlayerNumber = p;
           break;
         }
       }
-      if (nextPlayer == null) {
+      if (nextPlayerNumber == null) {
         throw AssertionError("No player to vote");
       }
       return GameStateVoting(
         stage: state.stage,
         day: state.day,
-        player: nextPlayer,
-        votes: LinkedHashMap.of({...state.votes, state.player: state.currentPlayerVotes ?? 0}),
+        currentPlayerNumber: nextPlayerNumber,
+        votes: LinkedHashMap.of(
+          {...state.votes, state.currentPlayerNumber: state.currentPlayerVotes ?? 0},
+        ),
         currentPlayerVotes: null,
       );
     }
@@ -439,34 +473,34 @@ class Game {
       return GameStateWithCurrentPlayer(
         stage: GameStage.dayLastWords,
         day: _state.day,
-        players: maxVotesPlayers,
-        playerIndex: 0,
+        playerNumbers: maxVotesPlayers,
+        currentPlayerIndex: 0,
       );
     }
     if (state.stage == GameStage.voting) {
       return GameStateWithCurrentPlayer(
         stage: GameStage.excuse,
         day: state.day,
-        players: maxVotesPlayers,
-        playerIndex: 0,
+        playerNumbers: maxVotesPlayers,
+        currentPlayerIndex: 0,
       );
     }
     // TODO: https://mafiaworldtour.com/fiim-rules 4.4.12.2
     return GameStateDropTableVoting(
       day: state.day,
-      players: maxVotesPlayers,
+      playerNumbers: maxVotesPlayers,
       votesForDropTable: 0,
     );
   }
 
   BaseGameState _handleEndOfNight() {
     final state = _state as GameStateNightCheck;
-    final thisNightKilledPlayer = state.thisNightKilledPlayer;
+    final thisNightKilledPlayer = state.thisNightKilledPlayerNumber;
     if (thisNightKilledPlayer != null) {
       return GameStateWithPlayer(
         stage: GameStage.nightLastWords,
         day: state.day,
-        player: thisNightKilledPlayer,
+        currentPlayerNumber: thisNightKilledPlayer,
       );
     }
     if (_consequentDaysWithoutKills >= 3) {
@@ -477,27 +511,27 @@ class Game {
     }
     return GameStateSpeaking(
       day: state.day + 1,
-      player: players.getByNumber(_firstSpeakingPlayerNumber),
+      currentPlayerNumber: _firstSpeakingPlayerNumber,
       accusations: LinkedHashMap(),
     );
   }
 
-  List<Player>? get _maxVotesPlayers {
+  List<int>? get _maxVotesPlayers {
     if (_state is! GameStateVoting) {
       if (_state is GameStateWithPlayers &&
           _state.stage.isAnyOf([GameStage.preVoting, GameStage.preFinalVoting])) {
         final state = _state as GameStateWithPlayers;
-        if (state.players.length == 1) {
-          return state.players;
+        if (state.playerNumbers.length == 1) {
+          return state.playerNumbers;
         }
       }
       return null;
     }
     final state = _state as GameStateVoting;
-    final votes = {...state.votes, state.player: state.currentPlayerVotes};
+    final votes = {...state.votes, state.currentPlayerNumber: state.currentPlayerVotes};
     final aliveCount = players.aliveCount;
-    if (votes[state.player] == null) {
-      votes[state.player] = 0;
+    if (votes[state.currentPlayerNumber] == null) {
+      votes[state.currentPlayerNumber] = 0;
     }
     if (votes.values.nonNulls.length + 1 == votes.length) {
       // All players except one was voted against
@@ -524,18 +558,22 @@ class Game {
         .where((e) => e is GameStateSpeaking && e.day == _state.day)
         .cast<GameStateSpeaking>()
         .firstOrNull
-        ?.player;
-    var result = previousFirstSpeakingPlayer ?? players.getByNumber(1);
+        ?.currentPlayerNumber;
+    var result = previousFirstSpeakingPlayer ?? 1;
     if (_state is GameStateSpeaking) {
-      return result.number;
+      return result;
     }
-    result = _nextAlivePlayer(fromNumber: result.number);
-    if (_state case GameStateWithPlayer(stage: GameStage.nightLastWords, player: final player)) {
-      if (player == result) {
-        result = _nextAlivePlayer(fromNumber: result.number);
+    result = _nextAlivePlayer(fromNumber: result).number;
+    if (_state
+        case GameStateWithPlayer(
+          stage: GameStage.nightLastWords,
+          currentPlayerNumber: final playerNumber,
+        )) {
+      if (playerNumber == result) {
+        result = _nextAlivePlayer(fromNumber: result).number;
       }
     }
-    return result.number;
+    return result;
   }
 
   int get _consequentDaysWithoutKills {

@@ -1,3 +1,5 @@
+import "dart:async";
+
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 
@@ -28,21 +30,22 @@ class PlayerButtons extends OrientationDependentWidget {
     this.showRoles = false,
   });
 
-  void _onPlayerButtonTap(BuildContext context, Player player) {
+  void _onPlayerButtonTap(BuildContext context, int playerNumber) {
     final controller = context.read<GameController>();
-    if (controller.state
-        case GameStateNightCheck(player: Player(isAlive: final isAlive, role: final role))) {
-      if (!isAlive) {
+    final player = controller.getPlayerByNumber(playerNumber);
+    if (controller.state case GameStateNightCheck(activePlayerNumber: final playerNumber)) {
+      final p = controller.getPlayerByNumber(playerNumber);
+      if (!p.isAlive) {
         return; // It's useless to allow dead players check others
       }
       final String result;
-      if (role == PlayerRole.don) {
+      if (p.role == PlayerRole.don) {
         if (player.role == PlayerRole.sheriff) {
           result = "ШЕРИФ";
         } else {
           result = "НЕ шериф";
         }
-      } else if (role == PlayerRole.sheriff) {
+      } else if (p.role == PlayerRole.sheriff) {
         if (player.role.isMafia) {
           result = "МАФИЯ 👎";
         } else {
@@ -95,7 +98,7 @@ class PlayerButtons extends OrientationDependentWidget {
     }
     switch (res) {
       case PlayerActions.warnPlus:
-        _onWarnPlayerTap(context, player.number);
+        unawaited(_onWarnPlayerTap(context, player.number));
       case PlayerActions.warnMinus:
         controller.unwarnPlayer(player.number);
       case PlayerActions.kill:
@@ -110,35 +113,36 @@ class PlayerButtons extends OrientationDependentWidget {
     Navigator.pop(context);
   }
 
-  Widget _buildPlayerButton(BuildContext context, Player player, BaseGameState gameState) {
+  Widget _buildPlayerButton(BuildContext context, int playerNumber, BaseGameState gameState) {
     final controller = context.watch<GameController>();
     final isActive = switch (gameState) {
       GameState() || GameStateFinish() => false,
-      GameStateWithPlayer(player: final p) ||
-      GameStateSpeaking(player: final p) ||
-      GameStateWithCurrentPlayer(player: final p) ||
-      GameStateVoting(player: final p) ||
-      GameStateNightCheck(player: final p) =>
-        p == player,
-      GameStateWithPlayers(players: final players) ||
-      GameStateNightKill(mafiaTeam: final players) ||
-      GameStateDropTableVoting(players: final players) =>
-        players.any((p) => p.number == player.number),
+      GameStateWithPlayer(currentPlayerNumber: final p) ||
+      GameStateSpeaking(currentPlayerNumber: final p) ||
+      GameStateWithCurrentPlayer(currentPlayerNumber: final p) ||
+      GameStateVoting(currentPlayerNumber: final p) ||
+      GameStateNightCheck(activePlayerNumber: final p) =>
+        p == playerNumber,
+      GameStateWithPlayers(playerNumbers: final ps) ||
+      GameStateNightKill(mafiaTeam: final ps) ||
+      GameStateDropTableVoting(playerNumbers: final ps) =>
+        ps.contains(playerNumber),
     };
     final isSelected = switch (gameState) {
-      GameStateSpeaking(accusations: final accusations) => accusations.containsValue(player),
-      GameStateNightKill(thisNightKilledPlayer: final thisNightKilledPlayer) ||
-      GameStateNightCheck(thisNightKilledPlayer: final thisNightKilledPlayer) =>
-        thisNightKilledPlayer == player,
+      GameStateSpeaking(accusations: final accusations) => accusations.containsValue(playerNumber),
+      GameStateNightKill(thisNightKilledPlayerNumber: final thisNightKilledPlayer) ||
+      GameStateNightCheck(thisNightKilledPlayerNumber: final thisNightKilledPlayer) =>
+        thisNightKilledPlayer == playerNumber,
       _ => false,
     };
+    final player = controller.getPlayerByNumber(playerNumber);
     return PlayerButton(
       player: player,
       isSelected: isSelected,
       isActive: isActive,
-      warnCount: controller.getPlayerWarnCount(player.number),
+      warnCount: controller.getPlayerWarnCount(playerNumber),
       onTap: player.isAlive || gameState.stage == GameStage.nightCheck
-          ? () => _onPlayerButtonTap(context, player)
+          ? () => _onPlayerButtonTap(context, playerNumber)
           : null,
       longPressActions: [
         TextButton(
@@ -169,11 +173,12 @@ class PlayerButtons extends OrientationDependentWidget {
                   height: size,
                   child: Padding(
                     padding: const EdgeInsets.all(4),
-                    child: _buildPlayerButton(context, controller.players[j], controller.state),
+                    child:
+                        _buildPlayerButton(context, controller.players[j].number, controller.state),
                   ),
                 ),
             ],
-          )
+          ),
       ],
     );
   }
@@ -199,13 +204,13 @@ class PlayerButtons extends OrientationDependentWidget {
                     padding: const EdgeInsets.all(4),
                     child: _buildPlayerButton(
                       context,
-                      controller.players[i.isEven ? i + itemsPerRow + i - j - 1 : j],
+                      controller.players[i.isEven ? i + itemsPerRow + i - j - 1 : j].number,
                       controller.state,
                     ),
                   ),
                 ),
             ],
-          )
+          ),
       ],
     );
   }
