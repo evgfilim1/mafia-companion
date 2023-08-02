@@ -4,6 +4,7 @@ import "package:flutter_localizations/flutter_localizations.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import "package:provider/provider.dart";
 
+import "screens/game_log.dart";
 import "screens/main.dart";
 import "screens/roles.dart";
 import "screens/seat_randomizer.dart";
@@ -59,6 +60,7 @@ class MyApp extends StatelessWidget {
           "/roles": (context) => const RolesScreen(),
           "/settings": (context) => const SettingsScreen(),
           "/seats": (context) => const SeatRandomizerScreen(),
+          "/log": (context) => const GameLogScreen(),
         },
         localizationsDelegates: const [
           GlobalMaterialLocalizations.delegate,

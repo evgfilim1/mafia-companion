@@ -11,8 +11,8 @@ import "orientation_dependent.dart";
 import "player_button.dart";
 
 enum PlayerActions {
-  warnPlus("Дать предупреждение"),
-  warnMinus("Снять предупреждение"),
+  warn("Дать предупреждение"),
+  removeWarn("Снять предупреждение"),
   kill("Убить"),
   revive("Воскресить"),
   ;
@@ -33,23 +33,24 @@ class PlayerButtons extends OrientationDependentWidget {
   void _onPlayerButtonTap(BuildContext context, int playerNumber) {
     final controller = context.read<GameController>();
     final player = controller.getPlayerByNumber(playerNumber);
-    if (controller.state case GameStateNightCheck(activePlayerNumber: final playerNumber)) {
-      final p = controller.getPlayerByNumber(playerNumber);
+    if (controller.state case GameStateNightCheck(activePlayerNumber: final pn)) {
+      final p = controller.getPlayerByNumber(pn);
       if (!p.isAlive) {
         return; // It's useless to allow dead players check others
       }
-      final String result;
+      final result = controller.checkPlayer(playerNumber);
+      final String msg;
       if (p.role == PlayerRole.don) {
-        if (player.role == PlayerRole.sheriff) {
-          result = "ШЕРИФ";
+        if (result) {
+          msg = "ШЕРИФ";
         } else {
-          result = "НЕ шериф";
+          msg = "НЕ шериф";
         }
       } else if (p.role == PlayerRole.sheriff) {
         if (player.role.isMafia) {
-          result = "МАФИЯ 👎";
+          msg = "МАФИЯ 👎";
         } else {
-          result = "НЕ мафия 👍";
+          msg = "НЕ мафия 👍";
         }
       } else {
         throw AssertionError();
@@ -57,7 +58,7 @@ class PlayerButtons extends OrientationDependentWidget {
       showSimpleDialog(
         context: context,
         title: const Text("Результат проверки"),
-        content: Text("Игрок ${player.number} — $result"),
+        content: Text("Игрок ${player.number} — $msg"),
       );
     } else {
       controller.togglePlayerSelected(player.number);
@@ -97,10 +98,10 @@ class PlayerButtons extends OrientationDependentWidget {
       throw StateError("Context is not mounted");
     }
     switch (res) {
-      case PlayerActions.warnPlus:
+      case PlayerActions.warn:
         unawaited(_onWarnPlayerTap(context, player.number));
-      case PlayerActions.warnMinus:
-        controller.unwarnPlayer(player.number);
+      case PlayerActions.removeWarn:
+        controller.removePlayerWarn(player.number);
       case PlayerActions.kill:
         if (player.isAlive) {
           controller.killPlayer(player.number);

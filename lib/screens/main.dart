@@ -84,6 +84,11 @@ class _MainScreenState extends State<MainScreen> {
           title: isGameRunning ? Text("День ${controller.state.day}") : Text(packageInfo.appName),
           actions: [
             IconButton(
+              onPressed: () => Navigator.pushNamed(context, "/log"),
+              tooltip: "Журнал игры",
+              icon: const Icon(Icons.list),
+            ),
+            IconButton(
               onPressed: () => _showNotes(context),
               tooltip: "Заметки",
               icon: const Icon(Icons.sticky_note_2),
