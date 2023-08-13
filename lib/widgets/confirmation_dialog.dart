@@ -1,12 +1,19 @@
 import "package:flutter/material.dart";
 
-class ExitDialog extends StatelessWidget {
-  const ExitDialog({super.key});
+class ConfirmationDialog extends StatelessWidget {
+  final Widget title;
+  final Widget content;
+
+  const ConfirmationDialog({
+    super.key,
+    required this.title,
+    required this.content,
+  });
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-        title: const Text("Выход из игры"),
-        content: const Text("Вы уверены, что хотите выйти из игры? Все данные будут потеряны."),
+        title: title,
+        content: content,
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),

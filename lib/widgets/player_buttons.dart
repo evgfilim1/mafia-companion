@@ -7,6 +7,7 @@ import "../game/player.dart";
 import "../game/states.dart";
 import "../utils/game_controller.dart";
 import "../utils/ui.dart";
+import "confirmation_dialog.dart";
 import "orientation_dependent.dart";
 import "player_button.dart";
 
@@ -67,18 +68,24 @@ class PlayerButtons extends OrientationDependentWidget {
 
   Future<void> _onWarnPlayerTap(BuildContext context, int playerNumber) async {
     final controller = context.read<GameController>();
-    final reason = await showSnackBar(
-      context,
-      SnackBar(
-        content: Text("Выдано предупреждение игроку $playerNumber"),
-        action: SnackBarAction(
-          label: "Отменить",
-          onPressed: () {},
-        ),
+    final res = await showDialog<bool>(
+      context: context,
+      builder: (context) => ConfirmationDialog(
+        title: const Text("Выдать предупреждение"),
+        content: Text("Вы уверены, что хотите выдать предупреждение игроку #$playerNumber?"),
       ),
     );
-    if (reason != SnackBarClosedReason.action) {
+    debugPrint("$res");
+    if (res ?? false) {
       controller.warnPlayer(playerNumber);
+      if (context.mounted) {
+        unawaited(
+          showSnackBar(
+            context,
+            SnackBar(content: Text("Выдано предупреждение игроку $playerNumber")),
+          ),
+        );
+      }
     }
   }
 
@@ -99,7 +106,7 @@ class PlayerButtons extends OrientationDependentWidget {
     }
     switch (res) {
       case PlayerActions.warn:
-        unawaited(_onWarnPlayerTap(context, player.number));
+        await _onWarnPlayerTap(context, player.number);
       case PlayerActions.removeWarn:
         controller.removePlayerWarn(player.number);
       case PlayerActions.kill:
@@ -111,7 +118,9 @@ class PlayerButtons extends OrientationDependentWidget {
           controller.revivePlayer(player.number);
         }
     }
-    Navigator.pop(context);
+    if (context.mounted) {
+      Navigator.pop(context);
+    }
   }
 
   Widget _buildPlayerButton(BuildContext context, int playerNumber, BaseGameState gameState) {

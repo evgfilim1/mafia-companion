@@ -10,7 +10,7 @@ import "../utils/game_controller.dart";
 import "../utils/ui.dart";
 import "../widgets/app_drawer.dart";
 import "../widgets/bottom_controls.dart";
-import "../widgets/exit_dialog.dart";
+import "../widgets/confirmation_dialog.dart";
 import "../widgets/game_state.dart";
 import "../widgets/orientation_dependent.dart";
 import "../widgets/player_buttons.dart";
@@ -75,7 +75,7 @@ class _MainScreenState extends State<MainScreen> {
         }
         final res = await showDialog<bool>(
           context: context,
-          builder: (context) => const ExitDialog(),
+          builder: (context) => const ConfirmationDialog(title: Text("Выход из игры"), content: Text("Вы уверены, что хотите выйти из игры? Все данные будут потеряны."),),
         );
         return res ?? false;
       },
