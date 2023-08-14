@@ -14,8 +14,6 @@ extension DescribeLogItem on BaseGameLogItem {
         switch (oldState) {
           case GameState() ||
                 GameStateWithPlayer() ||
-                GameStateVoting() ||
-                GameStateDropTableVoting() ||
                 GameStateWithPlayers() ||
                 GameStateNightKill() ||
                 GameStateNightCheck() ||
@@ -26,6 +24,10 @@ extension DescribeLogItem on BaseGameLogItem {
             if (accusations[pn] != null) {
               result.add("Игрок #$pn выставил на голосование игрока #${accusations[pn]}");
             }
+          case GameStateVoting(currentPlayerNumber: final pn, currentPlayerVotes: final votes):
+            result.add("За игрока #$pn отдано голосов: ${votes ?? 0}"); // FIXME: i18n
+          case GameStateDropTableVoting(votesForDropTable: final votes):
+            result.add("За подъём стола отдано голосов: $votes"); // FIXME: i18n
           case GameStateFinish():
             throw AssertionError();
         }
