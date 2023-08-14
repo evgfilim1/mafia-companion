@@ -45,7 +45,6 @@ jobs:
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
           cache: true
-          cache-key: "flutter-:os:-:arch:-:version:-:hash:"
 
       - name: Get Flutter dependencies
         run: flutter pub get
@@ -84,7 +83,6 @@ jobs:
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
           cache: true
-          cache-key: "flutter-:os:-:arch:-:version:-:hash:"
 
       - name: Get Flutter dependencies
         run: flutter pub get
