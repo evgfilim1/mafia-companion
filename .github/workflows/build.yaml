@@ -117,8 +117,8 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v2
 
-  draft-release:
-    name: Draft release
+  create-release:
+    name: Create release
     runs-on: ubuntu-latest
     needs:
       - build-apk
