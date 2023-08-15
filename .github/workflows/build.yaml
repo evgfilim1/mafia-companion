@@ -145,10 +145,10 @@ jobs:
           start_line="$(grep -En "## \[v?$GITHUB_REF_NAME\]" CHANGELOG.md | cut -d ':' -f 1)"
           end_line="$(grep -En "## \[v?$previous_tag\]" CHANGELOG.md | cut -d ':' -f 1)"
           sed -n "$((${start_line} + 1)),$((${end_line} - 1))p" CHANGELOG.md >$file
-          sed -Ei 's/###/##/;1{/^\s*$/d}' release-notes.md
+          sed -Ei 's/###/##/;1{/^\s*$/d}' $file
           # ChatGPT-powered magic to remove trailing empty lines
-          sed -i ':l;/^\n*$/{$d;N;bl;}' release-notes.md
-          echo -ne '\n## Commits\n\n' >>release-notes.md
+          sed -i ':l;/^\n*$/{$d;N;bl;}' $file
+          echo -ne '\n## Commits\n\n' >>$file
           git log --format="- %h: %s (%aN)" "${previous_tag}..${GITHUB_REF_NAME}" >>$file
           echo "$GITHUB_REF_NAME" | awk '{ print "prerelease=" (($1 ~ /v[0-9]+\.[0-9]+\.[0-9]+-.+/) ? "true" : "false"); }' >>$GITHUB_OUTPUT
           echo "release_notes=$file" >>$GITHUB_OUTPUT
