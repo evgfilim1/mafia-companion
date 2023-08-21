@@ -27,17 +27,21 @@ class _CounterState extends State<Counter> {
     _value = widget.initialValue;
   }
 
-  VoidCallback? _onButtonPressedFactory({required bool increment}) {
-    final delta = increment ? 1 : -1;
-    if (increment && _value >= widget.max) {
+  VoidCallback? _onButtonPressedFactory({int? delta, int? newValue}) {
+    if (delta == null && newValue == null) {
+      throw ArgumentError("Either delta or newValue must be provided");
+    }
+    if (delta != null && newValue != null) {
+      throw ArgumentError("Only one of delta or newValue must be provided");
+    }
+    if (delta != null) {
+      newValue = _value + delta;
+    }
+    if (newValue! > widget.max || newValue < widget.min || _value == newValue) {
       return null;
     }
-    if (!increment && _value <= widget.min) {
-      return null;
-    }
-    final newValue = _value + delta;
     return () => setState(() {
-          _value = newValue;
+          _value = newValue!;
           widget.onValueChanged?.call(newValue);
         });
   }
@@ -46,18 +50,53 @@ class _CounterState extends State<Counter> {
   Widget build(BuildContext context) => Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          IconButton(
-            onPressed: _onButtonPressedFactory(increment: false),
-            icon: const Icon(Icons.remove),
+          _IconButtonWithLongPress(
+            onTap: _onButtonPressedFactory(delta: -1),
+            onLongPress: _onButtonPressedFactory(newValue: widget.min),
+            icon: Icons.remove,
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
             child: Text("$_value", style: const TextStyle(fontSize: 28)),
           ),
-          IconButton(
-            onPressed: _onButtonPressedFactory(increment: true),
-            icon: const Icon(Icons.add),
+          _IconButtonWithLongPress(
+            onTap: _onButtonPressedFactory(delta: 1),
+            onLongPress: _onButtonPressedFactory(newValue: widget.max),
+            icon: Icons.add,
           ),
         ],
       );
+}
+
+class _IconButtonWithLongPress extends StatelessWidget {
+  final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
+  final IconData icon;
+
+  const _IconButtonWithLongPress({
+    super.key,
+    this.onTap,
+    this.onLongPress,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = onTap == null && onLongPress == null ? Theme.of(context).disabledColor : null;
+    return InkWell(
+      borderRadius: BorderRadius.circular(24),
+      onTap: onTap,
+      onLongPress: onLongPress,
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Theme(
+          data: Theme.of(context),
+          child: Icon(
+            icon,
+            color: color,
+          ),
+        ),
+      ),
+    );
+  }
 }
