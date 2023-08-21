@@ -402,7 +402,8 @@ class Game {
       } else {
         _playerWarns.update(k, (value) => value - 1);
       }
-      _log.removeLastWhere((item) => item is PlayerWarnedGameLogItem && item.playerNumber == number);
+      _log.removeLastWhere(
+          (item) => item is PlayerWarnedGameLogItem && item.playerNumber == number);
     }
   }
 
@@ -465,7 +466,8 @@ class Game {
         currentPlayerIndex: 0,
       );
     }
-    if (state.stage == GameStage.voting) {
+    if (state.stage == GameStage.voting ||
+        (state.stage == GameStage.finalVoting && maxVotesPlayers.length != state.votes.length)) {
       return GameStateWithCurrentPlayer(
         stage: GameStage.excuse,
         day: state.day,
@@ -481,7 +483,6 @@ class Game {
         thisNightKilledPlayerNumber: null,
       );
     }
-    // TODO: https://mafiaworldtour.com/fiim-rules 4.4.12.2
     return GameStateDropTableVoting(
       day: state.day,
       playerNumbers: maxVotesPlayers,

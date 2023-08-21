@@ -401,6 +401,7 @@ const validTransitions = {
   GameStage.preFinalVoting: [GameStage.finalVoting],
   GameStage.finalVoting: [
     GameStage.finalVoting,
+    GameStage.excuse,
     GameStage.dayLastWords,
     GameStage.dropTableVoting,
     GameStage.nightKill,
