@@ -399,7 +399,12 @@ const validTransitions = {
   GameStage.voting: [GameStage.voting, GameStage.excuse, GameStage.dayLastWords],
   GameStage.excuse: [GameStage.excuse, GameStage.preFinalVoting],
   GameStage.preFinalVoting: [GameStage.finalVoting],
-  GameStage.finalVoting: [GameStage.finalVoting, GameStage.dayLastWords, GameStage.dropTableVoting],
+  GameStage.finalVoting: [
+    GameStage.finalVoting,
+    GameStage.dayLastWords,
+    GameStage.dropTableVoting,
+    GameStage.nightKill,
+  ],
   GameStage.dropTableVoting: [GameStage.dayLastWords, GameStage.nightKill],
   GameStage.dayLastWords: [GameStage.dayLastWords, GameStage.nightKill, GameStage.finish],
   GameStage.nightKill: [GameStage.nightCheck],

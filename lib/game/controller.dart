@@ -473,6 +473,14 @@ class Game {
         currentPlayerIndex: 0,
       );
     }
+    if (maxVotesPlayers.length == players.aliveCount) {
+      // Rule 7.8
+      return GameStateNightKill(
+        day: state.day,
+        mafiaTeam: players.mafiaTeam.map((player) => player.number).toUnmodifiableList(),
+        thisNightKilledPlayerNumber: null,
+      );
+    }
     // TODO: https://mafiaworldtour.com/fiim-rules 4.4.12.2
     return GameStateDropTableVoting(
       day: state.day,
