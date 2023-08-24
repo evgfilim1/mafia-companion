@@ -12,8 +12,8 @@ import "orientation_dependent.dart";
 import "player_button.dart";
 
 enum PlayerActions {
-  warn("Дать предупреждение"),
-  removeWarn("Снять предупреждение"),
+  warn("Выдать фол"),
+  removeWarn("Убрать фол"),
   kill("Убить"),
   revive("Воскресить"),
   ;
@@ -71,8 +71,8 @@ class PlayerButtons extends OrientationDependentWidget {
     final res = await showDialog<bool>(
       context: context,
       builder: (context) => ConfirmationDialog(
-        title: const Text("Выдать предупреждение"),
-        content: Text("Вы уверены, что хотите выдать предупреждение игроку #$playerNumber?"),
+        title: const Text("Выдать фол"),
+        content: Text("Вы уверены, что хотите выдать фол игроку #$playerNumber?"),
       ),
     );
     debugPrint("$res");
@@ -82,7 +82,7 @@ class PlayerButtons extends OrientationDependentWidget {
         unawaited(
           showSnackBar(
             context,
-            SnackBar(content: Text("Выдано предупреждение игроку $playerNumber")),
+            SnackBar(content: Text("Выдан фол игроку $playerNumber")),
           ),
         );
       }

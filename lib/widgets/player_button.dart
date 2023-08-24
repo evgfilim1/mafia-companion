@@ -32,7 +32,7 @@ class PlayerButton extends StatelessWidget {
         content: Text(
           "Состояние: $isAliveText\n"
           "Роль: ${player.role.prettyName}\n"
-          "Предупреждений: $warnCount",
+          "Фолов: $warnCount",
         ),
         actions: [
           ...longPressActions,

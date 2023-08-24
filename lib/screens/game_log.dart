@@ -38,7 +38,7 @@ extension DescribeLogItem on BaseGameLogItem {
         ):
         result.add("${checkedByRole.prettyName} проверил игрока #$playerNumber");
       case PlayerWarnedGameLogItem(playerNumber: final playerNumber):
-        result.add("Выдано предупреждение игроку #$playerNumber");
+        result.add("Выдан фол игроку #$playerNumber");
     }
     return result;
   }
