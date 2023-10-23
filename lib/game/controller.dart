@@ -383,7 +383,7 @@ class Game {
       return null;
     }
     final state = _state as GameStateVoting;
-    return state.votes[players.getByNumber(playerNumber)];
+    return state.votes[playerNumber];
   }
 
   void warnPlayer(int number) {

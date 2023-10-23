@@ -122,7 +122,6 @@ class _RotatableMainScreenBody extends OrientationDependentWidget {
   final bool showRoles;
 
   const _RotatableMainScreenBody({
-    super.key,
     this.showRoles = false,
   });
 
@@ -144,7 +143,7 @@ class _RotatableMainScreenBody extends OrientationDependentWidget {
 }
 
 class _MainScreenMainBodyContent extends StatelessWidget {
-  const _MainScreenMainBodyContent({super.key});
+  const _MainScreenMainBodyContent();
 
   @override
   Widget build(BuildContext context) {

@@ -48,7 +48,6 @@ class _GameControlButton extends StatelessWidget {
   final String label;
 
   const _GameControlButton({
-    super.key,
     this.onTap,
     required this.icon,
     required this.label,
