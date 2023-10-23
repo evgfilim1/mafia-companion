@@ -17,9 +17,11 @@ Widget _buildWidget({
     MaterialApp(
       home: Center(
         child: PlayerButton(
-          number: number,
-          role: role,
-          isAlive: isAlive,
+          player: Player(
+            number: number,
+            role: role,
+            isAlive: isAlive,
+          ),
           isSelected: isSelected,
           isActive: isActive,
           warnCount: warnCount,
@@ -80,7 +82,7 @@ void main() {
       expect(find.text("Игрок 1"), findsOneWidget);
       expect(find.textContaining("Состояние: Жив"), findsOneWidget);
       expect(find.textContaining("Роль: Мирный житель"), findsOneWidget);
-      expect(find.textContaining("Предупреждений: 0"), findsOneWidget);
+      expect(find.textContaining("Фолов: 0"), findsOneWidget);
     });
   });
 }

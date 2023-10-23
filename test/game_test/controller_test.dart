@@ -37,8 +37,8 @@ void main() {
       expect(
         game.state,
         isA<GameStateNightKill>().having(
-          (state) => state.thisNightKilledPlayer!.number,
-          "thisNightKilledPlayer!.number",
+          (state) => state.thisNightKilledPlayerNumber,
+          "thisNightKilledPlayerNumber",
           4,
         ),
       );
@@ -47,7 +47,7 @@ void main() {
         game.state,
         isA<GameStateWithPlayer>()
             .having((state) => state.stage, "stage", GameStage.nightLastWords)
-            .having((state) => state.player.number, "player.number", 4),
+            .having((state) => state.currentPlayerNumber, "currentPlayerNumber", 4),
       );
       game.setNextState();
       expect(game.players.getByNumber(4).isAlive, false);
@@ -66,8 +66,8 @@ void main() {
         isA<GameStateSpeaking>()
             .having((state) => state.accusations, "accusations", hasLength(1))
             .having(
-              (state) => state.accusations.values.first.number,
-              "accusations.values.first.number",
+              (state) => state.accusations.values.first,
+              "accusations.values.first",
               5,
             ),
         reason: "Player #1 wasn't able to change his vote",
@@ -128,7 +128,7 @@ void main() {
         game.state,
         isA<GameStateWithCurrentPlayer>()
             .having((state) => state.stage, "stage", GameStage.excuse)
-            .having((state) => state.players, "players", hasLength(2)),
+            .having((state) => state.playerNumbers, "playerNumbers", hasLength(2)),
       );
     });
   });
@@ -143,7 +143,7 @@ void main() {
       expect(game.players.getByNumber(4).isAlive, false);
       expect(
         game.state,
-        isA<GameStateSpeaking>().having((state) => state.player.number, "player.number", 2),
+        isA<GameStateSpeaking>().having((state) => state.currentPlayerNumber, "currentPlayerNumber", 2),
       );
 
       game
@@ -153,7 +153,7 @@ void main() {
       expect(game.players.getByNumber(9).isAlive, false);
       expect(
         game.state,
-        isA<GameStateSpeaking>().having((state) => state.player.number, "player.number", 3),
+        isA<GameStateSpeaking>().having((state) => state.currentPlayerNumber, "currentPlayerNumber", 3),
       );
 
       game
@@ -163,7 +163,7 @@ void main() {
       expect(game.players.getByNumber(7).isAlive, false);
       expect(
         game.state,
-        isA<GameStateSpeaking>().having((state) => state.player.number, "player.number", 5),
+        isA<GameStateSpeaking>().having((state) => state.currentPlayerNumber, "currentPlayerNumber", 5),
       );
 
       game
