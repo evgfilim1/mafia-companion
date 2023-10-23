@@ -3,7 +3,7 @@ import "package:flutter/material.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import "package:provider/provider.dart";
 
-import "../settings.dart";
+import "../utils/settings.dart";
 import "../utils/ui.dart";
 
 class _ChoiceListTile<T> extends StatelessWidget {
@@ -71,6 +71,17 @@ class SettingsScreen extends StatelessWidget {
             },
             index: settings.themeMode.index,
             onChanged: settings.setThemeMode,
+          ),
+          _ChoiceListTile(
+            leading: const Icon(Icons.color_lens),
+            title: const Text("Цветовая схема"),
+            items: ColorSchemeType.values,
+            itemToString: (item) => switch (item) {
+              ColorSchemeType.system => "Системная",
+              ColorSchemeType.app => "Приложения",
+            },
+            index: settings.colorSchemeType.index,
+            onChanged: settings.setColorSchemeType,
           ),
           _ChoiceListTile(
             leading: const Icon(Icons.timer),

@@ -86,17 +86,17 @@ class GameState extends BaseGameState {
   int get hashCode => Object.hash(stage, day);
 }
 
-/// Represents game state with related player.
+/// Represents game state with related [currentPlayerNumber].
 ///
 /// [stage] can be [GameStage.night0SheriffCheck] or [GameStage.nightLastWords].
 @immutable
 class GameStateWithPlayer extends BaseGameState {
-  final Player player;
+  final int currentPlayerNumber;
 
   const GameStateWithPlayer({
     required super.stage,
     required super.day,
-    required this.player,
+    required this.currentPlayerNumber,
   }) : assert(
           stage == GameStage.night0SheriffCheck || stage == GameStage.nightLastWords,
           "Invalid stage for GameStateWithPlayer: $stage",
@@ -109,24 +109,24 @@ class GameStateWithPlayer extends BaseGameState {
           runtimeType == other.runtimeType &&
           stage == other.stage &&
           day == other.day &&
-          player == other.player;
+          currentPlayerNumber == other.currentPlayerNumber;
 
   @override
-  int get hashCode => Object.hash(stage, day, player);
+  int get hashCode => Object.hash(stage, day, currentPlayerNumber);
 }
 
-/// Represents state with current [player] and [accusations]. Accusations are a map from accuser
-/// to accused player.
+/// Represents state with [currentPlayerNumber] and [accusations].
+/// Accusations are a map from accuser number to accused number.
 ///
 /// [stage] is always [GameStage.speaking].
 @immutable
 class GameStateSpeaking extends BaseGameState {
-  final Player player;
-  final LinkedHashMap<Player, Player> accusations;
+  final int currentPlayerNumber;
+  final LinkedHashMap<int, int> accusations;
 
   const GameStateSpeaking({
     required super.day,
-    required this.player,
+    required this.currentPlayerNumber,
     required this.accusations,
   }) : super(stage: GameStage.speaking);
 
@@ -137,28 +137,28 @@ class GameStateSpeaking extends BaseGameState {
           runtimeType == other.runtimeType &&
           stage == other.stage &&
           day == other.day &&
-          player == other.player &&
+          currentPlayerNumber == other.currentPlayerNumber &&
           accusations == other.accusations;
 
   @override
-  int get hashCode => Object.hash(stage, day, player, accusations);
+  int get hashCode => Object.hash(stage, day, currentPlayerNumber, accusations);
 }
 
-/// Represents state with current [player] and [votes]. [votes] is a count of votes for each player,
-/// or `null` if player wasn't voted against yet.
+/// Represents state with [currentPlayerNumber], [currentPlayerVotes] and total [votes].
+/// [votes] is a count of votes for each player, or `null` if player wasn't voted against yet.
 ///
 /// [stage] can be [GameStage.voting] or [GameStage.finalVoting].
 @immutable
 class GameStateVoting extends BaseGameState {
-  final Player player;
-  final LinkedHashMap<Player, int?> votes;
+  final LinkedHashMap<int, int?> votes;
+  final int currentPlayerNumber;
   final int? currentPlayerVotes;
 
   const GameStateVoting({
     required super.stage,
     required super.day,
-    required this.player,
     required this.votes,
+    required this.currentPlayerNumber,
     required this.currentPlayerVotes,
   }) : assert(
           stage == GameStage.voting || stage == GameStage.finalVoting,
@@ -172,24 +172,25 @@ class GameStateVoting extends BaseGameState {
           runtimeType == other.runtimeType &&
           stage == other.stage &&
           day == other.day &&
-          player == other.player &&
-          votes == other.votes;
+          votes == other.votes &&
+          currentPlayerNumber == other.currentPlayerNumber &&
+          currentPlayerVotes == other.currentPlayerVotes;
 
   @override
-  int get hashCode => Object.hash(stage, day, player, votes);
+  int get hashCode => Object.hash(stage, day, votes, currentPlayerNumber, currentPlayerVotes);
 }
 
-/// Represents state with [players] and [votesForDropTable].
+/// Represents state with [playerNumbers] and [votesForDropTable].
 ///
 /// [stage] is always [GameStage.dropTableVoting].
 @immutable
 class GameStateDropTableVoting extends BaseGameState {
-  final List<Player> players;
+  final List<int> playerNumbers;
   final int votesForDropTable;
 
   const GameStateDropTableVoting({
     required super.day,
-    required this.players,
+    required this.playerNumbers,
     required this.votesForDropTable,
   }) : super(stage: GameStage.dropTableVoting);
 
@@ -200,24 +201,24 @@ class GameStateDropTableVoting extends BaseGameState {
           runtimeType == other.runtimeType &&
           stage == other.stage &&
           day == other.day &&
-          players == other.players &&
+          playerNumbers == other.playerNumbers &&
           votesForDropTable == other.votesForDropTable;
 
   @override
-  int get hashCode => Object.hash(stage, day, players, votesForDropTable);
+  int get hashCode => Object.hash(stage, day, playerNumbers, votesForDropTable);
 }
 
-/// Represents game state with related [players].
+/// Represents game state with related [playerNumbers].
 ///
 /// [stage] can be [GameStage.night0], [GameStage.preVoting] or [GameStage.preFinalVoting].
 @immutable
 class GameStateWithPlayers extends BaseGameState {
-  final List<Player> players;
+  final List<int> playerNumbers;
 
   const GameStateWithPlayers({
     required super.stage,
     required super.day,
-    required this.players,
+    required this.playerNumbers,
   }) : assert(
           stage == GameStage.night0 ||
               stage == GameStage.preVoting ||
@@ -232,10 +233,10 @@ class GameStateWithPlayers extends BaseGameState {
           runtimeType == other.runtimeType &&
           stage == other.stage &&
           day == other.day &&
-          players == other.players;
+          playerNumbers == other.playerNumbers;
 
   @override
-  int get hashCode => Object.hash(stage, day, players);
+  int get hashCode => Object.hash(stage, day, playerNumbers);
 }
 
 /// Represents night kill game state.
@@ -243,13 +244,13 @@ class GameStateWithPlayers extends BaseGameState {
 /// [stage] is always [GameStage.nightKill].
 @immutable
 class GameStateNightKill extends BaseGameState {
-  final List<Player> mafiaTeam;
-  final Player? thisNightKilledPlayer;
+  final List<int> mafiaTeam;
+  final int? thisNightKilledPlayerNumber;
 
   const GameStateNightKill({
     required super.day,
     required this.mafiaTeam,
-    required this.thisNightKilledPlayer,
+    required this.thisNightKilledPlayerNumber,
   }) : super(stage: GameStage.nightKill);
 
   @override
@@ -260,10 +261,10 @@ class GameStateNightKill extends BaseGameState {
           stage == other.stage &&
           day == other.day &&
           mafiaTeam == other.mafiaTeam &&
-          thisNightKilledPlayer == other.thisNightKilledPlayer;
+          thisNightKilledPlayerNumber == other.thisNightKilledPlayerNumber;
 
   @override
-  int get hashCode => Object.hash(stage, day, mafiaTeam, thisNightKilledPlayer);
+  int get hashCode => Object.hash(stage, day, mafiaTeam, thisNightKilledPlayerNumber);
 }
 
 /// Represents night check game state.
@@ -271,13 +272,15 @@ class GameStateNightKill extends BaseGameState {
 /// [stage] is always [GameStage.nightCheck].
 @immutable
 class GameStateNightCheck extends BaseGameState {
-  final Player player;
-  final Player? thisNightKilledPlayer;
+  final int activePlayerNumber;
+  final PlayerRole activePlayerRole;
+  final int? thisNightKilledPlayerNumber;
 
   const GameStateNightCheck({
     required super.day,
-    required this.player,
-    required this.thisNightKilledPlayer,
+    required this.activePlayerNumber,
+    required this.activePlayerRole,
+    required this.thisNightKilledPlayerNumber,
   }) : super(stage: GameStage.nightCheck);
 
   @override
@@ -287,33 +290,35 @@ class GameStateNightCheck extends BaseGameState {
           runtimeType == other.runtimeType &&
           stage == other.stage &&
           day == other.day &&
-          player == other.player &&
-          thisNightKilledPlayer == other.thisNightKilledPlayer;
+          activePlayerNumber == other.activePlayerNumber &&
+          activePlayerRole == other.activePlayerRole &&
+          thisNightKilledPlayerNumber == other.thisNightKilledPlayerNumber;
 
   @override
-  int get hashCode => Object.hash(stage, day, player, thisNightKilledPlayer);
+  int get hashCode =>
+      Object.hash(stage, day, activePlayerNumber, activePlayerRole, thisNightKilledPlayerNumber);
 }
 
-/// Represents game state with related [players] and current [playerIndex].
+/// Represents game state with related [playerNumbers] and current [currentPlayerIndex].
 ///
 /// [stage] can be [GameStage.excuse] or [GameStage.dayLastWords].
 @immutable
 class GameStateWithCurrentPlayer extends BaseGameState {
-  final List<Player> players;
-  final int playerIndex;
+  final List<int> playerNumbers;
+  final int currentPlayerIndex;
 
   const GameStateWithCurrentPlayer({
     required super.stage,
     required super.day,
-    required this.players,
-    required this.playerIndex,
+    required this.playerNumbers,
+    required this.currentPlayerIndex,
   })  : assert(
           stage == GameStage.excuse || stage == GameStage.dayLastWords,
           "Invalid stage for GameStateWithCurrentPlayer: $stage",
         ),
         assert(
-          0 <= playerIndex && playerIndex < players.length,
-          "Invalid playerIndex for GameStateWithCurrentPlayer: $playerIndex",
+          0 <= currentPlayerIndex && currentPlayerIndex < playerNumbers.length,
+          "Invalid playerIndex for GameStateWithCurrentPlayer: $currentPlayerIndex",
         );
 
   @override
@@ -323,13 +328,13 @@ class GameStateWithCurrentPlayer extends BaseGameState {
           runtimeType == other.runtimeType &&
           stage == other.stage &&
           day == other.day &&
-          players == other.players &&
-          playerIndex == other.playerIndex;
+          playerNumbers == other.playerNumbers &&
+          currentPlayerIndex == other.currentPlayerIndex;
 
   @override
-  int get hashCode => Object.hash(stage, day, players, playerIndex);
+  int get hashCode => Object.hash(stage, day, playerNumbers, currentPlayerIndex);
 
-  Player get player => players[playerIndex];
+  int get currentPlayerNumber => playerNumbers[currentPlayerIndex];
 }
 
 /// Represents finished game state. Contains [winner] team, which is one of [PlayerRole.mafia],
@@ -394,7 +399,13 @@ const validTransitions = {
   GameStage.voting: [GameStage.voting, GameStage.excuse, GameStage.dayLastWords],
   GameStage.excuse: [GameStage.excuse, GameStage.preFinalVoting],
   GameStage.preFinalVoting: [GameStage.finalVoting],
-  GameStage.finalVoting: [GameStage.finalVoting, GameStage.dayLastWords, GameStage.dropTableVoting],
+  GameStage.finalVoting: [
+    GameStage.finalVoting,
+    GameStage.excuse,
+    GameStage.dayLastWords,
+    GameStage.dropTableVoting,
+    GameStage.nightKill,
+  ],
   GameStage.dropTableVoting: [GameStage.dayLastWords, GameStage.nightKill],
   GameStage.dayLastWords: [GameStage.dayLastWords, GameStage.nightKill, GameStage.finish],
   GameStage.nightKill: [GameStage.nightCheck],

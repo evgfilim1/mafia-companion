@@ -1,3 +1,5 @@
+import "dart:math";
+
 extension MinMaxItemNum<T extends num> on Iterable<T> {
   T max() => reduce((value, element) => value > element ? value : element);
 
@@ -14,4 +16,8 @@ extension Sum on Iterable<int> {
 
 extension IsAnyOf<T> on T {
   bool isAnyOf(Iterable<T> values) => values.contains(this);
+}
+
+extension RandomElement<T> on List<T> {
+  T get randomElement => this[Random().nextInt(length)];
 }

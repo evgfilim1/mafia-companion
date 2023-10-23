@@ -21,7 +21,7 @@ class BottomControlBar extends StatelessWidget {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(8),
-              child: GameControl(
+              child: _GameControlButton(
                 onTap: onTapBack,
                 icon: Icons.arrow_back,
                 label: backLabel,
@@ -31,7 +31,7 @@ class BottomControlBar extends StatelessWidget {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(8),
-              child: GameControl(
+              child: _GameControlButton(
                 onTap: onTapNext,
                 icon: Icons.arrow_forward,
                 label: nextLabel,
@@ -42,12 +42,12 @@ class BottomControlBar extends StatelessWidget {
       );
 }
 
-class GameControl extends StatelessWidget {
+class _GameControlButton extends StatelessWidget {
   final VoidCallback? onTap;
   final IconData icon;
   final String label;
 
-  const GameControl({
+  const _GameControlButton({
     super.key,
     this.onTap,
     required this.icon,
@@ -60,7 +60,7 @@ class GameControl extends StatelessWidget {
     return ElevatedButton(
       onPressed: onTap,
       child: Padding(
-        padding: const EdgeInsets.all(8),
+        padding: const EdgeInsets.symmetric(vertical: 8),
         child: Column(
           children: [
             Icon(icon, color: color),

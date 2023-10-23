@@ -2,11 +2,24 @@ name: Build app
 
 on:
   push:
-    tags:
-      - '*'
+    paths:
+      - ".github/workflows/build.yaml"
+      - "android/**"
+      - "lib/**"
+      - "web/**"
+      - "pubspec.yaml"
+      - "pubspec.lock"
+  pull_request:
+    paths:
+      - ".github/workflows/build.yaml"
+      - "android/**"
+      - "lib/**"
+      - "web/**"
+      - "pubspec.yaml"
+      - "pubspec.lock"
 
 env:
-  JAVA_VERSION: "11"
+  JAVA_VERSION: "17"
   FLUTTER_CHANNEL: "beta"
 
 permissions:
@@ -32,18 +45,22 @@ jobs:
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
           cache: true
-          cache-key: "flutter-:os:-:arch:-:version:-:hash:"
 
       - name: Get Flutter dependencies
         run: flutter pub get
 
-      - name: Build app for Android
+      - name: Build release app for Android
         run: flutter build apk --split-per-abi
+        if: startsWith(github.ref, 'refs/tags/v')
+
+      - name: Build debug app for Android
+        run: flutter build apk --debug --split-per-abi
+        if: "!startsWith(github.ref, 'refs/tags/v')"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v3
         with:
-          name: android-apk
+          name: android-apks
           if-no-files-found: error
           path: |
             build/app/outputs/flutter-apk/app-*.apk
@@ -60,14 +77,12 @@ jobs:
         with:
           distribution: zulu
           java-version: ${{ env.JAVA_VERSION }}
-          cache: gradle
 
       - name: Install Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: ${{ env.FLUTTER_CHANNEL }}
           cache: true
-          cache-key: "flutter-:os:-:arch:-:version:-:hash:"
 
       - name: Get Flutter dependencies
         run: flutter pub get
@@ -85,29 +100,6 @@ jobs:
         with:
           path: build/web/
 
-  draft-release:
-    name: Draft release
-    runs-on: ubuntu-latest
-    needs:
-      - build-apk
-    permissions:
-      contents: write
-    steps:
-      - name: Download APK artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: android-apk
-          path: build
-
-      - name: Draft a release
-        uses: marvinpinto/action-automatic-releases@latest
-        with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          prerelease: true
-          draft: true
-          files: |
-            build/app-*.apk
-
   publish-web:
     name: Publish web build on GitHub Pages
     runs-on: ubuntu-latest
@@ -119,7 +111,53 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
+    if: startsWith(github.ref, 'refs/tags/v')
     steps:
       - name: Publish web on GitHub pages
         id: deployment
         uses: actions/deploy-pages@v2
+
+  create-release:
+    name: Create release
+    runs-on: ubuntu-latest
+    needs:
+      - build-apk
+    permissions:
+      contents: write
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Download APK artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: android-apks
+          path: build
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          file="$(mktemp --suffix=.md)"
+          previous_tag="$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^")"
+          start_line="$(grep -En "## \[v?$GITHUB_REF_NAME\]" CHANGELOG.md | cut -d ':' -f 1)"
+          end_line="$(grep -En "## \[v?$previous_tag\]" CHANGELOG.md | cut -d ':' -f 1)"
+          sed -n "$((${start_line} + 1)),$((${end_line} - 1))p" CHANGELOG.md >$file
+          sed -Ei 's/###/##/;1{/^\s*$/d}' $file
+          # ChatGPT-powered magic to remove trailing empty lines
+          sed -i ':l;/^\n*$/{$d;N;bl;}' $file
+          echo -ne '\n## Commits\n\n' >>$file
+          git log --format="- %h: %s (%aN)" "${previous_tag}..${GITHUB_REF_NAME}" >>$file
+          echo "$GITHUB_REF_NAME" | awk '{ print "prerelease=" (($1 ~ /v[0-9]+\.[0-9]+\.[0-9]+-.+/) ? "true" : "false"); }' >>$GITHUB_OUTPUT
+          echo "release_notes=$file" >>$GITHUB_OUTPUT
+
+      - name: Create a release
+        uses: softprops/action-gh-release@v1
+        with:
+          body_path: ${{ steps.release_notes.outputs.release_notes }}
+          prerelease: ${{ steps.release_notes.outputs.prerelease }}
+          files: |
+            build/app-*.apk
+          fail_on_unmatched_files: true

@@ -1,12 +1,15 @@
 import "package:flutter/material.dart";
 
-import "game/controller.dart";
-import "game/player.dart";
-import "game/states.dart";
-import "utils/extensions.dart";
+import "../game/controller.dart";
+import "../game/log.dart";
+import "../game/player.dart";
+import "../game/states.dart";
+import "extensions.dart";
 
 class GameController with ChangeNotifier {
   Game _game = Game();
+
+  Iterable<BaseGameLogItem> get gameLog => _game.log;
 
   BaseGameState get state => _game.state;
 
@@ -54,14 +57,14 @@ class GameController with ChangeNotifier {
   }
 
   void warnPlayer(int player) {
-    _game.players.warn(player);
+    _game.warnPlayer(player);
     notifyListeners();
   }
 
-  int getPlayerWarnCount(int player) => _game.players.getWarnCount(player);
+  int getPlayerWarnCount(int player) => _game.getPlayerWarnCount(player);
 
-  void unwarnPlayer(int player) {
-    _game.players.unwarn(player);
+  void removePlayerWarn(int player) {
+    _game.removePlayerWarn(player);
     notifyListeners();
   }
 
@@ -74,4 +77,6 @@ class GameController with ChangeNotifier {
     _game.players.revive(player);
     notifyListeners();
   }
+
+  bool checkPlayer(int number) => _game.checkPlayer(number);
 }
