@@ -1,6 +1,7 @@
 import "dart:async";
 
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import "package:provider/provider.dart";
 
@@ -68,11 +69,10 @@ class _MainScreenState extends State<MainScreen> {
     final isGameRunning = !gameState.stage.isAnyOf([GameStage.prepare, GameStage.finish]);
     final packageInfo = context.watch<PackageInfo>();
 
-    return WillPopScope(
-      onWillPop: () async {
-        if (controller.state.stage == GameStage.prepare) {
-          return true;
-        }
+    return PopScope(
+      canPop: controller.state.stage == GameStage.prepare,
+      onPopInvoked: (didPop) async {
+        if (didPop) return;
         final res = await showDialog<bool>(
           context: context,
           builder: (context) => const ConfirmationDialog(
@@ -80,7 +80,10 @@ class _MainScreenState extends State<MainScreen> {
             content: Text("Вы уверены, что хотите выйти из игры? Все данные будут потеряны."),
           ),
         );
-        return res ?? false;
+        if ((res ?? false) && context.mounted) {
+          // exit flutter app
+          await SystemNavigator.pop();
+        }
       },
       child: Scaffold(
         appBar: AppBar(
