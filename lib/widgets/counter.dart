@@ -74,7 +74,6 @@ class _IconButtonWithLongPress extends StatelessWidget {
   final IconData icon;
 
   const _IconButtonWithLongPress({
-    super.key,
     this.onTap,
     this.onLongPress,
     required this.icon,
