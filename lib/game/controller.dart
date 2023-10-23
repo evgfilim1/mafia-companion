@@ -403,7 +403,8 @@ class Game {
         _playerWarns.update(k, (value) => value - 1);
       }
       _log.removeLastWhere(
-          (item) => item is PlayerWarnedGameLogItem && item.playerNumber == number);
+        (item) => item is PlayerWarnedGameLogItem && item.playerNumber == number,
+      );
     }
   }
 

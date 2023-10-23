@@ -75,7 +75,10 @@ class _MainScreenState extends State<MainScreen> {
         }
         final res = await showDialog<bool>(
           context: context,
-          builder: (context) => const ConfirmationDialog(title: Text("Выход из игры"), content: Text("Вы уверены, что хотите выйти из игры? Все данные будут потеряны."),),
+          builder: (context) => const ConfirmationDialog(
+            title: Text("Выход из игры"),
+            content: Text("Вы уверены, что хотите выйти из игры? Все данные будут потеряны."),
+          ),
         );
         return res ?? false;
       },
