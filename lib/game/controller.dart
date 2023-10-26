@@ -97,8 +97,13 @@ class Game {
         );
       case GameStage.speaking:
         final state = _state as GameStateSpeaking;
-        final next = _nextAlivePlayer(fromNumber: state.currentPlayerNumber);
-        if (next.number == _firstSpeakingPlayerNumber) {
+        final alreadySpokeCount = _log
+            .whereType<StateChangeGameLogItem>()
+            .map((e) => e.oldState)
+            .where((e) => e is GameStateSpeaking && e.day == _state.day)
+            .cast<GameStateSpeaking>()
+            .length;
+        if (alreadySpokeCount + 1 == players.aliveCount) {
           if (state.accusations.isEmpty || state.day == 1 && state.accusations.length == 1) {
             return GameStateNightKill(
               day: state.day,
@@ -112,6 +117,7 @@ class Game {
             playerNumbers: state.accusations.values.toUnmodifiableList(),
           );
         }
+        final next = _nextAlivePlayer(fromNumber: state.currentPlayerNumber);
         assert(next.isAlive, "Next player must be alive");
         return GameStateSpeaking(
           currentPlayerNumber: next.number,
