@@ -17,6 +17,12 @@ import "../widgets/orientation_dependent.dart";
 import "../widgets/player_buttons.dart";
 import "../widgets/restart_dialog.dart";
 
+enum _PopupMenuItems {
+  log,
+  notes,
+  roles,
+}
+
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
@@ -90,24 +96,42 @@ class _MainScreenState extends State<MainScreen> {
           title: isGameRunning ? Text("День ${controller.state.day}") : Text(packageInfo.appName),
           actions: [
             IconButton(
-              onPressed: () => Navigator.pushNamed(context, "/log"),
-              tooltip: "Журнал игры",
-              icon: const Icon(Icons.list),
-            ),
-            IconButton(
-              onPressed: () => _showNotes(context),
-              tooltip: "Заметки",
-              icon: const Icon(Icons.sticky_note_2),
-            ),
-            IconButton(
-              onPressed: () => setState(() => _showRoles = !_showRoles),
-              tooltip: "${!_showRoles ? "Показать" : "Скрыть"} роли",
-              icon: const Icon(Icons.person_search),
-            ),
-            IconButton(
               onPressed: () => _askRestartGame(context),
               tooltip: "Перезапустить игру",
               icon: const Icon(Icons.restart_alt),
+            ),
+            PopupMenuButton<_PopupMenuItems>(
+              onSelected: (value) {
+                switch (value) {
+                  case _PopupMenuItems.log:
+                    Navigator.pushNamed(context, "/log");
+                  case _PopupMenuItems.notes:
+                    _showNotes(context);
+                  case _PopupMenuItems.roles:
+                    setState(() => _showRoles = !_showRoles);
+                }
+              },
+              itemBuilder: (context) => [
+                const PopupMenuItem(
+                  value: _PopupMenuItems.log,
+                  child: ListTile(
+                    leading: Icon(Icons.list),
+                    title: Text("Журнал игры"),
+                  ),
+                ),
+                const PopupMenuItem(
+                  value: _PopupMenuItems.notes,
+                  child: ListTile(
+                    leading: Icon(Icons.sticky_note_2),
+                    title: Text("Заметки"),
+                  ),
+                ),
+                CheckedPopupMenuItem(
+                  value: _PopupMenuItems.roles,
+                  checked: _showRoles,
+                  child: const Text("Показывать роли"),
+                ),
+              ],
             ),
           ],
         ),
