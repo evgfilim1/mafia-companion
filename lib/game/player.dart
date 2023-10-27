@@ -1,3 +1,5 @@
+import "dart:math";
+
 import "package:flutter/foundation.dart";
 
 import "../utils/extensions.dart";
@@ -59,6 +61,7 @@ List<Player> generatePlayers({
     PlayerRole.sheriff: 1,
     PlayerRole.don: 1,
   },
+  Random? random,
 }) {
   if (roles[PlayerRole.sheriff]! + roles[PlayerRole.don]! != 2) {
     throw ArgumentError("Only one sheriff and one don are allowed");
@@ -72,7 +75,7 @@ List<Player> generatePlayers({
   final playerRoles = roles.entries
       .expand((entry) => List.filled(entry.value, entry.key))
       .toList(growable: false)
-    ..shuffle();
+    ..shuffle(random);
   return playerRoles
       .asMap()
       .entries

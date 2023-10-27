@@ -1,3 +1,5 @@
+import "dart:math";
+
 import "package:flutter/material.dart";
 
 import "../game/controller.dart";
@@ -6,8 +8,23 @@ import "../game/player.dart";
 import "../game/states.dart";
 import "extensions.dart";
 
+int _getNewRandomSeed() => DateTime.now().millisecondsSinceEpoch;
+
 class GameController with ChangeNotifier {
-  Game _game = Game();
+  int _seed;
+  Random _random;
+
+  factory GameController() {
+    final seed = _getNewRandomSeed();
+    final random = Random(seed);
+    final game = Game.withPlayers(generatePlayers(random: random));
+    return GameController._(seed, random, game);
+  }
+  GameController._(this._seed, this._random, this._game);
+
+  Game _game;
+
+  int get playerRandomSeed => _seed;
 
   Iterable<BaseGameLogItem> get gameLog => _game.log;
 
@@ -27,8 +44,10 @@ class GameController with ChangeNotifier {
 
   PlayerRole? get winTeamAssumption => _game.winTeamAssumption;
 
-  void restart() {
-    _game = Game();
+  void restart([int? seed]) {
+    _seed = seed ?? _getNewRandomSeed();
+    _random = Random(_seed);
+    _game = Game.withPlayers(generatePlayers(random: _random));
     notifyListeners();
   }
 

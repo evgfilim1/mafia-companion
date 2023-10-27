@@ -12,6 +12,7 @@ import "../utils/ui.dart";
 import "../widgets/app_drawer.dart";
 import "../widgets/bottom_controls.dart";
 import "../widgets/confirmation_dialog.dart";
+import "../widgets/debug_menu_dialog.dart";
 import "../widgets/game_state.dart";
 import "../widgets/orientation_dependent.dart";
 import "../widgets/player_buttons.dart";
@@ -21,6 +22,7 @@ enum _PopupMenuItems {
   log,
   notes,
   roles,
+  debug,
 }
 
 class MainScreen extends StatefulWidget {
@@ -109,6 +111,11 @@ class _MainScreenState extends State<MainScreen> {
                     _showNotes(context);
                   case _PopupMenuItems.roles:
                     setState(() => _showRoles = !_showRoles);
+                  case _PopupMenuItems.debug:
+                    showDialog<void>(
+                      context: context,
+                      builder: (context) => const DebugMenuDialog(),
+                    );
                 }
               },
               itemBuilder: (context) => [
@@ -130,6 +137,13 @@ class _MainScreenState extends State<MainScreen> {
                   value: _PopupMenuItems.roles,
                   checked: _showRoles,
                   child: const Text("Показывать роли"),
+                ),
+                const PopupMenuItem(
+                  value: _PopupMenuItems.debug,
+                  child: ListTile(
+                    leading: Icon(Icons.bug_report),
+                    title: Text("Отладочное меню"),
+                  ),
                 ),
               ],
             ),
