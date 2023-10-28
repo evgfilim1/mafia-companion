@@ -6,6 +6,8 @@
 
 ## [Новое][unreleased]
 
+## [v0.2.0-rc.1] - 2023-10-28
+
 ## Добавлено
 
 - Долгое нажатие на "+" или "-" при голосовании увеличит количество голосов до максимума или
@@ -175,7 +177,8 @@
 - Больше информации об игроке при долгом нажатии на номер.
 - Автоматическая сборка при помощи GitHub Actions.
 
-[unreleased]: https://github.com/evgfilim1/mafia-companion/compare/v0.2.0-rc.0...HEAD
+[unreleased]: https://github.com/evgfilim1/mafia-companion/compare/v0.2.0-rc.1...HEAD
+[v0.2.0-rc.1]: https://github.com/evgfilim1/mafia-companion/releases/tag/v0.2.0-rc.1
 [v0.2.0-rc.0]: https://github.com/evgfilim1/mafia-companion/releases/tag/v0.2.0-rc.0
 [v0.2.0-beta.2]: https://github.com/evgfilim1/mafia-companion/releases/tag/0.2.0-beta.2
 [v0.2.0-beta.1]: https://github.com/evgfilim1/mafia-companion/releases/tag/0.2.0-beta.1
