@@ -1,7 +1,14 @@
+import "dart:async";
+
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
+import "package:flutter/services.dart";
+import "package:url_launcher/url_launcher.dart";
 
 import "../game/player.dart";
 import "../game/states.dart";
+import "../widgets/update_dialog.dart";
+import "updates_checker.dart";
 
 extension PlayerRolePrettyString on PlayerRole {
   String get prettyName {
@@ -139,4 +146,62 @@ void showSimpleDialog({
       ],
     ),
   );
+}
+
+Future<void> launchUrlOrCopy(BuildContext context, String url) async {
+  final isOk = await launchUrl(
+    Uri.parse(url),
+    mode: LaunchMode.externalApplication, // it crashes for me otherwise for some reason
+  );
+  if (isOk) {
+    return;
+  }
+  if (!context.mounted) {
+    return;
+  }
+  unawaited(
+    showSnackBar(
+      context,
+      SnackBar(
+        content: const Text("Не удалось открыть ссылку"),
+        action: SnackBarAction(
+          label: "Скопировать",
+          onPressed: () {
+            Clipboard.setData(ClipboardData(text: url));
+            showSnackBar(
+              context,
+              const SnackBar(
+                content: Text("Ссылка скопирована в буфер обмена"),
+              ),
+            );
+          },
+        ),
+      ),
+    ),
+  );
+}
+
+Future<void> showUpdateDialog(BuildContext context, NewVersionInfo info) async {
+  final doUpdate = await showDialog<bool>(
+    context: context,
+    builder: (context) => UpdateAvailableDialog(info: info),
+  );
+  if (!(doUpdate ?? false)) {
+    return;
+  }
+  if (!context.mounted) {
+    return;
+  }
+  if (kIsWeb) {
+    unawaited(
+      showSnackBar(
+        context,
+        const SnackBar(
+          content: Text("Перезагрузите страницу для обновления"),
+        ),
+      ),
+    );
+    return;
+  }
+  await launchUrlOrCopy(context, info.downloadUrl);
 }

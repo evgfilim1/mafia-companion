@@ -9,6 +9,7 @@ import "../game/states.dart";
 import "../utils/extensions.dart";
 import "../utils/game_controller.dart";
 import "../utils/ui.dart";
+import "../utils/updates_checker.dart";
 import "../widgets/app_drawer.dart";
 import "../widgets/bottom_controls.dart";
 import "../widgets/confirmation_dialog.dart";
@@ -37,9 +38,35 @@ class _MainScreenState extends State<MainScreen> {
   final _notesController = TextEditingController();
 
   @override
+  void initState() {
+    unawaited(_checkForUpdates());
+    super.initState();
+  }
+
+  @override
   void dispose() {
     _notesController.dispose();
     super.dispose();
+  }
+
+  Future<void> _checkForUpdates() async {
+    final update = await checkForUpdates();
+    if (update == null) {
+      return;
+    }
+    if (!context.mounted) {
+      return;
+    }
+    await showSnackBar(
+      context,
+      SnackBar(
+        content: const Text("Доступна новая версия приложения"),
+        action: SnackBarAction(
+          label: "Обновить",
+          onPressed: () => showUpdateDialog(context, update),
+        ),
+      ),
+    );
   }
 
   Future<void> _askRestartGame(BuildContext context) async {

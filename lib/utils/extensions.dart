@@ -21,3 +21,12 @@ extension IsAnyOf<T> on T {
 extension RandomElement<T> on List<T> {
   T get randomElement => this[Random().nextInt(length)];
 }
+
+extension RemovePrefix on String {
+  String removePrefix(String prefix) {
+    if (startsWith(prefix)) {
+      return substring(prefix.length);
+    }
+    return this;
+  }
+}
