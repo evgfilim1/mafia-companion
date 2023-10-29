@@ -35,11 +35,30 @@ Future<NewVersionInfo?> _checkForUpdates() async {
   final latestRelease = json.first;
   final packageInfo = await PackageInfo.fromPlatform();
   final currentVersion = packageInfo.version;
-  final latestVersion = (latestRelease["tag_name"] as String).removePrefix("v");
+  final latestReleaseTag = latestRelease["tag_name"] as String;
+  final latestVersion = latestReleaseTag.removePrefix("v");
   if (currentVersion == latestVersion) {
     return null;
   }
-  final releaseNotes = (latestRelease["body"] as String).replaceFirst(RegExp(r"#+ Commits.*$", dotAll: true), "");
+  final changelogUri = Uri.parse(
+    "https://raw.githubusercontent.com/evgfilim1/mafia-companion/$latestReleaseTag/CHANGELOG.md",
+  );
+  final changelogResponse = await http.get(changelogUri);
+  if (changelogResponse.statusCode > 299) {
+    throw HttpException(
+      "Unexpected status code: ${changelogResponse.statusCode}",
+      uri: changelogUri,
+    );
+  }
+  final escapedLatestVersion = RegExp.escape(latestVersion);
+  final escapedCurrentVersion = RegExp.escape(currentVersion);
+  final releaseNotes = changelogResponse.body
+      .replaceFirstMapped(
+        RegExp("^.+(## \\[v$escapedLatestVersion])", dotAll: true),
+        (match) => match[1]!,
+      )
+      .replaceFirst(RegExp("## \\[v$escapedCurrentVersion].+", dotAll: true), "")
+      .trim();
   if (kIsWeb) {
     return NewVersionInfo(
       version: latestVersion,
