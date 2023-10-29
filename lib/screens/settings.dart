@@ -1,3 +1,5 @@
+import "dart:async";
+
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:package_info_plus/package_info_plus.dart";
@@ -5,6 +7,7 @@ import "package:provider/provider.dart";
 
 import "../utils/settings.dart";
 import "../utils/ui.dart";
+import "../utils/updates_checker.dart";
 
 class _ChoiceListTile<T> extends StatelessWidget {
   final Widget? leading;
@@ -96,6 +99,49 @@ class SettingsScreen extends StatelessWidget {
             index: settings.timerType.index,
             onChanged: settings.setTimerType,
           ),
+          _ChoiceListTile(
+            leading: const Icon(Icons.update),
+            title: const Text("Проверка обновлений"),
+            items: CheckUpdatesType.values,
+            itemToString: (item) => switch (item) {
+              CheckUpdatesType.onLaunch => "При запуске",
+              CheckUpdatesType.manually => "Вручную",
+            },
+            index: settings.checkUpdatesType.index,
+            onChanged: settings.setCheckUpdatesType,
+          ),
+          ListTile(
+            leading: const Icon(Icons.refresh),
+            title: const Text("Проверить обновления"),
+            onTap: () async {
+              unawaited(
+                showSnackBar(context, const SnackBar(content: Text("Проверка обновлений..."))),
+              );
+              final NewVersionInfo? res;
+              try {
+                res = await checkForUpdates(rethrow_: true);
+              } on Exception {
+                if (context.mounted) {
+                  unawaited(
+                    showSnackBar(
+                      context,
+                      const SnackBar(content: Text("Ошибка проверки обновлений")),
+                    ),
+                  );
+                }
+                return;
+              }
+              if (context.mounted) {
+                if (res != null) {
+                  ScaffoldMessenger.of(context)
+                      .removeCurrentSnackBar(reason: SnackBarClosedReason.remove);
+                  unawaited(showUpdateDialog(context, res));
+                } else {
+                  unawaited(showSnackBar(context, const SnackBar(content: Text("Обновлений нет"))));
+                }
+              }
+            },
+          ),
           ListTile(
             leading: const Icon(Icons.info),
             title: const Text("О приложении"),
@@ -105,6 +151,7 @@ class SettingsScreen extends StatelessWidget {
               applicationName: packageInfo.appName,
               applicationVersion: "$appVersion build ${packageInfo.buildNumber}",
               applicationLegalese: "© 2023 Евгений Филимонов",
+              // TODO: sources, license
             ),
           ),
         ],

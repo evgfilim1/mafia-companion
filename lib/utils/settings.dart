@@ -2,6 +2,7 @@ import "package:flutter/material.dart";
 import "package:shared_preferences/shared_preferences.dart";
 
 enum TimerType {
+  // TODO: `short`
   strict,
   plus5,
   extended,
@@ -13,15 +14,23 @@ enum ColorSchemeType {
   app,
 }
 
+enum CheckUpdatesType {
+  onLaunch,
+  manually,
+}
+
 const defaultTimerType = TimerType.plus5;
 const defaultThemeMode = ThemeMode.system;
 const defaultColorSchemeType = ColorSchemeType.system;
+const defaultCheckUpdatesType = CheckUpdatesType.onLaunch;
 
 Future<SettingsModel> getSettings() async {
   final prefs = await SharedPreferences.getInstance();
   final timerTypeString = prefs.getString("timerType") ?? defaultTimerType.name;
   final theme = prefs.getString("theme") ?? defaultThemeMode.name;
   final colorSchemeTypeString = prefs.getString("colorSchemeType") ?? defaultColorSchemeType.name;
+  final checkUpdatesTypeString =
+      prefs.getString("checkUpdatesType") ?? defaultCheckUpdatesType.name;
 
   final TimerType timerType;
   switch (timerTypeString) {
@@ -65,10 +74,23 @@ Future<SettingsModel> getSettings() async {
       break;
   }
 
+  final CheckUpdatesType checkUpdatesType;
+  switch (checkUpdatesTypeString) {
+    case "onLaunch":
+      checkUpdatesType = CheckUpdatesType.onLaunch;
+    case "manually":
+      checkUpdatesType = CheckUpdatesType.manually;
+    default:
+      assert(false, "Unknown check updates type: $checkUpdatesTypeString"); // fail for debug builds
+      checkUpdatesType = defaultCheckUpdatesType; // use default for release builds
+      break;
+  }
+
   return SettingsModel(
     timerType: timerType,
     themeMode: themeMode,
     colorSchemeType: colorSchemeType,
+    checkUpdatesType: checkUpdatesType,
   );
 }
 
@@ -77,30 +99,37 @@ Future<void> saveSettings(SettingsModel settings) async {
   final timerTypeString = settings.timerType.name;
   final theme = settings.themeMode.name;
   final colorSchemeTypeString = settings.colorSchemeType.name;
+  final checkUpdatesTypeString = settings.checkUpdatesType.name;
 
   await prefs.setString("timerType", timerTypeString);
   await prefs.setString("theme", theme);
   await prefs.setString("colorSchemeType", colorSchemeTypeString);
+  await prefs.setString("checkUpdatesType", checkUpdatesTypeString);
 }
 
 class SettingsModel with ChangeNotifier {
   TimerType _timerType;
   ThemeMode _themeMode;
   ColorSchemeType _colorSchemeType;
+  CheckUpdatesType _checkUpdatesType;
 
   SettingsModel({
     required TimerType timerType,
     required ThemeMode themeMode,
     required ColorSchemeType colorSchemeType,
+    required CheckUpdatesType checkUpdatesType,
   })  : _timerType = timerType,
         _themeMode = themeMode,
-        _colorSchemeType = colorSchemeType;
+        _colorSchemeType = colorSchemeType,
+        _checkUpdatesType = checkUpdatesType;
 
   TimerType get timerType => _timerType;
 
   ThemeMode get themeMode => _themeMode;
 
   ColorSchemeType get colorSchemeType => _colorSchemeType;
+
+  CheckUpdatesType get checkUpdatesType => _checkUpdatesType;
 
   void setTimerType(TimerType value, {bool save = true}) {
     _timerType = value;
@@ -120,6 +149,14 @@ class SettingsModel with ChangeNotifier {
 
   void setColorSchemeType(ColorSchemeType value, {bool save = true}) {
     _colorSchemeType = value;
+    if (save) {
+      saveSettings(this);
+    }
+    notifyListeners();
+  }
+
+  void setCheckUpdatesType(CheckUpdatesType value, {bool save = true}) {
+    _checkUpdatesType = value;
     if (save) {
       saveSettings(this);
     }

@@ -8,6 +8,7 @@ import "package:provider/provider.dart";
 import "../game/states.dart";
 import "../utils/extensions.dart";
 import "../utils/game_controller.dart";
+import "../utils/settings.dart";
 import "../utils/ui.dart";
 import "../utils/updates_checker.dart";
 import "../widgets/app_drawer.dart";
@@ -50,6 +51,9 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Future<void> _checkForUpdates() async {
+    if (context.read<SettingsModel>().checkUpdatesType != CheckUpdatesType.onLaunch) {
+      return;
+    }
     final update = await checkForUpdates();
     if (update == null) {
       return;

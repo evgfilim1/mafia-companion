@@ -64,18 +64,24 @@ Future<NewVersionInfo?> _checkForUpdates() async {
   );
 }
 
-Future<NewVersionInfo?> checkForUpdates() async {
+Future<NewVersionInfo?> checkForUpdates({bool rethrow_ = false}) async {
   try {
     return await _checkForUpdates();
   } on SocketException catch (e) {
     // TODO: log warning
     // ignore: avoid_print
     print("Error while checking for updates: $e");
+    if (rethrow_) {
+      rethrow;
+    }
     return null;
   } catch (e, stackTrace) {
     // TODO: log error
     // ignore: avoid_print
     print("Error while checking for updates: $e\n$stackTrace");
+    if (rethrow_) {
+      rethrow;
+    }
     return null;
   }
 }
