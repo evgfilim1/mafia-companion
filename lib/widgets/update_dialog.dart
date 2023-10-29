@@ -3,6 +3,7 @@ import "package:flutter_markdown/flutter_markdown.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import "package:provider/provider.dart";
 
+import "../utils/ui.dart";
 import "../utils/updates_checker.dart";
 import "confirmation_dialog.dart";
 
@@ -25,6 +26,12 @@ class UpdateAvailableDialog extends StatelessWidget {
               "Новая версия: **${info.version}**\n\n"
               "# Что нового?\n\n${info.releaseNotes}",
           listItemCrossAxisAlignment: MarkdownListItemCrossAxisAlignment.start,
+          onTapLink: (text, href, title) {
+            if (href == null) {
+              return;
+            }
+            launchUrlOrCopy(context, href);
+          },
         ),
       ),
     );
