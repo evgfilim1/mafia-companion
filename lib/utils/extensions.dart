@@ -1,5 +1,7 @@
 import "dart:math";
 
+import "package:http/http.dart" as http;
+
 extension MinMaxItemNum<T extends num> on Iterable<T> {
   T max() => reduce((value, element) => value > element ? value : element);
 
@@ -28,5 +30,14 @@ extension RemovePrefix on String {
       return substring(prefix.length);
     }
     return this;
+  }
+}
+
+extension RaiseForStatus on http.Response {
+  void raiseForStatus({bool Function(int)? isOk}) {
+    if (isOk?.call(statusCode) ?? statusCode < 300) {
+      return;
+    }
+    throw http.ClientException("Unexpected status code: $statusCode", request?.url);
   }
 }

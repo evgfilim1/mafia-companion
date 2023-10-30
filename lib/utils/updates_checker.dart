@@ -1,12 +1,21 @@
 import "dart:convert";
-import "dart:ffi";
-import "dart:io";
 
-import "package:flutter/foundation.dart";
 import "package:http/http.dart" as http;
+import "package:intl/intl.dart";
 import "package:package_info_plus/package_info_plus.dart";
 
 import "extensions.dart";
+import "github.dart";
+import "updates_checker/stub.dart"
+    if (dart.library.ffi) "updates_checker/native.dart"
+    if (dart.library.html) "updates_checker/web.dart" show getReleaseDownloadUrl;
+import "version.dart";
+
+export "" show NewVersionInfo, checkForUpdates;
+
+final _releasesUri = Uri.parse("https://api.github.com/repos/evgfilim1/mafia-companion/releases");
+final _commitsRegexp = RegExp(r"#+\s*Commits\r?\n.+$", dotAll: true);
+final _changelogDateFormat = DateFormat("yyyy-MM-dd");
 
 class NewVersionInfo {
   /// Version string
@@ -25,60 +34,61 @@ class NewVersionInfo {
   });
 }
 
-Future<NewVersionInfo?> _checkForUpdates() async {
-  final uri = Uri.parse("https://api.github.com/repos/evgfilim1/mafia-companion/releases");
-  final response = await http.get(uri);
-  if (response.statusCode > 299) {
-    throw HttpException("Unexpected status code: ${response.statusCode}", uri: uri);
+Future<List<GitHubRelease>> _getAllReleases([http.Client? client]) async {
+  client ??= http.Client();
+  final response = await client.get(_releasesUri);
+  response.raiseForStatus();
+  return (jsonDecode(response.body) as List<dynamic>)
+      .cast<Map<String, dynamic>>()
+      .map(GitHubRelease.fromJson)
+      .toList();
+}
+
+String _formatChangelog({
+  required List<GitHubRelease> releases,
+  required Version from,
+  Version? to,
+}) {
+  if (from == to) {
+    return "";
   }
-  final json = (jsonDecode(response.body) as List<dynamic>).cast<Map<String, dynamic>>();
-  final latestRelease = json.first;
+  final changelog = StringBuffer();
+  final fromIndex = releases.indexWhere((e) => e.tagName.removePrefix("v") == "$from");
+  final toIndex = to == null ? 0 : releases.indexWhere((e) => e.tagName.removePrefix("v") == "$to");
+  for (var i = fromIndex - 1; i >= toIndex; i--) {
+    final release = releases[i];
+    final date = _changelogDateFormat.format(release.publishedAt);
+    changelog
+      ..write("## [${release.tagName}](${release.htmlUrl}) - $date\n\n")
+      ..write(
+        release.body
+            .replaceFirst(_commitsRegexp, "")
+            .replaceAllMapped(RegExp("^(#+)", multiLine: true), (m) => "${m[1]!}#")
+            .trim(),
+      )
+      ..write("\n\n");
+  }
+  return changelog.toString().trim();
+}
+
+Future<NewVersionInfo?> _checkForUpdates() async {
+  final releases = await _getAllReleases();
   final packageInfo = await PackageInfo.fromPlatform();
-  final currentVersion = packageInfo.version;
-  final latestReleaseTag = latestRelease["tag_name"] as String;
-  final latestVersion = latestReleaseTag.removePrefix("v");
+  final currentVersion = Version.fromString(packageInfo.version);
+  final latestReleaseTag = releases.first.tagName;
+  final latestVersion = Version.fromString(latestReleaseTag.removePrefix("v"));
   if (currentVersion == latestVersion) {
     return null;
   }
-  final changelogUri = Uri.parse(
-    "https://raw.githubusercontent.com/evgfilim1/mafia-companion/$latestReleaseTag/CHANGELOG.md",
+  final changelog = _formatChangelog(
+    releases: releases,
+    from: currentVersion,
+    to: latestVersion,
   );
-  final changelogResponse = await http.get(changelogUri);
-  if (changelogResponse.statusCode > 299) {
-    throw HttpException(
-      "Unexpected status code: ${changelogResponse.statusCode}",
-      uri: changelogUri,
-    );
-  }
-  final escapedLatestVersion = RegExp.escape(latestVersion);
-  final escapedCurrentVersion = RegExp.escape(currentVersion);
-  final releaseNotes = changelogResponse.body
-      .replaceFirstMapped(
-        RegExp("^.+(## \\[v$escapedLatestVersion])", dotAll: true),
-        (match) => match[1]!,
-      )
-      .replaceFirst(RegExp("## \\[v$escapedCurrentVersion].+", dotAll: true), "")
-      .trim();
-  if (kIsWeb) {
-    return NewVersionInfo(
-      version: latestVersion,
-      releaseNotes: releaseNotes,
-      downloadUrl: "",
-    );
-  }
-  final currentPlatform = Abi.current();
-  final arch = switch (currentPlatform) {
-    Abi.androidArm64 => "arm64-v8a",
-    Abi.androidArm => "armeabi-v7a",
-    Abi.androidX64 => "x86_64",
-    _ => throw AssertionError("Unsupported platform: $currentPlatform"),
-  };
-  final assets = (latestRelease["assets"] as List<dynamic>).cast<Map<String, dynamic>>();
-  final asset = assets.singleWhere((e) => e["name"] == "app-$arch-release.apk");
-  final downloadUrl = asset["browser_download_url"] as String;
+  final downloadUrl = getReleaseDownloadUrl(latestRelease: releases.first);
   return NewVersionInfo(
-    version: latestVersion,
-    releaseNotes: releaseNotes,
+    version: latestVersion.toString(),
+    releaseNotes: changelog,
     downloadUrl: downloadUrl,
   );
 }
@@ -86,7 +96,7 @@ Future<NewVersionInfo?> _checkForUpdates() async {
 Future<NewVersionInfo?> checkForUpdates({bool rethrow_ = false}) async {
   try {
     return await _checkForUpdates();
-  } on SocketException catch (e) {
+  } on http.ClientException catch (e) {
     // TODO: log warning
     // ignore: avoid_print
     print("Error while checking for updates: $e");
