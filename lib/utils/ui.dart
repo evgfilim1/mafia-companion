@@ -149,10 +149,7 @@ void showSimpleDialog({
 }
 
 Future<void> launchUrlOrCopy(BuildContext context, String url) async {
-  final isOk = await launchUrl(
-    Uri.parse(url),
-    mode: LaunchMode.externalApplication, // it crashes for me otherwise for some reason
-  );
+  final isOk = await launchUrl(Uri.parse(url), mode: LaunchMode.inAppBrowserView);
   if (isOk) {
     return;
   }
