@@ -94,6 +94,7 @@ class SettingsScreen extends StatelessWidget {
             title: const Text("Режим таймера"),
             items: TimerType.values,
             itemToString: (item) => switch (item) {
+              TimerType.shortened => "Сокращённый",
               TimerType.strict => "Строгий",
               TimerType.plus5 => "+5 секунд",
               TimerType.extended => "Увеличенный",

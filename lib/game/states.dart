@@ -390,6 +390,16 @@ const timeLimitsExtended = {
   GameStage.nightLastWords: Duration(minutes: 1, seconds: 30),
 };
 
+const timeLimitsShortened = <GameStage, Duration>{
+  GameStage.night0: Duration(seconds: 30),
+  GameStage.night0SheriffCheck: Duration(seconds: 10),
+  GameStage.speaking: Duration(seconds: 30),
+  GameStage.excuse: Duration(seconds: 15),
+  GameStage.dayLastWords: Duration(seconds: 30),
+  GameStage.nightCheck: Duration(seconds: 6),
+  GameStage.nightLastWords: Duration(seconds: 30),
+};
+
 const validTransitions = {
   GameStage.prepare: [GameStage.night0],
   GameStage.night0: [GameStage.night0SheriffCheck],

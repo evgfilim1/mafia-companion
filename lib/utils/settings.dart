@@ -2,7 +2,7 @@ import "package:flutter/material.dart";
 import "package:shared_preferences/shared_preferences.dart";
 
 enum TimerType {
-  // TODO: `short`
+  shortened,
   strict,
   plus5,
   extended,
@@ -34,6 +34,8 @@ Future<SettingsModel> getSettings() async {
 
   final TimerType timerType;
   switch (timerTypeString) {
+    case "shortened":
+      timerType = TimerType.shortened;
     case "strict":
       timerType = TimerType.strict;
     case "plus5":
