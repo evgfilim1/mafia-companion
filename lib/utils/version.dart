@@ -24,15 +24,15 @@ class Version implements Comparable<Version> {
     String? preRelease,
     String? build,
   }) : this._(
-    major: major,
-    minor: minor,
-    patch: patch,
-    preRelease: preRelease,
-    build: build,
-    versionString: "$major.$minor.$patch"
-        "${preRelease == null ? "" : "-$preRelease"}"
-        "${build == null ? "" : "+$build"}",
-  );
+          major: major,
+          minor: minor,
+          patch: patch,
+          preRelease: preRelease,
+          build: build,
+          versionString: "$major.$minor.$patch"
+              "${preRelease == null ? "" : "-$preRelease"}"
+              "${build == null ? "" : "+$build"}",
+        );
 
   const Version._({
     required this.major,
