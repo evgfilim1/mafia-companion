@@ -60,6 +60,7 @@ android {
             signingConfig signingConfigs.debug
         }
     }
+    namespace 'me.evgfilim1.mafia_companion'
 }
 
 flutter {
