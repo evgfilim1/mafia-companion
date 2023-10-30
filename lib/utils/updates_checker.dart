@@ -1,5 +1,6 @@
 import "dart:convert";
 
+import "package:flutter/foundation.dart";
 import "package:http/http.dart" as http;
 import "package:intl/intl.dart";
 import "package:package_info_plus/package_info_plus.dart";
@@ -11,12 +12,13 @@ import "updates_checker/stub.dart"
     if (dart.library.html) "updates_checker/web.dart" show getReleaseDownloadUrl;
 import "version.dart";
 
-export "" show NewVersionInfo, checkForUpdates;
+export "" show NewVersionInfo, UpdatesChecker;
 
 final _releasesUri = Uri.parse("https://api.github.com/repos/evgfilim1/mafia-companion/releases");
 final _commitsRegexp = RegExp(r"#+\s*Commits\r?\n.+$", dotAll: true);
 final _changelogDateFormat = DateFormat("yyyy-MM-dd");
 
+@immutable
 class NewVersionInfo {
   /// Version string
   final String version;
@@ -27,11 +29,23 @@ class NewVersionInfo {
   /// Download URL for Android, empty string for web
   final String downloadUrl;
 
-  NewVersionInfo({
+  const NewVersionInfo({
     required this.version,
     required this.releaseNotes,
     required this.downloadUrl,
   });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is NewVersionInfo &&
+          runtimeType == other.runtimeType &&
+          version == other.version &&
+          releaseNotes == other.releaseNotes &&
+          downloadUrl == other.downloadUrl;
+
+  @override
+  int get hashCode => Object.hash(version, releaseNotes, downloadUrl);
 }
 
 Future<List<GitHubRelease>> _getAllReleases([http.Client? client]) async {
@@ -93,7 +107,7 @@ Future<NewVersionInfo?> _checkForUpdates() async {
   );
 }
 
-Future<NewVersionInfo?> checkForUpdates({bool rethrow_ = false}) async {
+Future<NewVersionInfo?> _checkForUpdatesImpl({bool rethrow_ = false}) async {
   try {
     return await _checkForUpdates();
   } on http.ClientException catch (e) {
@@ -112,5 +126,22 @@ Future<NewVersionInfo?> checkForUpdates({bool rethrow_ = false}) async {
       rethrow;
     }
     return null;
+  }
+}
+
+class UpdatesChecker with ChangeNotifier {
+  NewVersionInfo? _info;
+
+  NewVersionInfo? get updateInfo => _info;
+
+  bool get hasUpdate => _info != null;
+
+  Future<NewVersionInfo?> checkForUpdates({bool rethrow_ = false}) async {
+    final info = await _checkForUpdatesImpl(rethrow_: rethrow_);
+    if (info != _info) {
+      _info = info;
+      notifyListeners();
+    }
+    return _info;
   }
 }

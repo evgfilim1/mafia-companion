@@ -3,6 +3,8 @@ import "package:package_info_plus/package_info_plus.dart";
 import "package:provider/provider.dart";
 
 import "../utils/ui.dart";
+import "../utils/updates_checker.dart";
+import "notification_dot.dart";
 
 class AppDrawer extends StatelessWidget {
   const AppDrawer({super.key});
@@ -10,6 +12,7 @@ class AppDrawer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final packageInfo = context.watch<PackageInfo>();
+    final checker = context.watch<UpdatesChecker>();
 
     return Drawer(
       child: ListView(
@@ -46,6 +49,7 @@ class AppDrawer extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.settings),
             title: const Text("Настройки"),
+            trailing: checker.hasUpdate ? const NotificationDot(size: 8) : null,
             onTap: () {
               Navigator.pop(context);
               Navigator.pushNamed(context, "/settings");

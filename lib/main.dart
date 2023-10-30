@@ -11,6 +11,7 @@ import "screens/seat_randomizer.dart";
 import "screens/settings.dart";
 import "utils/game_controller.dart";
 import "utils/settings.dart";
+import "utils/updates_checker.dart";
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +23,7 @@ void main() async {
         ChangeNotifierProvider<SettingsModel>.value(value: settings),
         Provider<PackageInfo>.value(value: packageInfo),
         ChangeNotifierProvider<GameController>(create: (context) => GameController()),
+        ChangeNotifierProvider<UpdatesChecker>(create: (context) => UpdatesChecker()),
       ],
       child: const MyApp(),
     ),

@@ -8,6 +8,7 @@ import "package:provider/provider.dart";
 import "../utils/settings.dart";
 import "../utils/ui.dart";
 import "../utils/updates_checker.dart";
+import "../widgets/notification_dot.dart";
 
 class _ChoiceListTile<T> extends StatelessWidget {
   final Widget? leading;
@@ -59,6 +60,8 @@ class SettingsScreen extends StatelessWidget {
     final settings = context.watch<SettingsModel>();
     final packageInfo = context.read<PackageInfo>();
     final appVersion = packageInfo.version + (kDebugMode ? " (debug)" : "");
+    final checker = context.watch<UpdatesChecker>();
+
     return Scaffold(
       appBar: AppBar(title: const Text("Настройки")),
       body: ListView(
@@ -113,13 +116,19 @@ class SettingsScreen extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.refresh),
             title: const Text("Проверить обновления"),
+            subtitle: Text(
+              checker.hasUpdate
+                  ? "Доступна новая версия v${checker.updateInfo!.version}"
+                  : "Обновлений нет",
+            ),
+            trailing: checker.hasUpdate ? const NotificationDot(size: 8) : null,
             onTap: () async {
               unawaited(
                 showSnackBar(context, const SnackBar(content: Text("Проверка обновлений..."))),
               );
               final NewVersionInfo? res;
               try {
-                res = await checkForUpdates(rethrow_: true);
+                res = await checker.checkForUpdates(rethrow_: true);
               } on Exception {
                 if (context.mounted) {
                   unawaited(
