@@ -44,6 +44,9 @@ enum GameStage {
   /// Further nights, don and sheriff check
   nightCheck,
 
+  /// First night killed player guesses mafia team members
+  bestTurn,
+
   /// Last words of player who was killed during night
   nightLastWords,
 
@@ -299,6 +302,35 @@ class GameStateNightCheck extends BaseGameState {
       Object.hash(stage, day, activePlayerNumber, activePlayerRole, thisNightKilledPlayerNumber);
 }
 
+/// Represents game state with assumed mafia team [playerNumbers] and current [currentPlayerNumber].
+/// [currentPlayerNumber] is the player who guesses mafia team.
+///
+/// [stage] is always [GameStage.bestTurn].
+@immutable
+class GameStateBestTurn extends BaseGameState {
+  final int currentPlayerNumber;
+  final List<int> playerNumbers;
+
+  const GameStateBestTurn({
+    required super.day,
+    required this.currentPlayerNumber,
+    required this.playerNumbers,
+  }) : super(stage: GameStage.bestTurn);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is GameStateBestTurn &&
+          runtimeType == other.runtimeType &&
+          stage == other.stage &&
+          day == other.day &&
+          currentPlayerNumber == other.currentPlayerNumber &&
+          playerNumbers == other.playerNumbers;
+
+  @override
+  int get hashCode => Object.hash(stage, day, currentPlayerNumber, playerNumbers);
+}
+
 /// Represents game state with related [playerNumbers] and current [currentPlayerIndex].
 ///
 /// [stage] can be [GameStage.excuse] or [GameStage.dayLastWords].
@@ -377,6 +409,7 @@ const timeLimits = {
   GameStage.dayLastWords: Duration(minutes: 1),
   // GameStage.nightKill: null,
   GameStage.nightCheck: Duration(seconds: 10),
+  GameStage.bestTurn: Duration(seconds: 20),
   GameStage.nightLastWords: Duration(minutes: 1),
   // GameStage.finish: null,
 };
@@ -387,6 +420,7 @@ const timeLimitsExtended = {
   GameStage.excuse: Duration(minutes: 1),
   GameStage.dayLastWords: Duration(minutes: 1, seconds: 30),
   GameStage.nightCheck: Duration(seconds: 30),
+  GameStage.bestTurn: Duration(seconds: 40),
   GameStage.nightLastWords: Duration(minutes: 1, seconds: 30),
 };
 
@@ -397,6 +431,7 @@ const timeLimitsShortened = <GameStage, Duration>{
   GameStage.excuse: Duration(seconds: 15),
   GameStage.dayLastWords: Duration(seconds: 30),
   GameStage.nightCheck: Duration(seconds: 6),
+  GameStage.bestTurn: Duration(seconds: 10),
   GameStage.nightLastWords: Duration(seconds: 30),
 };
 
@@ -421,10 +456,12 @@ const validTransitions = {
   GameStage.nightKill: [GameStage.nightCheck],
   GameStage.nightCheck: [
     GameStage.nightCheck,
+    GameStage.bestTurn,
     GameStage.nightLastWords,
     GameStage.speaking,
     GameStage.finish,
   ],
+  GameStage.bestTurn: [GameStage.nightLastWords],
   GameStage.nightLastWords: [GameStage.speaking, GameStage.finish],
   GameStage.finish: <GameStage>[],
 };

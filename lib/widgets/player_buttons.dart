@@ -131,7 +131,8 @@ class PlayerButtons extends OrientationDependentWidget {
       GameStateSpeaking(currentPlayerNumber: final p) ||
       GameStateWithCurrentPlayer(currentPlayerNumber: final p) ||
       GameStateVoting(currentPlayerNumber: final p) ||
-      GameStateNightCheck(activePlayerNumber: final p) =>
+      GameStateNightCheck(activePlayerNumber: final p) ||
+      GameStateBestTurn(currentPlayerNumber: final p) =>
         p == playerNumber,
       GameStateWithPlayers(playerNumbers: final ps) ||
       GameStateNightKill(mafiaTeam: final ps) ||
@@ -140,6 +141,7 @@ class PlayerButtons extends OrientationDependentWidget {
     };
     final isSelected = switch (gameState) {
       GameStateSpeaking(accusations: final accusations) => accusations.containsValue(playerNumber),
+      GameStateBestTurn(playerNumbers: final playerNumbers) => playerNumbers.contains(playerNumber),
       GameStateNightKill(thisNightKilledPlayerNumber: final thisNightKilledPlayer) ||
       GameStateNightCheck(thisNightKilledPlayerNumber: final thisNightKilledPlayer) =>
         thisNightKilledPlayer == playerNumber,

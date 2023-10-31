@@ -63,6 +63,10 @@ extension GameStatePrettyString on BaseGameState {
           return "Ночь, ход Дона";
         }
         return "Ночь, ход Шерифа";
+      case GameStateBestTurn(
+        currentPlayerNumber: final playerNumber,
+      ):
+        return "Лучший ход игрока $playerNumber";
       case GameStateWithPlayer(
           stage: GameStage.nightLastWords,
           currentPlayerNumber: final playerNumber,

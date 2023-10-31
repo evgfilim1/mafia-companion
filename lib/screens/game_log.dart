@@ -28,6 +28,12 @@ extension DescribeLogItem on BaseGameLogItem {
             result.add("За игрока #$pn отдано голосов: ${votes ?? 0}"); // FIXME: i18n
           case GameStateDropTableVoting(votesForDropTable: final votes):
             result.add("За подъём стола отдано голосов: $votes"); // FIXME: i18n
+          case GameStateBestTurn(currentPlayerNumber: final pn, playerNumbers: final pns):
+            if (pns.isNotEmpty) {
+              result.add(
+                'Игрок #$pn сделал "Лучший ход": игрок(и) ${pns.map((n) => "#$n").join(", ")}',
+              );
+            }
           case GameStateFinish():
             throw AssertionError();
         }
