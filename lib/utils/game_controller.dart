@@ -48,7 +48,7 @@ class GameController with ChangeNotifier {
 
   PlayerRole? get winTeamAssumption => _game.winTeamAssumption;
 
-  void restart([int? seed]) {
+  void restart({int? seed}) {
     _seed = seed ?? _getNewRandomSeed();
     _random = Random(_seed);
     _game = Game.withPlayers(

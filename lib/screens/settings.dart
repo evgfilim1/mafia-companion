@@ -30,7 +30,7 @@ class SettingsScreen extends StatelessWidget {
           title: Text("Перезапустить игру?"),
           content: Text(
             "Для применения этой настройки сейчас, необходимо перезапустить игру."
-                " Перезапустить игру?",
+            " Перезапустить игру?",
           ),
         ),
       );
@@ -70,8 +70,7 @@ class SettingsScreen extends StatelessWidget {
     }
     if (context.mounted) {
       if (res != null) {
-        ScaffoldMessenger.of(context)
-            .removeCurrentSnackBar(reason: SnackBarClosedReason.remove);
+        ScaffoldMessenger.of(context).removeCurrentSnackBar(reason: SnackBarClosedReason.remove);
         unawaited(showUpdateDialog(context, res));
       } else {
         unawaited(showSnackBar(context, const SnackBar(content: Text("Обновлений нет"))));

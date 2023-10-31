@@ -139,7 +139,7 @@ class BottomGameStateWidget extends StatelessWidget {
         timeLimit = timeLimitsExtended[gameState.stage] ?? timeLimits[gameState.stage];
       case TimerType.strict:
         timeLimit = timeLimits[gameState.stage];
-        case TimerType.shortened:
+      case TimerType.shortened:
         timeLimit = timeLimitsShortened[gameState.stage] ?? timeLimits[gameState.stage];
     }
     if (timeLimit != null) {

@@ -56,7 +56,7 @@ class _DebugMenuDialogState extends State<DebugMenuDialog> {
                 ),
               );
               if (res ?? false) {
-                controller.restart(seed);
+                controller.restart(seed: seed);
                 if (context.mounted) {
                   unawaited(
                     showSnackBar(

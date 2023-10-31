@@ -1,7 +1,5 @@
 import "package:flutter/material.dart";
 
-import "../utils/ui.dart";
-
 class ToggleListTile extends StatelessWidget {
   final Widget? leading;
   final Widget title;
@@ -22,13 +20,13 @@ class ToggleListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListTile(
-    leading: leading,
-    title: title,
-    subtitle: subtitle,
-    trailing: Switch(
-      value: value,
-      onChanged: _onTap,
-    ),
-    onTap: () => _onTap(!value),
-  );
+        leading: leading,
+        title: title,
+        subtitle: subtitle,
+        trailing: Switch(
+          value: value,
+          onChanged: _onTap,
+        ),
+        onTap: () => _onTap(!value),
+      );
 }
