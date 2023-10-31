@@ -22,7 +22,9 @@ void main() async {
       providers: [
         ChangeNotifierProvider<SettingsModel>.value(value: settings),
         Provider<PackageInfo>.value(value: packageInfo),
-        ChangeNotifierProvider<GameController>(create: (context) => GameController()),
+        ChangeNotifierProvider<GameController>(
+          create: (context) => GameController(skipBestTurnStage: !settings.bestTurnEnabled),
+        ),
         ChangeNotifierProvider<UpdatesChecker>(create: (context) => UpdatesChecker()),
       ],
       child: const MyApp(),

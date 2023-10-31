@@ -13,16 +13,20 @@ int _getNewRandomSeed() => DateTime.now().millisecondsSinceEpoch;
 class GameController with ChangeNotifier {
   int _seed;
   Random _random;
+  Game _game;
+  bool skipBestTurnStage;
 
-  factory GameController() {
+  factory GameController({bool skipBestTurnStage = false}) {
     final seed = _getNewRandomSeed();
     final random = Random(seed);
-    final game = Game.withPlayers(generatePlayers(random: random));
-    return GameController._(seed, random, game);
+    final game = Game.withPlayers(
+      generatePlayers(random: random),
+      skipBestTurnStage: skipBestTurnStage,
+    );
+    return GameController._(seed, random, game, skipBestTurnStage);
   }
-  GameController._(this._seed, this._random, this._game);
 
-  Game _game;
+  GameController._(this._seed, this._random, this._game, this.skipBestTurnStage);
 
   int get playerRandomSeed => _seed;
 
@@ -47,7 +51,10 @@ class GameController with ChangeNotifier {
   void restart([int? seed]) {
     _seed = seed ?? _getNewRandomSeed();
     _random = Random(_seed);
-    _game = Game.withPlayers(generatePlayers(random: _random));
+    _game = Game.withPlayers(
+      generatePlayers(random: _random),
+      skipBestTurnStage: skipBestTurnStage,
+    );
     notifyListeners();
   }
 

@@ -23,6 +23,7 @@ const defaultTimerType = TimerType.plus5;
 const defaultThemeMode = ThemeMode.system;
 const defaultColorSchemeType = ColorSchemeType.system;
 const defaultCheckUpdatesType = CheckUpdatesType.onLaunch;
+const defaultBestTurnEnabled = true;
 
 Future<SettingsModel> getSettings() async {
   final prefs = await SharedPreferences.getInstance();
@@ -88,11 +89,14 @@ Future<SettingsModel> getSettings() async {
       break;
   }
 
+  final bestTurnEnabled = prefs.getBool("bestTurnEnabled") ?? defaultBestTurnEnabled;
+
   return SettingsModel(
     timerType: timerType,
     themeMode: themeMode,
     colorSchemeType: colorSchemeType,
     checkUpdatesType: checkUpdatesType,
+    bestTurnEnabled: bestTurnEnabled,
   );
 }
 
@@ -107,6 +111,7 @@ Future<void> saveSettings(SettingsModel settings) async {
   await prefs.setString("theme", theme);
   await prefs.setString("colorSchemeType", colorSchemeTypeString);
   await prefs.setString("checkUpdatesType", checkUpdatesTypeString);
+  await prefs.setBool("bestTurnEnabled", settings.bestTurnEnabled);
 }
 
 class SettingsModel with ChangeNotifier {
@@ -114,16 +119,19 @@ class SettingsModel with ChangeNotifier {
   ThemeMode _themeMode;
   ColorSchemeType _colorSchemeType;
   CheckUpdatesType _checkUpdatesType;
+  bool _bestTurnEnabled;
 
   SettingsModel({
     required TimerType timerType,
     required ThemeMode themeMode,
     required ColorSchemeType colorSchemeType,
     required CheckUpdatesType checkUpdatesType,
+    required bool bestTurnEnabled,
   })  : _timerType = timerType,
         _themeMode = themeMode,
         _colorSchemeType = colorSchemeType,
-        _checkUpdatesType = checkUpdatesType;
+        _checkUpdatesType = checkUpdatesType,
+        _bestTurnEnabled = bestTurnEnabled;
 
   TimerType get timerType => _timerType;
 
@@ -132,6 +140,8 @@ class SettingsModel with ChangeNotifier {
   ColorSchemeType get colorSchemeType => _colorSchemeType;
 
   CheckUpdatesType get checkUpdatesType => _checkUpdatesType;
+
+  bool get bestTurnEnabled => _bestTurnEnabled;
 
   void setTimerType(TimerType value, {bool save = true}) {
     _timerType = value;
@@ -159,6 +169,16 @@ class SettingsModel with ChangeNotifier {
 
   void setCheckUpdatesType(CheckUpdatesType value, {bool save = true}) {
     _checkUpdatesType = value;
+    if (save) {
+      saveSettings(this);
+    }
+    notifyListeners();
+  }
+
+  // It's obvious from the function name what the first parameter means.
+  // ignore: avoid_positional_boolean_parameters
+  void setBestTurnEnabled(bool value, {bool save = true}) {
+    _bestTurnEnabled = value;
     if (save) {
       saveSettings(this);
     }

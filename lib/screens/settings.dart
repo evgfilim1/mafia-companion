@@ -5,55 +5,79 @@ import "package:flutter/material.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import "package:provider/provider.dart";
 
+import "../game/states.dart";
+import "../utils/extensions.dart";
+import "../utils/game_controller.dart";
 import "../utils/settings.dart";
 import "../utils/ui.dart";
 import "../utils/updates_checker.dart";
+import "../widgets/choice_list_tile.dart";
+import "../widgets/confirmation_dialog.dart";
 import "../widgets/notification_dot.dart";
-
-class _ChoiceListTile<T> extends StatelessWidget {
-  final Widget? leading;
-  final Widget title;
-  final List<T> items;
-  final ConverterFunction<T, String>? itemToString;
-  final int index;
-  final ValueChanged<T> onChanged;
-
-  const _ChoiceListTile({
-    super.key,
-    this.leading,
-    required this.title,
-    required this.items,
-    this.itemToString,
-    required this.index,
-    required this.onChanged,
-  });
-
-  String _itemToString(T item) => itemToString == null ? item.toString() : itemToString!(item);
-
-  Future<void> _onTileClick(BuildContext context) async {
-    final res = await showChoiceDialog(
-      context: context,
-      items: items,
-      itemToString: _itemToString,
-      title: title,
-      selectedIndex: index,
-    );
-    if (res != null) {
-      onChanged(res);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) => ListTile(
-        leading: leading,
-        title: title,
-        subtitle: Text(_itemToString(items[index])),
-        onTap: () => _onTileClick(context),
-      );
-}
+import "../widgets/toggle_list_tile.dart";
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
+
+  Future<void> _setBestTurnEnabled(BuildContext context, bool value) async {
+    final controller = context.read<GameController>();
+    final settings = context.read<SettingsModel>();
+    final bool? res;
+    if (!controller.state.stage.isAnyOf([GameStage.prepare, GameStage.finish])) {
+      res = await showDialog<bool>(
+        context: context,
+        builder: (context) => const ConfirmationDialog(
+          title: Text("Перезапустить игру?"),
+          content: Text(
+            "Для применения этой настройки сейчас, необходимо перезапустить игру."
+                " Перезапустить игру?",
+          ),
+        ),
+      );
+    } else {
+      res = true;
+    }
+    settings.setBestTurnEnabled(value);
+    controller.skipBestTurnStage = !value;
+    if (res ?? false) {
+      controller.restart();
+      if (context.mounted) {
+        unawaited(
+          showSnackBar(context, const SnackBar(content: Text("Игра перезапущена"))),
+        );
+      }
+    }
+  }
+
+  Future<void> _checkForUpdates(BuildContext context) async {
+    final checker = context.read<UpdatesChecker>();
+    unawaited(
+      showSnackBar(context, const SnackBar(content: Text("Проверка обновлений..."))),
+    );
+    final NewVersionInfo? res;
+    try {
+      res = await checker.checkForUpdates(rethrow_: true);
+    } on Exception {
+      if (context.mounted) {
+        unawaited(
+          showSnackBar(
+            context,
+            const SnackBar(content: Text("Ошибка проверки обновлений")),
+          ),
+        );
+      }
+      return;
+    }
+    if (context.mounted) {
+      if (res != null) {
+        ScaffoldMessenger.of(context)
+            .removeCurrentSnackBar(reason: SnackBarClosedReason.remove);
+        unawaited(showUpdateDialog(context, res));
+      } else {
+        unawaited(showSnackBar(context, const SnackBar(content: Text("Обновлений нет"))));
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +90,7 @@ class SettingsScreen extends StatelessWidget {
       appBar: AppBar(title: const Text("Настройки")),
       body: ListView(
         children: [
-          _ChoiceListTile(
+          ChoiceListTile(
             leading: const Icon(Icons.color_lens),
             title: const Text("Тема"),
             items: ThemeMode.values,
@@ -78,7 +102,7 @@ class SettingsScreen extends StatelessWidget {
             index: settings.themeMode.index,
             onChanged: settings.setThemeMode,
           ),
-          _ChoiceListTile(
+          ChoiceListTile(
             leading: const Icon(Icons.color_lens),
             title: const Text("Цветовая схема"),
             items: ColorSchemeType.values,
@@ -89,7 +113,7 @@ class SettingsScreen extends StatelessWidget {
             index: settings.colorSchemeType.index,
             onChanged: settings.setColorSchemeType,
           ),
-          _ChoiceListTile(
+          ChoiceListTile(
             leading: const Icon(Icons.timer),
             title: const Text("Режим таймера"),
             items: TimerType.values,
@@ -103,7 +127,14 @@ class SettingsScreen extends StatelessWidget {
             index: settings.timerType.index,
             onChanged: settings.setTimerType,
           ),
-          _ChoiceListTile(
+          ToggleListTile(
+            leading: const SizedBox.shrink(),
+            title: const Text("Лучший ход (правило 4.5.9)"),
+            subtitle: const Text("Для применения требуется перезапуск игры"),
+            value: settings.bestTurnEnabled,
+            onChanged: (newValue) => _setBestTurnEnabled(context, newValue),
+          ),
+          ChoiceListTile(
             leading: const Icon(Icons.update),
             title: const Text("Проверка обновлений"),
             items: CheckUpdatesType.values,
@@ -123,34 +154,7 @@ class SettingsScreen extends StatelessWidget {
                   : "Обновлений нет",
             ),
             trailing: checker.hasUpdate ? const NotificationDot(size: 8) : null,
-            onTap: () async {
-              unawaited(
-                showSnackBar(context, const SnackBar(content: Text("Проверка обновлений..."))),
-              );
-              final NewVersionInfo? res;
-              try {
-                res = await checker.checkForUpdates(rethrow_: true);
-              } on Exception {
-                if (context.mounted) {
-                  unawaited(
-                    showSnackBar(
-                      context,
-                      const SnackBar(content: Text("Ошибка проверки обновлений")),
-                    ),
-                  );
-                }
-                return;
-              }
-              if (context.mounted) {
-                if (res != null) {
-                  ScaffoldMessenger.of(context)
-                      .removeCurrentSnackBar(reason: SnackBarClosedReason.remove);
-                  unawaited(showUpdateDialog(context, res));
-                } else {
-                  unawaited(showSnackBar(context, const SnackBar(content: Text("Обновлений нет"))));
-                }
-              }
-            },
+            onTap: () => _checkForUpdates(context),
           ),
           ListTile(
             leading: const Icon(Icons.info),
