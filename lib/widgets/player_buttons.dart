@@ -1,5 +1,6 @@
 import "dart:async";
 
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 
@@ -75,7 +76,6 @@ class PlayerButtons extends OrientationDependentWidget {
         content: Text("Вы уверены, что хотите выдать фол игроку #$playerNumber?"),
       ),
     );
-    debugPrint("$res");
     if (res ?? false) {
       controller.warnPlayer(playerNumber);
       if (context.mounted) {
@@ -157,10 +157,16 @@ class PlayerButtons extends OrientationDependentWidget {
           ? () => _onPlayerButtonTap(context, playerNumber)
           : null,
       longPressActions: [
-        TextButton(
-          onPressed: () => _onPlayerActionsTap(context, player),
-          child: const Text("Действия"),
-        ),
+        if (kDebugMode)
+          TextButton(
+            onPressed: () => _onPlayerActionsTap(context, player),
+            child: const Text("Действия"),
+          )
+        else
+          TextButton(
+            onPressed: () => _onWarnPlayerTap(context, player.number),
+            child: Text(PlayerActions.warn.text),
+          ),
       ],
       showRole: showRoles,
     );
