@@ -74,15 +74,15 @@ class BottomGameStateWidget extends StatelessWidget {
     if (gameState is GameStateVoting) {
       final selectedPlayers = controller.voteCandidates;
       assert(selectedPlayers.isNotEmpty, "No vote candidates (bug?)");
-      final onlyOneSelected = selectedPlayers.length == 1;
+      assert(selectedPlayers.length > 1, "Only one vote candidate (bug?)");
       final aliveCount = controller.alivePlayersCount;
       final currentPlayerVotes = gameState.currentPlayerVotes ?? 0;
       return Counter(
         key: ValueKey(gameState.currentPlayerNumber),
-        min: onlyOneSelected ? aliveCount : 0,
+        min: 0,
         max: aliveCount - controller.totalVotes,
         onValueChanged: (value) => controller.vote(gameState.currentPlayerNumber, value),
-        initialValue: onlyOneSelected ? aliveCount : currentPlayerVotes,
+        initialValue: currentPlayerVotes,
       );
     }
 
