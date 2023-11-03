@@ -20,7 +20,7 @@ class ToggleListTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListTile(
-        leading: leading,
+        leading: leading ?? const SizedBox.shrink(),
         title: title,
         subtitle: subtitle,
         trailing: Switch(

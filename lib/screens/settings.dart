@@ -127,7 +127,6 @@ class SettingsScreen extends StatelessWidget {
             onChanged: settings.setTimerType,
           ),
           ToggleListTile(
-            leading: const SizedBox.shrink(),
             title: const Text("Лучший ход (правило 4.5.9)"),
             subtitle: const Text("Для применения требуется перезапуск игры"),
             value: settings.bestTurnEnabled,

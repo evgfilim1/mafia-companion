@@ -37,7 +37,7 @@ class ChoiceListTile<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListTile(
-        leading: leading,
+        leading: leading ?? const SizedBox.shrink(),
         title: title,
         subtitle: Text(_itemToString(items[index])),
         onTap: () => _onTileClick(context),
