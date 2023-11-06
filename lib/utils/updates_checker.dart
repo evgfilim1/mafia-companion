@@ -91,7 +91,7 @@ Future<NewVersionInfo?> _checkForUpdates() async {
   final currentVersion = Version.fromString(packageInfo.version);
   final latestReleaseTag = releases.first.tagName;
   final latestVersion = Version.fromString(latestReleaseTag.removePrefix("v"));
-  if (currentVersion <= latestVersion) {
+  if (currentVersion >= latestVersion) {
     return null;
   }
   final changelog = _formatChangelog(
