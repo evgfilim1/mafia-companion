@@ -5,8 +5,6 @@ import "package:flutter/material.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import "package:provider/provider.dart";
 
-import "../game/states.dart";
-import "../utils/extensions.dart";
 import "../utils/game_controller.dart";
 import "../utils/settings.dart";
 import "../utils/ui.dart";
@@ -23,7 +21,7 @@ class SettingsScreen extends StatelessWidget {
     final controller = context.read<GameController>();
     final settings = context.read<SettingsModel>();
     final bool? res;
-    if (!controller.state.stage.isAnyOf([GameStage.prepare, GameStage.finish])) {
+    if (controller.isGameActive) {
       res = await showDialog<bool>(
         context: context,
         builder: (context) => const ConfirmationDialog(

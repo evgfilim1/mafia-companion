@@ -30,6 +30,8 @@ class GameController with ChangeNotifier {
 
   int get playerRandomSeed => _seed;
 
+  bool get isGameActive => _game.isActive;
+
   Iterable<BaseGameLogItem> get gameLog => _game.log;
 
   BaseGameState get state => _game.state;

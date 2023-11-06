@@ -70,8 +70,11 @@ class Game {
     return null;
   }
 
-  /// Checks if game is over.
+  /// Checks if the game is over.
   bool get isGameOver => _state.stage == GameStage.finish || winTeamAssumption != null;
+
+  /// Checks if the game is running.
+  bool get isActive => !_state.stage.isAnyOf([GameStage.prepare, GameStage.finish]);
 
   int get totalVotes {
     if (_state is! GameStateVoting) {

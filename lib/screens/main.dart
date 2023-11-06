@@ -5,8 +5,6 @@ import "package:flutter/services.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import "package:provider/provider.dart";
 
-import "../game/states.dart";
-import "../utils/extensions.dart";
 import "../utils/game_controller.dart";
 import "../utils/settings.dart";
 import "../utils/ui.dart";
@@ -106,13 +104,11 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<GameController>();
-    final gameState = controller.state;
-    final isGameRunning = !gameState.stage.isAnyOf([GameStage.prepare, GameStage.finish]);
     final packageInfo = context.watch<PackageInfo>();
     final checker = context.watch<UpdatesChecker>();
 
     return PopScope(
-      canPop: controller.state.stage == GameStage.prepare,
+      canPop: controller.isGameActive,
       onPopInvoked: (didPop) async {
         if (didPop) return;
         final res = await showDialog<bool>(
@@ -129,7 +125,9 @@ class _MainScreenState extends State<MainScreen> {
       },
       child: Scaffold(
         appBar: AppBar(
-          title: isGameRunning ? Text("День ${controller.state.day}") : Text(packageInfo.appName),
+          title: controller.isGameActive
+              ? Text("День ${controller.state.day}")
+              : Text(packageInfo.appName),
           leading: Builder(
             builder: (context) => IconButton(
               onPressed: () => Scaffold.of(context).openDrawer(),
