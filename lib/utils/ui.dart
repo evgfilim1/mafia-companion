@@ -28,7 +28,7 @@ extension PlayerRolePrettyString on PlayerRole {
 extension GameStatePrettyString on BaseGameState {
   String get prettyName {
     switch (this) {
-      case GameState(stage: GameStage.prepare):
+      case GameStatePrepare(stage: GameStage.prepare):
         return "Ожидание игроков...";
       case GameStateWithPlayers(stage: GameStage.night0):
         return "Первая ночь";
@@ -40,7 +40,7 @@ extension GameStatePrettyString on BaseGameState {
         return "Голосование";
       case GameStateVoting(stage: GameStage.voting, currentPlayerNumber: final playerNumber):
         return "Голосование против игрока $playerNumber";
-      case GameStateWithCurrentPlayer(
+      case GameStateWithIterablePlayers(
           stage: GameStage.excuse,
           currentPlayerNumber: final playerNumber,
         ):
@@ -51,21 +51,20 @@ extension GameStatePrettyString on BaseGameState {
         return "Повторное голосование против игрока $playerNumber";
       case GameStateDropTableVoting():
         return "Голосование за подъём стола";
-      case GameStateWithCurrentPlayer(
+      case GameStateWithIterablePlayers(
           stage: GameStage.dayLastWords,
           currentPlayerNumber: final playerNumber,
         ):
         return "Последние слова игрока $playerNumber";
       case GameStateNightKill():
         return "Ночь, ход Мафии";
-      case GameStateNightCheck(stage: GameStage.nightCheck, activePlayerRole: final playerRole):
-        if (playerRole == PlayerRole.don) {
+      case GameStateNightCheck(stage: GameStage.nightCheck, activePlayerNumber: final playerNumber):
+        final player = players[playerNumber - 1];
+        if (player.role == PlayerRole.don) {
           return "Ночь, ход Дона";
         }
         return "Ночь, ход Шерифа";
-      case GameStateBestTurn(
-          currentPlayerNumber: final playerNumber,
-        ):
+      case GameStateBestTurn(currentPlayerNumber: final playerNumber):
         return "Лучший ход игрока $playerNumber";
       case GameStateWithPlayer(
           stage: GameStage.nightLastWords,
@@ -205,4 +204,18 @@ Future<void> showUpdateDialog(BuildContext context, NewVersionInfo info) async {
     return;
   }
   await launchUrlOrCopy(context, info.downloadUrl);
+}
+
+class GameStateKey extends ValueKey<BaseGameState> {
+  const GameStateKey(super.value);
+
+  @override
+  // It's totally fine to use `hashCode` of `ValueKey<BaseGameState>` here
+  // ignore: hash_and_equals
+  bool operator ==(Object other) {
+    if (other.runtimeType != runtimeType) {
+      return false;
+    }
+    return other is GameStateKey && !value.hasStateChanged(other.value) || super == other;
+  }
 }

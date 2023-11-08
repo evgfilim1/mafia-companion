@@ -10,14 +10,25 @@ extension DescribeLogItem on BaseGameLogItem {
   List<String> get description {
     final result = <String>[];
     switch (this) {
-      case StateChangeGameLogItem(oldState: final oldState):
+      case StateChangeGameLogItem(oldState: final oldState, newState: final newState):
+        if (oldState != null && !newState.hasStateChanged(oldState)) {
+          for (var i = 0; i < newState.players.length; i++) {
+            final oldWarns = oldState.players[i].warns;
+            final newWarns = newState.players[i].warns;
+            if (oldWarns != newWarns) {
+              result.add("Выдан фол игроку #${newState.players[i].number}");
+            }
+          }
+          break;
+        }
         switch (oldState) {
-          case GameState() ||
+          case GameStatePrepare() ||
                 GameStateWithPlayer() ||
                 GameStateWithPlayers() ||
                 GameStateNightKill() ||
                 GameStateNightCheck() ||
-                GameStateWithCurrentPlayer():
+                GameStateWithIterablePlayers() ||
+                null:
             // skip
             break;
           case GameStateSpeaking(currentPlayerNumber: final pn, accusations: final accusations):
@@ -37,14 +48,12 @@ extension DescribeLogItem on BaseGameLogItem {
           case GameStateFinish():
             throw AssertionError();
         }
-        result.add('Этап игры изменён с "${oldState.prettyName}"');
+        result.add('Этап игры изменён на "${newState.prettyName}"');
       case PlayerCheckedGameLogItem(
           playerNumber: final playerNumber,
           checkedByRole: final checkedByRole,
         ):
         result.add("${checkedByRole.prettyName} проверил игрока #$playerNumber");
-      case PlayerWarnedGameLogItem(playerNumber: final playerNumber):
-        result.add("Выдан фол игроку #$playerNumber");
     }
     return result;
   }

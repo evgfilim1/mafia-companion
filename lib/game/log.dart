@@ -12,19 +12,12 @@ abstract class BaseGameLogItem {
 
 @immutable
 class StateChangeGameLogItem extends BaseGameLogItem {
-  final BaseGameState oldState;
+  final BaseGameState? oldState;
+  final BaseGameState newState;
 
   const StateChangeGameLogItem({
     required this.oldState,
-  });
-}
-
-@immutable
-class PlayerWarnedGameLogItem extends BaseGameLogItem {
-  final int playerNumber;
-
-  const PlayerWarnedGameLogItem({
-    required this.playerNumber,
+    required this.newState,
   });
 }
 
@@ -57,10 +50,24 @@ class GameLog with IterableMixin<BaseGameLogItem> {
 
   BaseGameLogItem pop() => _log.removeLast();
 
-  void removeLastWhere(bool Function(BaseGameLogItem item) test) {
+  /// Removes all items from the end of the log until [test] returns true.
+  /// If [test] never returns true, nothing will be removed.
+  ///
+  /// Example:
+  /// ```dart
+  /// final log = GameLog();
+  /// log.add(1);
+  /// log.add(2);
+  /// log.add(3);
+  /// log.removeLastUntil((item) => item == 2);
+  /// print(log); // [1, 2]
+  /// ```
+  void removeLastUntil(bool Function(BaseGameLogItem item) test) {
     final i = _log.lastIndexWhere(test);
     if (i != -1) {
-      _log.removeAt(i);
+      _log.removeRange(i + 1, _log.length);
     }
   }
+
+  T lastWhereType<T extends BaseGameLogItem>() => lastWhere((item) => item is T) as T;
 }

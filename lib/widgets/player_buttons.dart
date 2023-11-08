@@ -1,6 +1,5 @@
 import "dart:async";
 
-import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 
@@ -11,18 +10,6 @@ import "../utils/ui.dart";
 import "confirmation_dialog.dart";
 import "orientation_dependent.dart";
 import "player_button.dart";
-
-enum PlayerActions {
-  warn("Выдать фол"),
-  removeWarn("Убрать фол"),
-  kill("Убить"),
-  revive("Воскресить"),
-  ;
-
-  final String text;
-
-  const PlayerActions(this.text);
-}
 
 class PlayerButtons extends OrientationDependentWidget {
   final bool showRoles;
@@ -89,47 +76,13 @@ class PlayerButtons extends OrientationDependentWidget {
     }
   }
 
-  Future<void> _onPlayerActionsTap(BuildContext context, Player player) async {
-    final controller = context.read<GameController>();
-    final res = await showChoiceDialog(
-      context: context,
-      items: PlayerActions.values,
-      itemToString: (i) => i.text,
-      title: Text("Действия для игрока ${player.number}"),
-      selectedIndex: null,
-    );
-    if (res == null) {
-      return;
-    }
-    if (!context.mounted) {
-      throw StateError("Context is not mounted");
-    }
-    switch (res) {
-      case PlayerActions.warn:
-        await _onWarnPlayerTap(context, player.number);
-      case PlayerActions.removeWarn:
-        controller.removePlayerWarn(player.number);
-      case PlayerActions.kill:
-        if (player.isAlive) {
-          controller.killPlayer(player.number);
-        }
-      case PlayerActions.revive:
-        if (!player.isAlive) {
-          controller.revivePlayer(player.number);
-        }
-    }
-    if (context.mounted) {
-      Navigator.pop(context);
-    }
-  }
-
   Widget _buildPlayerButton(BuildContext context, int playerNumber, BaseGameState gameState) {
     final controller = context.watch<GameController>();
     final isActive = switch (gameState) {
-      GameState() || GameStateFinish() => false,
+      GameStatePrepare() || GameStateFinish() => false,
       GameStateWithPlayer(currentPlayerNumber: final p) ||
       GameStateSpeaking(currentPlayerNumber: final p) ||
-      GameStateWithCurrentPlayer(currentPlayerNumber: final p) ||
+      GameStateWithIterablePlayers(currentPlayerNumber: final p) ||
       GameStateVoting(currentPlayerNumber: final p) ||
       GameStateNightCheck(activePlayerNumber: final p) ||
       GameStateBestTurn(currentPlayerNumber: final p) =>
@@ -142,8 +95,7 @@ class PlayerButtons extends OrientationDependentWidget {
     final isSelected = switch (gameState) {
       GameStateSpeaking(accusations: final accusations) => accusations.containsValue(playerNumber),
       GameStateBestTurn(playerNumbers: final playerNumbers) => playerNumbers.contains(playerNumber),
-      GameStateNightKill(thisNightKilledPlayerNumber: final thisNightKilledPlayer) ||
-      GameStateNightCheck(thisNightKilledPlayerNumber: final thisNightKilledPlayer) =>
+      GameStateNightKill(thisNightKilledPlayerNumber: final thisNightKilledPlayer) =>
         thisNightKilledPlayer == playerNumber,
       _ => false,
     };
@@ -157,16 +109,11 @@ class PlayerButtons extends OrientationDependentWidget {
           ? () => _onPlayerButtonTap(context, playerNumber)
           : null,
       longPressActions: [
-        if (kDebugMode)
-          TextButton(
-            onPressed: () => _onPlayerActionsTap(context, player),
-            child: const Text("Действия"),
-          )
-        else
-          TextButton(
-            onPressed: () => _onWarnPlayerTap(context, player.number),
-            child: Text(PlayerActions.warn.text),
-          ),
+        TextButton(
+          onPressed:
+              controller.isGameActive ? () => _onWarnPlayerTap(context, player.number) : null,
+          child: const Text("Выдать фол"),
+        ),
       ],
       showRole: showRoles,
     );

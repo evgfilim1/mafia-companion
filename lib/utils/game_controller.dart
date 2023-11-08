@@ -44,8 +44,6 @@ class GameController with ChangeNotifier {
 
   int get alivePlayersCount => _game.players.aliveCount;
 
-  List<int> get voteCandidates => _game.voteCandidates;
-
   int get totalVotes => _game.totalVotes;
 
   PlayerRole? get winTeamAssumption => _game.winTeamAssumption;
@@ -90,21 +88,6 @@ class GameController with ChangeNotifier {
   }
 
   int getPlayerWarnCount(int player) => _game.getPlayerWarnCount(player);
-
-  void removePlayerWarn(int player) {
-    _game.removePlayerWarn(player);
-    notifyListeners();
-  }
-
-  void killPlayer(int player) {
-    _game.players.kill(player);
-    notifyListeners();
-  }
-
-  void revivePlayer(int player) {
-    _game.players.revive(player);
-    notifyListeners();
-  }
 
   bool checkPlayer(int number) => _game.checkPlayer(number);
 }

@@ -6,7 +6,6 @@ import "package:vibration/vibration.dart";
 
 import "../game/player.dart";
 import "../game/states.dart";
-import "../utils/extensions.dart";
 import "../utils/game_controller.dart";
 import "../utils/settings.dart";
 import "../utils/ui.dart";
@@ -63,8 +62,11 @@ class BottomGameStateWidget extends StatelessWidget {
       );
     }
 
-    if (gameState.stage.isAnyOf([GameStage.preVoting, GameStage.preFinalVoting])) {
-      final selectedPlayers = controller.voteCandidates;
+    if (gameState
+        case GameStateWithPlayers(
+          stage: GameStage.preVoting || GameStage.preFinalVoting,
+          playerNumbers: final selectedPlayers
+        )) {
       return Text(
         "Выставлены: ${selectedPlayers.join(", ")}",
         style: const TextStyle(fontSize: 20),
@@ -72,9 +74,7 @@ class BottomGameStateWidget extends StatelessWidget {
     }
 
     if (gameState is GameStateVoting) {
-      final selectedPlayers = controller.voteCandidates;
-      assert(selectedPlayers.isNotEmpty, "No vote candidates (bug?)");
-      assert(selectedPlayers.length > 1, "Only one vote candidate (bug?)");
+      assert(gameState.votes.keys.length > 1, "One or less vote candidates (bug?)");
       final aliveCount = controller.alivePlayersCount;
       final currentPlayerVotes = gameState.currentPlayerVotes ?? 0;
       return Counter(
@@ -144,7 +144,7 @@ class BottomGameStateWidget extends StatelessWidget {
     }
     if (timeLimit != null) {
       return PlayerTimer(
-        key: ValueKey(controller.state),
+        key: GameStateKey(gameState),
         duration: timeLimit,
         onTimerTick: (duration) async {
           if (await Vibration.hasVibrator() != true) {

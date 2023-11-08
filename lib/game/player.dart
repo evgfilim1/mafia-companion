@@ -23,22 +23,26 @@ class Player {
   final PlayerRole role;
   final int number;
   final bool isAlive;
+  final int warns;
 
   const Player({
     required this.role,
     required this.number,
     this.isAlive = true,
+    this.warns = 0,
   });
 
   Player copyWith({
     PlayerRole? role,
     int? number,
     bool? isAlive,
+    int? warns,
   }) =>
       Player(
         isAlive: isAlive ?? this.isAlive,
         role: role ?? this.role,
         number: number ?? this.number,
+        warns: warns ?? this.warns,
       );
 
   @override
