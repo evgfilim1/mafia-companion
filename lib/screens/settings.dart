@@ -5,47 +5,14 @@ import "package:flutter/material.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import "package:provider/provider.dart";
 
-import "../utils/game_controller.dart";
 import "../utils/settings.dart";
 import "../utils/ui.dart";
 import "../utils/updates_checker.dart";
 import "../widgets/choice_list_tile.dart";
-import "../widgets/confirmation_dialog.dart";
 import "../widgets/notification_dot.dart";
-import "../widgets/toggle_list_tile.dart";
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
-
-  Future<void> _setBestTurnEnabled(BuildContext context, bool value) async {
-    final controller = context.read<GameController>();
-    final settings = context.read<SettingsModel>();
-    final bool? res;
-    if (controller.isGameActive) {
-      res = await showDialog<bool>(
-        context: context,
-        builder: (context) => const ConfirmationDialog(
-          title: Text("Перезапустить игру?"),
-          content: Text(
-            "Для применения этой настройки сейчас, необходимо перезапустить игру."
-            " Перезапустить игру?",
-          ),
-        ),
-      );
-    } else {
-      res = true;
-    }
-    settings.setBestTurnEnabled(value);
-    controller.skipBestTurnStage = !value;
-    if (res ?? false) {
-      controller.restart();
-      if (context.mounted) {
-        unawaited(
-          showSnackBar(context, const SnackBar(content: Text("Игра перезапущена"))),
-        );
-      }
-    }
-  }
 
   Future<void> _checkForUpdates(BuildContext context) async {
     final checker = context.read<UpdatesChecker>();
@@ -123,12 +90,6 @@ class SettingsScreen extends StatelessWidget {
             },
             index: settings.timerType.index,
             onChanged: settings.setTimerType,
-          ),
-          ToggleListTile(
-            title: const Text("Лучший ход (правило 4.5.9)"),
-            subtitle: const Text("Для применения требуется перезапуск игры"),
-            value: settings.bestTurnEnabled,
-            onChanged: (newValue) => _setBestTurnEnabled(context, newValue),
           ),
           ChoiceListTile(
             leading: const Icon(Icons.update),

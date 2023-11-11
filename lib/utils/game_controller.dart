@@ -14,19 +14,15 @@ class GameController with ChangeNotifier {
   int _seed;
   Random _random;
   Game _game;
-  bool skipBestTurnStage;
 
-  factory GameController({bool skipBestTurnStage = false}) {
+  factory GameController() {
     final seed = _getNewRandomSeed();
     final random = Random(seed);
-    final game = Game.withPlayers(
-      generatePlayers(random: random),
-      skipBestTurnStage: skipBestTurnStage,
-    );
-    return GameController._(seed, random, game, skipBestTurnStage);
+    final game = Game.withPlayers(generatePlayers(random: random));
+    return GameController._(seed, random, game);
   }
 
-  GameController._(this._seed, this._random, this._game, this.skipBestTurnStage);
+  GameController._(this._seed, this._random, this._game);
 
   int get playerRandomSeed => _seed;
 
@@ -51,10 +47,7 @@ class GameController with ChangeNotifier {
   void restart({int? seed}) {
     _seed = seed ?? _getNewRandomSeed();
     _random = Random(_seed);
-    _game = Game.withPlayers(
-      generatePlayers(random: _random),
-      skipBestTurnStage: skipBestTurnStage,
-    );
+    _game = Game.withPlayers(generatePlayers(random: _random));
     notifyListeners();
   }
 
