@@ -86,9 +86,9 @@ class PlayerButtons extends OrientationDependentWidget {
       GameStateBestTurn(currentPlayerNumber: final p) =>
         p == playerNumber,
       GameStateWithPlayers(playerNumbers: final ps) ||
-      GameStateNightKill(mafiaTeam: final ps) ||
       GameStateDropTableVoting(playerNumbers: final ps) =>
         ps.contains(playerNumber),
+      GameStateNightKill() => controller.getPlayerByNumber(playerNumber).role.isMafia,
     };
     final isSelected = switch (gameState) {
       GameStateSpeaking(accusations: final accusations) => accusations.containsValue(playerNumber),

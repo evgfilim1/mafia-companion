@@ -121,7 +121,6 @@ class Game {
             return GameStateNightKill(
               day: state.day,
               players: state.players,
-              mafiaTeam: players.mafiaTeam.map((player) => player.number).toUnmodifiableList(),
               thisNightKilledPlayerNumber: null,
             );
           }
@@ -203,7 +202,6 @@ class Game {
             return GameStateNightKill(
               day: state.day,
               players: state.players,
-              mafiaTeam: players.mafiaTeam.map((player) => player.number).toUnmodifiableList(),
               thisNightKilledPlayerNumber: null,
             );
           }
@@ -246,7 +244,6 @@ class Game {
           return GameStateNightKill(
             day: state.day,
             players: state.players,
-            mafiaTeam: players.mafiaTeam.map((player) => player.number).toUnmodifiableList(),
             thisNightKilledPlayerNumber: null,
           );
         }
@@ -275,7 +272,6 @@ class Game {
           return GameStateNightKill(
             day: state.day,
             players: newPlayers,
-            mafiaTeam: players.mafiaTeam.map((player) => player.number).toUnmodifiableList(),
             thisNightKilledPlayerNumber: null,
           );
         }

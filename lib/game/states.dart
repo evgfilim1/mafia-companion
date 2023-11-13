@@ -365,13 +365,11 @@ class GameStateWithPlayers extends BaseGameState {
 /// [stage] is always [GameStage.nightKill].
 @immutable
 class GameStateNightKill extends BaseGameState {
-  final List<int> mafiaTeam;
   final int? thisNightKilledPlayerNumber;
 
   const GameStateNightKill({
     required super.day,
     required super.players,
-    required this.mafiaTeam,
     required this.thisNightKilledPlayerNumber,
   }) : super(stage: GameStage.nightKill);
 
@@ -383,27 +381,19 @@ class GameStateNightKill extends BaseGameState {
           stage == other.stage &&
           day == other.day &&
           players == other.players &&
-          mafiaTeam == other.mafiaTeam &&
           thisNightKilledPlayerNumber == other.thisNightKilledPlayerNumber;
 
   @override
-  int get hashCode => Object.hash(stage, day, players, mafiaTeam, thisNightKilledPlayerNumber);
-
-  @override
-  bool hasStateChanged(BaseGameState oldState) =>
-      oldState is GameStateNightKill && mafiaTeam != oldState.mafiaTeam ||
-      super.hasStateChanged(oldState);
+  int get hashCode => Object.hash(stage, day, players, thisNightKilledPlayerNumber);
 
   GameStateNightKill copyWith({
     int? day,
     List<Player>? players,
-    List<int>? mafiaTeam,
     int? thisNightKilledPlayerNumber,
   }) =>
       GameStateNightKill(
         day: day ?? this.day,
         players: players ?? this.players,
-        mafiaTeam: mafiaTeam ?? this.mafiaTeam,
         thisNightKilledPlayerNumber:
             thisNightKilledPlayerNumber ?? this.thisNightKilledPlayerNumber,
       );
