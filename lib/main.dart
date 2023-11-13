@@ -5,6 +5,7 @@ import "package:package_info_plus/package_info_plus.dart";
 import "package:provider/provider.dart";
 
 import "screens/choose_roles_screen.dart";
+import "screens/debug_menu_screen.dart";
 import "screens/game_log.dart";
 import "screens/main.dart";
 import "screens/roles.dart";
@@ -65,6 +66,7 @@ class MyApp extends StatelessWidget {
           "/seats": (context) => const SeatRandomizerScreen(),
           "/log": (context) => const GameLogScreen(),
           "/chooseRoles": (context) => const ChooseRolesScreen(),
+          "/debug": (context) => const DebugMenuScreen(),
         },
         localizationsDelegates: const [
           GlobalMaterialLocalizations.delegate,

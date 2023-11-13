@@ -6,7 +6,7 @@ import "player.dart";
 import "states.dart";
 
 @immutable
-abstract class BaseGameLogItem {
+sealed class BaseGameLogItem {
   const BaseGameLogItem();
 }
 

@@ -9,7 +9,7 @@ import "../utils/errors.dart";
 import "../utils/settings.dart";
 import "../utils/ui.dart";
 import "../utils/updates_checker.dart";
-import "../widgets/choice_list_tile.dart";
+import "../widgets/list_tiles/choice.dart";
 import "../widgets/notification_dot.dart";
 
 class SettingsScreen extends StatelessWidget {

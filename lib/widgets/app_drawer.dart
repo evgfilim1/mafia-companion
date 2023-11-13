@@ -55,6 +55,14 @@ class AppDrawer extends StatelessWidget {
               Navigator.pushNamed(context, "/settings");
             },
           ),
+          ListTile(
+            leading: const Icon(Icons.bug_report),
+            title: const Text("Отладочное меню"),
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.pushNamed(context, "/debug");
+            },
+          ),
         ],
       ),
     );

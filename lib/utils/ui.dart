@@ -92,42 +92,6 @@ void showSnackBar(
   messenger.showSnackBar(snackBar);
 }
 
-/// Shows a simple dialog with a list of [items] and returns the selected item.
-///
-/// [itemToString] is used to convert the item to a string.
-///
-/// [selectedIndex] is the index of the item that should be selected by default.
-/// If [selectedIndex] is null, no item will be selected, thus no checkmark will
-/// be shown.
-///
-/// Returns the selected item or null if the dialog was dismissed.
-Future<T?> showChoiceDialog<T>({
-  required BuildContext context,
-  required List<T> items,
-  ConverterFunction<T, String>? itemToString,
-  required Widget title,
-  required int? selectedIndex,
-}) async =>
-    showDialog<T>(
-      context: context,
-      builder: (context) => SimpleDialog(
-        title: title,
-        children: [
-          for (var i = 0; i < items.length; i++)
-            SimpleDialogOption(
-              onPressed: () => Navigator.pop(context, items[i]),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(itemToString?.call(items[i]) ?? items[i].toString()),
-                  if (i == selectedIndex) const Icon(Icons.check),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-
 void showSimpleDialog({
   required BuildContext context,
   required Widget title,
@@ -150,8 +114,8 @@ void showSimpleDialog({
   );
 }
 
-Future<void> launchUrlOrCopy(BuildContext context, String url) async {
-  final isOk = await launchUrl(Uri.parse(url), mode: LaunchMode.inAppBrowserView);
+Future<void> launchUrlOrCopy(BuildContext context, String url, {LaunchMode? launchMode}) async {
+  final isOk = await launchUrl(Uri.parse(url), mode: launchMode ?? LaunchMode.inAppBrowserView);
   if (isOk) {
     return;
   }
