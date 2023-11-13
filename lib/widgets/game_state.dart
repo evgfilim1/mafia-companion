@@ -55,7 +55,7 @@ class BottomGameStateWidget extends StatelessWidget {
             child: const Text("Случайная рассадка", style: TextStyle(fontSize: 20)),
           ),
           TextButton(
-            onPressed: () => Navigator.pushNamed(context, "/roles"),
+            onPressed: () => Navigator.pushNamed(context, "/chooseRoles"),
             child: const Text("Раздача ролей", style: TextStyle(fontSize: 20)),
           ),
         ],
