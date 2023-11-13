@@ -16,19 +16,15 @@ class SettingsScreen extends StatelessWidget {
 
   Future<void> _checkForUpdates(BuildContext context) async {
     final checker = context.read<UpdatesChecker>();
-    unawaited(
-      showSnackBar(context, const SnackBar(content: Text("Проверка обновлений..."))),
-    );
+    showSnackBar(context, const SnackBar(content: Text("Проверка обновлений...")));
     final NewVersionInfo? res;
     try {
       res = await checker.checkForUpdates(rethrow_: true);
     } on Exception {
       if (context.mounted) {
-        unawaited(
-          showSnackBar(
-            context,
-            const SnackBar(content: Text("Ошибка проверки обновлений")),
-          ),
+        showSnackBar(
+          context,
+          const SnackBar(content: Text("Ошибка проверки обновлений")),
         );
       }
       return;
@@ -38,7 +34,7 @@ class SettingsScreen extends StatelessWidget {
         ScaffoldMessenger.of(context).removeCurrentSnackBar(reason: SnackBarClosedReason.remove);
         unawaited(showUpdateDialog(context, res));
       } else {
-        unawaited(showSnackBar(context, const SnackBar(content: Text("Обновлений нет"))));
+        showSnackBar(context, const SnackBar(content: Text("Обновлений нет")));
       }
     }
   }

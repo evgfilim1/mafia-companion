@@ -61,7 +61,7 @@ class _MainScreenState extends State<MainScreen> {
     if (!context.mounted) {
       return;
     }
-    await showSnackBar(
+    showSnackBar(
       context,
       SnackBar(
         content: const Text("Доступна новая версия приложения"),
@@ -80,7 +80,7 @@ class _MainScreenState extends State<MainScreen> {
     );
     if (context.mounted && (restartGame ?? false)) {
       context.read<GameController>().restart();
-      unawaited(showSnackBar(context, const SnackBar(content: Text("Игра перезапущена"))));
+      showSnackBar(context, const SnackBar(content: Text("Игра перезапущена")));
     }
   }
 

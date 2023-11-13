@@ -79,9 +79,7 @@ extension GameStatePrettyString on BaseGameState {
   }
 }
 
-typedef ConverterFunction<T, R> = R Function(T value);
-
-Future<SnackBarClosedReason> showSnackBar(
+void showSnackBar(
   BuildContext context,
   SnackBar snackBar, {
   bool dismissPrevious = true,
@@ -90,7 +88,7 @@ Future<SnackBarClosedReason> showSnackBar(
   if (dismissPrevious) {
     messenger.hideCurrentSnackBar();
   }
-  return messenger.showSnackBar(snackBar).closed;
+  messenger.showSnackBar(snackBar);
 }
 
 /// Shows a simple dialog with a list of [items] and returns the selected item.
@@ -159,23 +157,21 @@ Future<void> launchUrlOrCopy(BuildContext context, String url) async {
   if (!context.mounted) {
     return;
   }
-  unawaited(
-    showSnackBar(
-      context,
-      SnackBar(
-        content: const Text("Не удалось открыть ссылку"),
-        action: SnackBarAction(
-          label: "Скопировать",
-          onPressed: () {
-            Clipboard.setData(ClipboardData(text: url));
-            showSnackBar(
-              context,
-              const SnackBar(
-                content: Text("Ссылка скопирована в буфер обмена"),
-              ),
-            );
-          },
-        ),
+  showSnackBar(
+    context,
+    SnackBar(
+      content: const Text("Не удалось открыть ссылку"),
+      action: SnackBarAction(
+        label: "Скопировать",
+        onPressed: () {
+          Clipboard.setData(ClipboardData(text: url));
+          showSnackBar(
+            context,
+            const SnackBar(
+              content: Text("Ссылка скопирована в буфер обмена"),
+            ),
+          );
+        },
       ),
     ),
   );
@@ -193,12 +189,10 @@ Future<void> showUpdateDialog(BuildContext context, NewVersionInfo info) async {
     return;
   }
   if (kIsWeb) {
-    unawaited(
-      showSnackBar(
-        context,
-        const SnackBar(
-          content: Text("Перезагрузите страницу для обновления"),
-        ),
+    showSnackBar(
+      context,
+      const SnackBar(
+        content: Text("Перезагрузите страницу для обновления"),
       ),
     );
     return;

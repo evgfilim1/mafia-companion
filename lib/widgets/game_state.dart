@@ -116,9 +116,7 @@ class BottomGameStateWidget extends StatelessWidget {
               if (restartGame ?? false) {
                 controller.restart();
                 if (context.mounted) {
-                  unawaited(
-                    showSnackBar(context, const SnackBar(content: Text("Игра перезапущена"))),
-                  );
+                  showSnackBar(context, const SnackBar(content: Text("Игра перезапущена")));
                 }
               }
             },

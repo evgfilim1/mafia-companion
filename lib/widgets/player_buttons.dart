@@ -66,11 +66,9 @@ class PlayerButtons extends OrientationDependentWidget {
     if (res ?? false) {
       controller.warnPlayer(playerNumber);
       if (context.mounted) {
-        unawaited(
-          showSnackBar(
-            context,
-            SnackBar(content: Text("Выдан фол игроку $playerNumber")),
-          ),
+        showSnackBar(
+          context,
+          SnackBar(content: Text("Выдан фол игроку $playerNumber")),
         );
       }
     }
