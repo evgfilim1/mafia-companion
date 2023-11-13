@@ -8,6 +8,7 @@ import "package:url_launcher/url_launcher.dart";
 import "../game/player.dart";
 import "../game/states.dart";
 import "../widgets/update_dialog.dart";
+import "errors.dart";
 import "updates_checker.dart";
 
 extension PlayerRolePrettyString on PlayerRole {
@@ -155,7 +156,7 @@ Future<void> launchUrlOrCopy(BuildContext context, String url) async {
     return;
   }
   if (!context.mounted) {
-    return;
+    throw ContextNotMountedError();
   }
   showSnackBar(
     context,
@@ -186,7 +187,7 @@ Future<void> showUpdateDialog(BuildContext context, NewVersionInfo info) async {
     return;
   }
   if (!context.mounted) {
-    return;
+    throw ContextNotMountedError();
   }
   if (kIsWeb) {
     showSnackBar(

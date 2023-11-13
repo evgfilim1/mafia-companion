@@ -5,6 +5,7 @@ import "package:flutter/material.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import "package:provider/provider.dart";
 
+import "../utils/errors.dart";
 import "../utils/settings.dart";
 import "../utils/ui.dart";
 import "../utils/updates_checker.dart";
@@ -21,21 +22,23 @@ class SettingsScreen extends StatelessWidget {
     try {
       res = await checker.checkForUpdates(rethrow_: true);
     } on Exception {
-      if (context.mounted) {
-        showSnackBar(
-          context,
-          const SnackBar(content: Text("Ошибка проверки обновлений")),
-        );
+      if (!context.mounted) {
+        throw ContextNotMountedError();
       }
+      showSnackBar(
+        context,
+        const SnackBar(content: Text("Ошибка проверки обновлений")),
+      );
       return;
     }
-    if (context.mounted) {
-      if (res != null) {
-        ScaffoldMessenger.of(context).removeCurrentSnackBar(reason: SnackBarClosedReason.remove);
-        unawaited(showUpdateDialog(context, res));
-      } else {
-        showSnackBar(context, const SnackBar(content: Text("Обновлений нет")));
-      }
+    if (!context.mounted) {
+      throw ContextNotMountedError();
+    }
+    if (res != null) {
+      ScaffoldMessenger.of(context).removeCurrentSnackBar(reason: SnackBarClosedReason.remove);
+      unawaited(showUpdateDialog(context, res));
+    } else {
+      showSnackBar(context, const SnackBar(content: Text("Обновлений нет")));
     }
   }
 

@@ -6,6 +6,7 @@ import "package:vibration/vibration.dart";
 
 import "../game/player.dart";
 import "../game/states.dart";
+import "../utils/errors.dart";
 import "../utils/game_controller.dart";
 import "../utils/settings.dart";
 import "../utils/ui.dart";
@@ -115,9 +116,10 @@ class BottomGameStateWidget extends StatelessWidget {
               );
               if (restartGame ?? false) {
                 controller.restart();
-                if (context.mounted) {
-                  showSnackBar(context, const SnackBar(content: Text("Игра перезапущена")));
+                if (!context.mounted) {
+                  throw ContextNotMountedError();
                 }
+                showSnackBar(context, const SnackBar(content: Text("Игра перезапущена")));
               }
             },
             child: const Text("Начать заново", style: TextStyle(fontSize: 20)),

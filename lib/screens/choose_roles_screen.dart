@@ -6,6 +6,7 @@ import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 
 import "../game/player.dart";
+import "../utils/errors.dart";
 import "../utils/extensions.dart";
 import "../utils/game_controller.dart";
 import "../utils/ui.dart";
@@ -170,17 +171,18 @@ class _ChooseRolesScreenState extends State<ChooseRolesScreen> {
       _isInProgress = false;
     });
     if (newSeed == null) {
-      if (context.mounted) {
-        showSnackBar(
-          context,
-          const SnackBar(content: Text("Невозможно применить выбранные роли")),
-        );
+      if (!context.mounted) {
+        throw ContextNotMountedError();
       }
+      showSnackBar(
+        context,
+        const SnackBar(content: Text("Невозможно применить выбранные роли")),
+      );
       return;
     }
     controller.restart(seed: newSeed);
     if (!context.mounted) {
-      throw StateError("context is not mounted");
+      throw ContextNotMountedError();
     }
     showSnackBar(context, const SnackBar(content: Text("Роли применены")));
     unawaited(Navigator.pushReplacementNamed(context, "/roles"));

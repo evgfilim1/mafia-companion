@@ -5,6 +5,7 @@ import "package:provider/provider.dart";
 
 import "../game/player.dart";
 import "../game/states.dart";
+import "../utils/errors.dart";
 import "../utils/game_controller.dart";
 import "../utils/ui.dart";
 import "confirmation_dialog.dart";
@@ -65,12 +66,13 @@ class PlayerButtons extends OrientationDependentWidget {
     );
     if (res ?? false) {
       controller.warnPlayer(playerNumber);
-      if (context.mounted) {
-        showSnackBar(
-          context,
-          SnackBar(content: Text("Выдан фол игроку $playerNumber")),
-        );
+      if (!context.mounted) {
+        throw ContextNotMountedError();
       }
+      showSnackBar(
+        context,
+        SnackBar(content: Text("Выдан фол игроку $playerNumber")),
+      );
     }
   }
 

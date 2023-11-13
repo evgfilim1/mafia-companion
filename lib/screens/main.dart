@@ -5,6 +5,7 @@ import "package:flutter/services.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import "package:provider/provider.dart";
 
+import "../utils/errors.dart";
 import "../utils/game_controller.dart";
 import "../utils/settings.dart";
 import "../utils/ui.dart";
@@ -78,7 +79,10 @@ class _MainScreenState extends State<MainScreen> {
       context: context,
       builder: (context) => const RestartGameDialog(),
     );
-    if (context.mounted && (restartGame ?? false)) {
+    if (!context.mounted) {
+      throw ContextNotMountedError();
+    }
+    if (restartGame ?? false) {
       context.read<GameController>().restart();
       showSnackBar(context, const SnackBar(content: Text("Игра перезапущена")));
     }
@@ -118,7 +122,7 @@ class _MainScreenState extends State<MainScreen> {
             content: Text("Вы уверены, что хотите выйти из игры? Все данные будут потеряны."),
           ),
         );
-        if ((res ?? false) && context.mounted) {
+        if (res ?? false) {
           // exit flutter app
           await SystemNavigator.pop();
         }
