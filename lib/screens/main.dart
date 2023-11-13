@@ -108,7 +108,7 @@ class _MainScreenState extends State<MainScreen> {
     final checker = context.watch<UpdatesChecker>();
 
     return PopScope(
-      canPop: controller.isGameActive,
+      canPop: !controller.isGameActive,
       onPopInvoked: (didPop) async {
         if (didPop) return;
         final res = await showDialog<bool>(
