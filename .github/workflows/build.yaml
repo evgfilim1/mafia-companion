@@ -82,13 +82,17 @@ jobs:
       - name: Get Flutter dependencies
         run: flutter pub get
 
-      - name: Build release app for Android
-        run: flutter build apk --split-per-abi
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: Decode keystore file
+        env:
+          KEYSTORE_CONTENTS: ${{ secrets.KEYSTORE_CONTENTS }}
+        run: |
+          echo "$KEYSTORE_CONTENTS" | base64 -d >android/keystore.jks
 
-      - name: Build debug app for Android
-        run: flutter build apk --debug --split-per-abi
-        if: "!startsWith(github.ref, 'refs/tags/v')"
+      - name: Build app for Android
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: flutter build apk --release --split-per-abi
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v3
