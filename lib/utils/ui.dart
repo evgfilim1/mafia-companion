@@ -1,13 +1,16 @@
 import "dart:async";
+import "dart:io";
 
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
+import "package:ota_update/ota_update.dart";
+import "package:provider/provider.dart";
 import "package:url_launcher/url_launcher.dart";
 
 import "../game/player.dart";
 import "../game/states.dart";
-import "../widgets/update_dialog.dart";
+import "../widgets/update_available_dialog.dart";
 import "errors.dart";
 import "updates_checker.dart";
 
@@ -156,13 +159,27 @@ Future<void> showUpdateDialog(BuildContext context, NewVersionInfo info) async {
   if (kIsWeb) {
     showSnackBar(
       context,
-      const SnackBar(
-        content: Text("Перезагрузите страницу для обновления"),
-      ),
+      const SnackBar(content: Text("Перезагрузите страницу для обновления")),
     );
     return;
   }
-  await launchUrlOrCopy(context, info.downloadUrl);
+  if (!Platform.isAndroid) {
+    throw UnsupportedError("Unsupported platform: ${Platform.operatingSystem}");
+  }
+  assert(info.downloadUrl.isNotEmpty, "Download URL is empty");
+  try {
+    showSnackBar(
+      context,
+      const SnackBar(content: Text("Загрузка обновления...")),
+    );
+    // TODO: downloading dialog or show progress notification while downloading
+    await context.read<UpdatesChecker>().runOtaUpdate();
+  } on OtaUpdateException {
+    if (!context.mounted) {
+      throw ContextNotMountedError();
+    }
+    await launchUrlOrCopy(context, info.downloadUrl);
+  }
 }
 
 class GameStateKey extends ValueKey<BaseGameState> {

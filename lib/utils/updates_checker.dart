@@ -1,9 +1,13 @@
 import "dart:convert";
+import "dart:io";
 
 import "package:flutter/foundation.dart";
 import "package:http/http.dart" as http;
 import "package:intl/intl.dart";
+import "package:ota_update/ota_update.dart";
 import "package:package_info_plus/package_info_plus.dart";
+import "package:path/path.dart" as path;
+import "package:path_provider/path_provider.dart" as pp;
 
 import "extensions.dart";
 import "github.dart";
@@ -149,5 +153,52 @@ class UpdatesChecker with ChangeNotifier {
       notifyListeners();
     }
     return _info;
+  }
+
+  Future<void> runOtaUpdate({void Function(OtaEvent event)? onOtaEvent}) async {
+    if (_info == null) {
+      return;
+    }
+    try {
+      await for (final event in OtaUpdate().execute(_info!.downloadUrl)) {
+        _otaEventListener(event);
+        onOtaEvent?.call(event);
+      }
+    } on Exception catch (e, s) {
+      // TODO: log error
+      // ignore: avoid_print
+      print("Error while running OTA update: $e\n$s");
+      rethrow;
+    }
+  }
+
+  Future<void> clearLeftoverUpdateFile() async {
+    // `ota_update` puts downloaded file in `<package_data_dir>/files/ota_update/ota_update.apk`
+    // and doesn't delete it after installation. To prevent filling up storage with update files,
+    // we delete it manually. Would be better if the library put the file in cache dir instead of
+    // support dir.
+    //
+    // Also, consider switching to manual update installation some day by managing downloads
+    // and calling intents to install the downloaded file, then we can also delete the file
+    // ourselves.
+    final dir = await pp.getApplicationSupportDirectory();
+    final file = File(path.join(dir.path, "ota_update", "ota_update.apk"));
+    if (file.existsSync()) {
+      await file.delete();
+    }
+  }
+
+  void _otaEventListener(OtaEvent event) {
+    switch (event.status) {
+      case OtaStatus.DOWNLOADING:
+      case OtaStatus.INSTALLING:
+      case OtaStatus.ALREADY_RUNNING_ERROR:
+        break;
+      case OtaStatus.PERMISSION_NOT_GRANTED_ERROR:
+      case OtaStatus.INTERNAL_ERROR:
+      case OtaStatus.DOWNLOAD_ERROR:
+      case OtaStatus.CHECKSUM_ERROR:
+        throw AssertionError("${event.status}: ${event.value}");
+    }
   }
 }

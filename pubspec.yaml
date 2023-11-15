@@ -34,6 +34,12 @@ dependencies:
   flutter_markdown: ^0.6.18
   http: ^1.1.0
   intl: ^0.18.1
+  ota_update:
+    # Has bug with AGP 8.0+, see https://github.com/4Q-s-r-o/ota_update/issue/108
+    # Waiting for my fix to be merged, see https://github.com/4Q-s-r-o/ota_update/pull/109
+    git:
+      url: https://github.com/evgfilim1/ota_update
+      ref: 301899fe15da6c6a8ec760fa1306ef72918f5ce1
   package_info_plus: ^4.2.0
   path: ^1.8.3
   path_provider: ^2.1.1

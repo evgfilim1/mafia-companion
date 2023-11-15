@@ -1,5 +1,6 @@
 import "dart:async";
 
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:package_info_plus/package_info_plus.dart";
@@ -49,10 +50,21 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Future<void> _checkForUpdates() async {
-    if (context.read<SettingsModel>().checkUpdatesType != CheckUpdatesType.onLaunch) {
+    final checker = context.read<UpdatesChecker>();
+    final settings = context.read<SettingsModel>();
+    if (!kIsWeb) {
+      // web has no files downloaded
+      try {
+        await checker.clearLeftoverUpdateFile();
+      } on Exception catch (e, s) {
+        // TODO: log warning
+        // ignore: avoid_print
+        print("Error while clearing leftover update file: $e\n$s");
+      }
+    }
+    if (settings.checkUpdatesType != CheckUpdatesType.onLaunch) {
       return;
     }
-    final checker = context.read<UpdatesChecker>();
     final update = await checker.checkForUpdates();
     if (update == null) {
       return;
