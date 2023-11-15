@@ -59,7 +59,7 @@ android {
     signingConfigs {
         release {
             if (keystoreAvailable) {
-                storeFile file(System.getenv("KEYSTORE_FILE") ?: "android/keystore.jks")
+                storeFile file(System.getenv("KEYSTORE_FILE") ?: "../keystore.jks")
                 storePassword System.getenv("KEYSTORE_PASSWORD")
                 keyAlias System.getenv("KEY_ALIAS") ?: "sign"
                 keyPassword System.getenv("KEY_PASSWORD")
