@@ -241,8 +241,8 @@ packages:
     dependency: "direct main"
     description:
       path: "."
-      ref: "301899fe15da6c6a8ec760fa1306ef72918f5ce1"
-      resolved-ref: "301899fe15da6c6a8ec760fa1306ef72918f5ce1"
+      ref: "80d4984f564f8062085cbe0a140590f8543ba9fa"
+      resolved-ref: "80d4984f564f8062085cbe0a140590f8543ba9fa"
       url: "https://github.com/evgfilim1/ota_update"
     source: git
     version: "5.1.0"
