@@ -101,7 +101,7 @@ class _DebugMenuScreenState extends State<DebugMenuScreen> {
                   "Для сообщения о проблеме нужно поделиться файлом или скопированным текстом"
                   " мне в ЛС в Telegram.",
                 ),
-                actions: [
+                extraActions: [
                   TextButton(
                     onPressed: () async {
                       await reportBug(context);

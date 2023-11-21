@@ -26,6 +26,7 @@ environment:
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
 dependencies:
+  async: ^2.11.0
   dynamic_color: ^1.6.8
   flutter:
     sdk: flutter
@@ -34,15 +35,10 @@ dependencies:
   flutter_markdown: ^0.6.18
   http: ^1.1.0
   intl: ^0.18.1
-  ota_update:
-    # Has bugs with AGP 8.0+, see https://github.com/4Q-s-r-o/ota_update/issue/108
-    # Waiting for my fix to be merged, see https://github.com/4Q-s-r-o/ota_update/pull/109
-    git:
-      url: https://github.com/evgfilim1/ota_update
-      ref: 80d4984f564f8062085cbe0a140590f8543ba9fa
   package_info_plus: ^4.2.0
   path: ^1.8.3
   path_provider: ^2.1.1
+  permission_handler: ^11.0.1
   provider: ^6.0.5
   share_plus: ^7.2.1
   shared_preferences: ^2.2.2

@@ -36,7 +36,7 @@ class SettingsScreen extends StatelessWidget {
     }
     if (res != null) {
       ScaffoldMessenger.of(context).removeCurrentSnackBar(reason: SnackBarClosedReason.remove);
-      unawaited(showUpdateDialog(context, res));
+      unawaited(showUpdateDialog(context));
     } else {
       showSnackBar(context, const SnackBar(content: Text("Обновлений нет")));
     }

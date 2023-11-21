@@ -4,13 +4,15 @@ import "dart:io";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
-import "package:ota_update/ota_update.dart";
+import "package:permission_handler/permission_handler.dart";
 import "package:provider/provider.dart";
 import "package:url_launcher/url_launcher.dart";
 
 import "../game/player.dart";
 import "../game/states.dart";
+import "../widgets/information_dialog.dart";
 import "../widgets/update_available_dialog.dart";
+import "../widgets/update_dialog.dart";
 import "errors.dart";
 import "updates_checker.dart";
 
@@ -95,27 +97,20 @@ void showSnackBar(
   messenger.showSnackBar(snackBar);
 }
 
-void showSimpleDialog({
+Future<void> showSimpleDialog({
   required BuildContext context,
   required Widget title,
   required Widget content,
-  List<Widget> actions = const [],
-}) {
-  showDialog<void>(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: title,
-      content: content,
-      actions: [
-        ...actions,
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text("ОК"),
-        ),
-      ],
-    ),
-  );
-}
+  List<Widget> extraActions = const [],
+}) =>
+    showDialog<void>(
+      context: context,
+      builder: (context) => InformationDialog(
+        title: title,
+        content: content,
+        extraActions: extraActions,
+      ),
+    );
 
 Future<void> launchUrlOrCopy(BuildContext context, String url, {LaunchMode? launchMode}) async {
   final isOk = await launchUrl(Uri.parse(url), mode: launchMode ?? LaunchMode.inAppBrowserView);
@@ -145,10 +140,14 @@ Future<void> launchUrlOrCopy(BuildContext context, String url, {LaunchMode? laun
   );
 }
 
-Future<void> showUpdateDialog(BuildContext context, NewVersionInfo info) async {
+Future<void> showUpdateDialog(BuildContext context) async {
+  final updater = context.read<UpdatesChecker>();
+  if (!updater.hasUpdate) {
+    throw StateError("No update available");
+  }
   final doUpdate = await showDialog<bool>(
     context: context,
-    builder: (context) => UpdateAvailableDialog(info: info),
+    builder: (context) => UpdateAvailableDialog(info: updater.updateInfo!),
   );
   if (!(doUpdate ?? false)) {
     return;
@@ -166,19 +165,60 @@ Future<void> showUpdateDialog(BuildContext context, NewVersionInfo info) async {
   if (!Platform.isAndroid) {
     throw UnsupportedError("Unsupported platform: ${Platform.operatingSystem}");
   }
-  assert(info.downloadUrl.isNotEmpty, "Download URL is empty");
+  assert(updater.updateInfo!.downloadUrl.isNotEmpty, "Download URL is empty");
   try {
-    showSnackBar(
-      context,
-      const SnackBar(content: Text("Загрузка обновления...")),
-    );
-    // TODO: downloading dialog or show progress notification while downloading
-    await context.read<UpdatesChecker>().runOtaUpdate();
-  } on OtaUpdateException {
+    const requiredPermission = Permission.requestInstallPackages;
+    if (await requiredPermission.status != PermissionStatus.granted) {
+      if (!context.mounted) {
+        throw ContextNotMountedError();
+      }
+      await showSimpleDialog(
+        context: context,
+        title: const Text("Необходимо разрешение"),
+        content: const Text(
+          "Для установки обновления необходимо разрешение на установку приложений из неизвестных"
+          " источников.",
+        ),
+      );
+      if (await requiredPermission.request() != PermissionStatus.granted) {
+        if (context.mounted) {
+          showSnackBar(
+            context,
+            const SnackBar(content: Text("Не удалось получить разрешение")),
+          );
+        }
+        return;
+      }
+    }
     if (!context.mounted) {
       throw ContextNotMountedError();
     }
-    await launchUrlOrCopy(context, info.downloadUrl);
+    unawaited(updater.startOtaUpdateSession());
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        final updater = context.watch<UpdatesChecker>();
+        if (updater.currentAction == OtaAction.error) {
+          return InformationDialog(
+            title: const Text("Ошибка"),
+            content: const Text("Не удалось установить обновление, попробуйте сделать это вручную."),
+            extraActions: [
+              TextButton(
+                onPressed: () => launchUrlOrCopy(context, updater.updateInfo!.downloadUrl),
+                child: const Text("Открыть ссылку"),
+              ),
+            ],
+          );
+        }
+        return const PopScope(canPop: false, child: UpdateDialog());
+      },
+    );
+  } on Exception {
+    if (!context.mounted) {
+      throw ContextNotMountedError();
+    }
+    await launchUrlOrCopy(context, updater.updateInfo!.downloadUrl);
   }
 }
 

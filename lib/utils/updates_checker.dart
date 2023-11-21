@@ -1,14 +1,16 @@
 import "dart:convert";
-import "dart:io";
 
+import "package:async/async.dart";
 import "package:flutter/foundation.dart";
+import "package:flutter/services.dart";
 import "package:http/http.dart" as http;
 import "package:intl/intl.dart";
-import "package:ota_update/ota_update.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import "package:path/path.dart" as path;
 import "package:path_provider/path_provider.dart" as pp;
 
+import "apk_installer.dart";
+import "downloader.dart";
 import "extensions.dart";
 import "github.dart";
 import "updates_checker/stub.dart"
@@ -139,12 +141,82 @@ Future<NewVersionInfo?> _checkForUpdatesImpl({bool rethrow_ = false}) async {
   }
 }
 
+class _OtaUpdateSession {
+  final NewVersionInfo _info;
+  CancelableOperation<void>? _downloadOperation;
+  bool _downloadFinished = false;
+
+  _OtaUpdateSession(this._info);
+
+  bool get isDownloading => _downloadOperation != null;
+
+  bool get isDownloadFinished => _downloadFinished;
+
+  static Future<String> getUpdateFilePath() async =>
+      path.join((await pp.getApplicationCacheDirectory()).path, "update.apk");
+
+  Future<void> download({ProgressCallback? onProgress}) async {
+    if (_downloadOperation != null) {
+      throw StateError("Update is already running");
+    }
+    try {
+      _downloadOperation = await downloadFile(
+        _info.downloadUrl,
+        destination: await getUpdateFilePath(),
+        onProgress: onProgress,
+      );
+      await _downloadOperation!.valueOrCancellation();
+      if (!_downloadOperation!.isCanceled) {
+        _downloadFinished = true;
+      }
+    } finally {
+      _downloadOperation = null;
+    }
+  }
+
+  Future<void> install() async {
+    await requestSelfUpdate(path: await getUpdateFilePath());
+  }
+
+  Stream<double> installWithProgress() async* {
+    yield* requestSelfUpdateWithProgress(path: await getUpdateFilePath());
+  }
+
+  Future<void> cancel() async {
+    await _downloadOperation?.cancel();
+  }
+}
+
+enum OtaAction {
+  downloading,
+  installing,
+  error,
+}
+
 class UpdatesChecker with ChangeNotifier {
   NewVersionInfo? _info;
+  _OtaUpdateSession? _currentOtaSession;
+
+  var _downloaded = 0;
+  int? _total;
+  OtaAction? _currentAction;
 
   NewVersionInfo? get updateInfo => _info;
 
   bool get hasUpdate => _info != null;
+
+  bool get isOtaRunning => _currentOtaSession != null;
+
+  bool get isCancellable => _currentAction != OtaAction.installing;
+
+  double? get progress {
+    if (_total == null) {
+      return null;
+    }
+    return _downloaded / _total!;
+  }
+
+  OtaAction? get currentAction => _currentAction;
 
   Future<NewVersionInfo?> checkForUpdates({bool rethrow_ = false}) async {
     final info = await _checkForUpdatesImpl(rethrow_: rethrow_);
@@ -155,50 +227,64 @@ class UpdatesChecker with ChangeNotifier {
     return _info;
   }
 
-  Future<void> runOtaUpdate({void Function(OtaEvent event)? onOtaEvent}) async {
-    if (_info == null) {
+  Future<void> startOtaUpdateSession() async {
+    if (!hasUpdate) {
       return;
     }
+    if (isOtaRunning) {
+      throw StateError("Update is already running");
+    }
+    _currentOtaSession = _OtaUpdateSession(_info!);
     try {
-      await for (final event in OtaUpdate().execute(_info!.downloadUrl)) {
-        _otaEventListener(event);
-        onOtaEvent?.call(event);
+      _currentAction = OtaAction.downloading;
+      await _currentOtaSession!.download(
+        onProgress: (downloaded, total) {
+          _downloaded = downloaded;
+          _total = total;
+          notifyListeners();
+        },
+      );
+      if (!_currentOtaSession!.isDownloadFinished) {
+        return;
+      }
+      _currentAction = OtaAction.installing;
+      _downloaded = 0;
+      _total = null;
+      notifyListeners();
+      await for (final progress in _currentOtaSession!.installWithProgress()) {
+        _total = 100;
+        _downloaded = (progress * _total!).round();
+        notifyListeners();
       }
     } on Exception catch (e, s) {
       // TODO: log error
       // ignore: avoid_print
       print("Error while running OTA update: $e\n$s");
-      rethrow;
+      _currentAction = OtaAction.error;
+      if (e is! PlatformException) {
+        rethrow;
+      }
+      if (e.code != "UPDATE_SESSION_FAILED") {
+        rethrow;
+      }
+    } finally {
+      _currentOtaSession = null;
+      _downloaded = 0;
+      _total = null;
+      notifyListeners();
     }
   }
 
-  Future<void> clearLeftoverUpdateFile() async {
-    // `ota_update` puts downloaded file in `<package_data_dir>/files/ota_update/ota_update.apk`
-    // and doesn't delete it after installation. To prevent filling up storage with update files,
-    // we delete it manually. Would be better if the library put the file in cache dir instead of
-    // support dir.
-    //
-    // Also, consider switching to manual update installation some day by managing downloads
-    // and calling intents to install the downloaded file, then we can also delete the file
-    // ourselves.
-    final dir = await pp.getApplicationSupportDirectory();
-    final file = File(path.join(dir.path, "ota_update", "ota_update.apk"));
-    if (file.existsSync()) {
-      await file.delete();
+  Future<void> cancelOtaUpdate() async {
+    if (!isCancellable) {
+      throw StateError("Update is not cancellable");
     }
+    await _currentOtaSession?.cancel();
   }
 
-  void _otaEventListener(OtaEvent event) {
-    switch (event.status) {
-      case OtaStatus.DOWNLOADING:
-      case OtaStatus.INSTALLING:
-      case OtaStatus.ALREADY_RUNNING_ERROR:
-        break;
-      case OtaStatus.PERMISSION_NOT_GRANTED_ERROR:
-      case OtaStatus.INTERNAL_ERROR:
-      case OtaStatus.DOWNLOAD_ERROR:
-      case OtaStatus.CHECKSUM_ERROR:
-        throw AssertionError("${event.status}: ${event.value}");
-    }
+  @override
+  Future<void> dispose() async {
+    await _currentOtaSession?.cancel();
+    super.dispose();
   }
 }
