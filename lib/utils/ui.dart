@@ -202,7 +202,8 @@ Future<void> showUpdateDialog(BuildContext context) async {
         if (updater.currentAction == OtaAction.error) {
           return InformationDialog(
             title: const Text("Ошибка"),
-            content: const Text("Не удалось установить обновление, попробуйте сделать это вручную."),
+            content:
+                const Text("Не удалось установить обновление, попробуйте сделать это вручную."),
             extraActions: [
               TextButton(
                 onPressed: () => launchUrlOrCopy(context, updater.updateInfo!.downloadUrl),
