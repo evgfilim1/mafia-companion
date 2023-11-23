@@ -1,6 +1,8 @@
 name: mafia_companion
 description: A companion for Tournament Mafia game
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+repository: https://github.com/evgfilim1/mafia-companion
+issue_tracker: https://github.com/evgfilim1/mafia-companion/issues
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -17,7 +19,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 0.3.0-rc.0+12
 
 environment:
-  sdk: '>=3.1.0 <4.0.0'
+  sdk: '>=3.2.0 <4.0.0'
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -34,13 +36,16 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   flutter_markdown: ^0.6.18
+  # Latest `http: ^1.1.1` depends on `web: ^0.4.0`, but `flutter_localizations` pins
+  # `web: 0.3.0` in Flutter `3.17.0-0.0.pre` => cannot use `http: ^1.1.1` yet.
+  # TODO: upgrade once `flutter_localizations` is updated in sdk.
   http: ^1.1.0
   intl: ^0.18.1
-  package_info_plus: ^4.2.0
+  package_info_plus: ^5.0.1
   path: ^1.8.3
   path_provider: ^2.1.1
-  permission_handler: ^11.0.1
-  provider: ^6.0.5
+  permission_handler: ^11.1.0
+  provider: ^6.1.1
   share_plus: ^7.2.1
   shared_preferences: ^2.2.2
   url_launcher: ^6.1.14
