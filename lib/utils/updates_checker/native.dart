@@ -16,7 +16,8 @@ Future<UrlChecksum> getReleaseDownloadUrl({
     _ => throw AssertionError("Unsupported platform: $currentPlatform"),
   };
   final asset = latestRelease.assets.singleWhere((e) => e.name == "app-$arch-release.apk");
-  final checksumAsset = latestRelease.assets.where((e) => e.name == "${asset.name}.sha1").singleOrNull;
+  final checksumAsset =
+      latestRelease.assets.where((e) => e.name == "${asset.name}.sha1").singleOrNull;
   final String? checksum;
   if (checksumAsset != null) {
     checksum = await http.read(Uri.parse(checksumAsset.browserDownloadUrl));
