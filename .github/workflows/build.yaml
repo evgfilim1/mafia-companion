@@ -101,6 +101,7 @@ jobs:
           if-no-files-found: error
           path: |
             build/app/outputs/flutter-apk/app-*.apk
+            build/app/outputs/flutter-apk/app-*.apk.sha1
 
   build-web:
     name: Build app for web

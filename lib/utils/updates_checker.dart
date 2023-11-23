@@ -1,6 +1,9 @@
+import "dart:async";
 import "dart:convert";
+import "dart:io";
 
 import "package:async/async.dart";
+import "package:crypto/crypto.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/services.dart";
 import "package:http/http.dart" as http;
@@ -11,6 +14,7 @@ import "package:path_provider/path_provider.dart" as pp;
 
 import "apk_installer.dart";
 import "downloader.dart";
+import "errors.dart";
 import "extensions.dart";
 import "github.dart";
 import "updates_checker/stub.dart"
@@ -35,10 +39,14 @@ class NewVersionInfo {
   /// Download URL for Android, empty string for web
   final String downloadUrl;
 
+  /// SHA1 checksum for the file to be downloaded from [downloadUrl], `null` when not available
+  final String? sha1sum;
+
   const NewVersionInfo({
     required this.version,
     required this.releaseNotes,
     required this.downloadUrl,
+    required this.sha1sum,
   });
 
   @override
@@ -111,34 +119,13 @@ Future<NewVersionInfo?> _checkForUpdates() async {
     from: currentVersion,
     to: latestVersion,
   );
-  final downloadUrl = getReleaseDownloadUrl(latestRelease: releases.first);
+  final (downloadUrl, checksum) = await getReleaseDownloadUrl(latestRelease: releases.first);
   return NewVersionInfo(
     version: latestVersion.toString(),
     releaseNotes: changelog,
     downloadUrl: downloadUrl,
+    sha1sum: checksum,
   );
-}
-
-Future<NewVersionInfo?> _checkForUpdatesImpl({bool rethrow_ = false}) async {
-  try {
-    return await _checkForUpdates();
-  } on http.ClientException catch (e) {
-    // TODO: log warning
-    // ignore: avoid_print
-    print("Error while checking for updates: $e");
-    if (rethrow_) {
-      rethrow;
-    }
-    return null;
-  } catch (e, stackTrace) {
-    // TODO: log error
-    // ignore: avoid_print
-    print("Error while checking for updates: $e\n$stackTrace");
-    if (rethrow_) {
-      rethrow;
-    }
-    return null;
-  }
 }
 
 class _OtaUpdateSession {
@@ -174,8 +161,23 @@ class _OtaUpdateSession {
     }
   }
 
-  Future<void> install() async {
-    await requestSelfUpdate(path: await getUpdateFilePath());
+  Future<bool> checkSha1sum({bool throwOnMismatch = false}) async {
+    if (_info.sha1sum == null) {
+      throw StateError("SHA1 checksum is not available");
+    }
+    final completer = Completer<Digest>();
+    final output =
+        ChunkedConversionSink<Digest>.withCallback((data) => completer.complete(data.single));
+    final input = sha1.startChunkedConversion(output);
+    final file = File(await getUpdateFilePath());
+    await file.openRead().forEach(input.add);
+    input.close();
+    final digest = await completer.future;
+    final result = digest.toString() == _info.sha1sum!;
+    if (!result && throwOnMismatch) {
+      throw ChecksumMismatch(actual: digest.toString(), expected: _info.sha1sum!);
+    }
+    return result;
   }
 
   Stream<double> installWithProgress() async* {
@@ -219,7 +221,24 @@ class UpdatesChecker with ChangeNotifier {
   OtaAction? get currentAction => _currentAction;
 
   Future<NewVersionInfo?> checkForUpdates({bool rethrow_ = false}) async {
-    final info = await _checkForUpdatesImpl(rethrow_: rethrow_);
+    NewVersionInfo? info;
+    try {
+      info = await _checkForUpdates();
+    } on http.ClientException catch (e) {
+      // TODO: log warning
+      // ignore: avoid_print
+      print("Error while checking for updates: $e");
+      if (rethrow_) {
+        rethrow;
+      }
+    } catch (e, stackTrace) {
+      // TODO: log error
+      // ignore: avoid_print
+      print("Error while checking for updates: $e\n$stackTrace");
+      if (rethrow_) {
+        rethrow;
+      }
+    }
     if (info != _info) {
       _info = info;
       notifyListeners();
@@ -235,22 +254,38 @@ class UpdatesChecker with ChangeNotifier {
       throw StateError("Update is already running");
     }
     _currentOtaSession = _OtaUpdateSession(_info!);
+    _currentAction = OtaAction.downloading;
+    notifyListeners();
+    var checksumOk = false;
+    if (File(await _OtaUpdateSession.getUpdateFilePath()).existsSync()) {
+      try {
+        checksumOk = await _currentOtaSession!.checkSha1sum();
+      } on StateError {
+        // checksum unavailable, assume mismatch (ignore exception)
+      }
+    }
+    // TODO: log debug
+    // ignore: avoid_print
+    print("Checksum check result: $checksumOk");
     try {
-      _currentAction = OtaAction.downloading;
-      await _currentOtaSession!.download(
-        onProgress: (downloaded, total) {
-          _downloaded = downloaded;
-          _total = total;
-          notifyListeners();
-        },
-      );
-      if (!_currentOtaSession!.isDownloadFinished) {
-        return;
+      if (!checksumOk) {
+        await _currentOtaSession!.download(
+          onProgress: (downloaded, total) {
+            _downloaded = downloaded;
+            _total = total;
+            notifyListeners();
+          },
+        );
+        if (!_currentOtaSession!.isDownloadFinished) {
+          return;
+        }
       }
       _currentAction = OtaAction.installing;
       _downloaded = 0;
       _total = null;
       notifyListeners();
+      checksumOk = await _currentOtaSession!.checkSha1sum(throwOnMismatch: true);
+      assert(checksumOk, "Checksum mismatched, but no error thrown");
       await for (final progress in _currentOtaSession!.installWithProgress()) {
         _total = 100;
         _downloaded = (progress * _total!).round();

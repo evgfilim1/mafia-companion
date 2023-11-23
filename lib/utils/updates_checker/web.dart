@@ -1,6 +1,7 @@
 import "../github.dart";
+import "stub.dart";
 
-String getReleaseDownloadUrl({
+Future<UrlChecksum> getReleaseDownloadUrl({
   required GitHubRelease latestRelease,
-}) =>
-    "";
+}) async =>
+    ("", null);

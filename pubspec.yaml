@@ -27,6 +27,7 @@ environment:
 # versions available, run `flutter pub outdated`.
 dependencies:
   async: ^2.11.0
+  crypto: ^3.0.3
   dynamic_color: ^1.6.8
   flutter:
     sdk: flutter

@@ -1,10 +1,13 @@
 import "dart:ffi";
 
-import "../github.dart";
+import "package:http/http.dart" as http;
 
-String getReleaseDownloadUrl({
+import "../github.dart";
+import "stub.dart";
+
+Future<UrlChecksum> getReleaseDownloadUrl({
   required GitHubRelease latestRelease,
-}) {
+}) async {
   final currentPlatform = Abi.current();
   final arch = switch (currentPlatform) {
     Abi.androidArm64 => "arm64-v8a",
@@ -13,5 +16,12 @@ String getReleaseDownloadUrl({
     _ => throw AssertionError("Unsupported platform: $currentPlatform"),
   };
   final asset = latestRelease.assets.singleWhere((e) => e.name == "app-$arch-release.apk");
-  return asset.browserDownloadUrl;
+  final checksumAsset = latestRelease.assets.where((e) => e.name == "${asset.name}.sha1").singleOrNull;
+  final String? checksum;
+  if (checksumAsset != null) {
+    checksum = await http.read(Uri.parse(checksumAsset.browserDownloadUrl));
+  } else {
+    checksum = null;
+  }
+  return (asset.browserDownloadUrl, checksum?.trim());
 }
