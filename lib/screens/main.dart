@@ -1,5 +1,6 @@
 import "dart:async";
 
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter/services.dart";
 import "package:package_info_plus/package_info_plus.dart";
@@ -49,6 +50,9 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Future<void> _checkForUpdates() async {
+    if (kIsWeb) {
+      return;
+    }
     final checker = context.read<UpdatesChecker>();
     final settings = context.read<SettingsModel>();
     if (settings.checkUpdatesType != CheckUpdatesType.onLaunch) {

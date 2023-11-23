@@ -36,7 +36,7 @@ class NewVersionInfo {
   /// Markdown-formatted release notes
   final String releaseNotes;
 
-  /// Download URL for Android, empty string for web
+  /// Download URL for the release
   final String downloadUrl;
 
   /// SHA1 checksum for the file to be downloaded from [downloadUrl], `null` when not available
@@ -221,6 +221,9 @@ class UpdatesChecker with ChangeNotifier {
   OtaAction? get currentAction => _currentAction;
 
   Future<NewVersionInfo?> checkForUpdates({bool rethrow_ = false}) async {
+    if (kIsWeb) {
+      throw UnsupportedError("Web platform is not supported");
+    }
     NewVersionInfo? info;
     try {
       info = await _checkForUpdates();
@@ -257,12 +260,8 @@ class UpdatesChecker with ChangeNotifier {
     _currentAction = OtaAction.downloading;
     notifyListeners();
     var checksumOk = false;
-    if (File(await _OtaUpdateSession.getUpdateFilePath()).existsSync()) {
-      try {
-        checksumOk = await _currentOtaSession!.checkSha1sum();
-      } on StateError {
-        // checksum unavailable, assume mismatch (ignore exception)
-      }
+    if (File(await _OtaUpdateSession.getUpdateFilePath()).existsSync() && _info!.sha1sum != null) {
+      checksumOk = await _currentOtaSession!.checkSha1sum();
     }
     // TODO: log debug
     // ignore: avoid_print
@@ -284,8 +283,10 @@ class UpdatesChecker with ChangeNotifier {
       _downloaded = 0;
       _total = null;
       notifyListeners();
-      checksumOk = await _currentOtaSession!.checkSha1sum(throwOnMismatch: true);
-      assert(checksumOk, "Checksum mismatched, but no error thrown");
+      if (_info!.sha1sum != null) {
+        checksumOk = await _currentOtaSession!.checkSha1sum(throwOnMismatch: true);
+        assert(checksumOk, "Checksum mismatched, but no error thrown");
+      }
       await for (final progress in _currentOtaSession!.installWithProgress()) {
         _total = 100;
         _downloaded = (progress * _total!).round();

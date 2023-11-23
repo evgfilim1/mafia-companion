@@ -19,6 +19,7 @@ class SettingsScreen extends StatelessWidget {
     final checker = context.read<UpdatesChecker>();
     showSnackBar(context, const SnackBar(content: Text("Проверка обновлений...")));
     final NewVersionInfo? res;
+    assert(!kIsWeb, "Updates checking is not supported on web");
     try {
       res = await checker.checkForUpdates(rethrow_: true);
     } on Exception {
@@ -90,28 +91,30 @@ class SettingsScreen extends StatelessWidget {
             index: settings.timerType.index,
             onChanged: settings.setTimerType,
           ),
-          ChoiceListTile(
-            leading: const Icon(Icons.update),
-            title: const Text("Проверка обновлений"),
-            items: CheckUpdatesType.values,
-            itemToString: (item) => switch (item) {
-              CheckUpdatesType.onLaunch => "При запуске",
-              CheckUpdatesType.manually => "Вручную",
-            },
-            index: settings.checkUpdatesType.index,
-            onChanged: settings.setCheckUpdatesType,
-          ),
-          ListTile(
-            leading: const Icon(Icons.refresh),
-            title: const Text("Проверить обновления"),
-            subtitle: Text(
-              checker.hasUpdate
-                  ? "Доступна новая версия v${checker.updateInfo!.version}"
-                  : "Обновлений нет",
+          if (!kIsWeb)
+            ChoiceListTile(
+              leading: const Icon(Icons.update),
+              title: const Text("Проверка обновлений"),
+              items: CheckUpdatesType.values,
+              itemToString: (item) => switch (item) {
+                CheckUpdatesType.onLaunch => "При запуске",
+                CheckUpdatesType.manually => "Вручную",
+              },
+              index: settings.checkUpdatesType.index,
+              onChanged: settings.setCheckUpdatesType,
             ),
-            trailing: checker.hasUpdate ? const NotificationDot(size: 8) : null,
-            onTap: () => _checkForUpdates(context),
-          ),
+          if (!kIsWeb)
+            ListTile(
+              leading: const Icon(Icons.refresh),
+              title: const Text("Проверить обновления"),
+              subtitle: Text(
+                checker.hasUpdate
+                    ? "Доступна новая версия v${checker.updateInfo!.version}"
+                    : "Обновлений нет",
+              ),
+              trailing: checker.hasUpdate ? const NotificationDot(size: 8) : null,
+              onTap: () => _checkForUpdates(context),
+            ),
           ListTile(
             leading: const Icon(Icons.info),
             title: const Text("О приложении"),

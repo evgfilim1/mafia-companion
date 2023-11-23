@@ -141,6 +141,7 @@ Future<void> launchUrlOrCopy(BuildContext context, String url, {LaunchMode? laun
 }
 
 Future<void> showUpdateDialog(BuildContext context) async {
+  assert(!kIsWeb, "Updates checking is not supported on web");
   final updater = context.read<UpdatesChecker>();
   if (!updater.hasUpdate) {
     throw StateError("No update available");
@@ -154,13 +155,6 @@ Future<void> showUpdateDialog(BuildContext context) async {
   }
   if (!context.mounted) {
     throw ContextNotMountedError();
-  }
-  if (kIsWeb) {
-    showSnackBar(
-      context,
-      const SnackBar(content: Text("Перезагрузите страницу для обновления")),
-    );
-    return;
   }
   if (!Platform.isAndroid) {
     throw UnsupportedError("Unsupported platform: ${Platform.operatingSystem}");

@@ -3,5 +3,5 @@ import "stub.dart";
 
 Future<UrlChecksum> getReleaseDownloadUrl({
   required GitHubRelease latestRelease,
-}) async =>
-    ("", null);
+}) =>
+    throw UnsupportedError("Cannot download releases on web");
