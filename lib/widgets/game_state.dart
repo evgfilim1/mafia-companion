@@ -147,9 +147,6 @@ class BottomGameStateWidget extends StatelessWidget {
         key: GameStateKey(gameState),
         duration: timeLimit,
         onTimerTick: (duration) async {
-          if (await Vibration.hasVibrator() != true) {
-            return;
-          }
           if (duration == Duration.zero) {
             await Vibration.vibrate(duration: 100);
             await Future<void>.delayed(
