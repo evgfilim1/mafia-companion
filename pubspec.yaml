@@ -31,6 +31,7 @@ dependencies:
   async: ^2.11.0
   crypto: ^3.0.3
   dynamic_color: ^1.6.8
+  file_saver: ^0.2.9
   flutter:
     sdk: flutter
   flutter_localizations:

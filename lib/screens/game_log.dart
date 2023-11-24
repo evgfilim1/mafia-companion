@@ -1,10 +1,18 @@
+import "dart:convert";
+
+import "package:file_saver/file_saver.dart";
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
+import "package:intl/intl.dart";
 import "package:provider/provider.dart";
 
 import "../game/log.dart";
 import "../game/states.dart";
 import "../utils/game_controller.dart";
+import "../utils/json.dart";
 import "../utils/ui.dart";
+
+final _fileNameDateFormat = DateFormat("yyyy-MM-dd_HH-mm-ss");
 
 extension DescribeLogItem on BaseGameLogItem {
   List<String> get description {
@@ -68,6 +76,38 @@ class GameLogScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Журнал игры"),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.save),
+            tooltip: "Сохранить журнал",
+            onPressed: () async {
+              final jsonData = jsonEncode(controller.gameLog.map((e) => e.jsonData).toList());
+              final data = Uint8List.fromList(jsonData.codeUnits);
+              final fileName = "mafia_game_log_${_fileNameDateFormat.format(DateTime.now())}";
+              final String? path;
+              if (kIsWeb) {
+                // web doesn't support `saveAs`
+                path = await FileSaver.instance.saveFile(
+                  name: fileName,
+                  ext: "json",
+                  bytes: data,
+                  mimeType: MimeType.json,
+                );
+              } else {
+                path = await FileSaver.instance.saveAs(
+                  name: fileName,
+                  ext: "json",
+                  bytes: data,
+                  mimeType: MimeType.json,
+                );
+              }
+              if (!context.mounted || path == null) {
+                return;
+              }
+              showSnackBar(context, const SnackBar(content: Text("Журнал сохранён")));
+            },
+          ),
+        ],
       ),
       body: controller.gameLog.isNotEmpty
           ? ListView(

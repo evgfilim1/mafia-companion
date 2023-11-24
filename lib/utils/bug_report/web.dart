@@ -7,8 +7,8 @@ import "package:provider/provider.dart";
 
 import "../errors.dart";
 import "../game_controller.dart";
+import "../json.dart";
 import "../ui.dart";
-import "stub.dart";
 
 Future<void> reportBug(BuildContext context) async {
   final controller = context.read<GameController>();
@@ -18,7 +18,7 @@ Future<void> reportBug(BuildContext context) async {
     "packageInfo": packageInfo.data,
     "game": <String, dynamic>{
       "seed": controller.playerRandomSeed,
-      "log": controller.gameLog.map<dynamic>((e) => e.data).toList(),
+      "log": controller.gameLog.map<dynamic>((e) => e.jsonData).toList(),
     },
   };
   final reportString = jsonEncode(

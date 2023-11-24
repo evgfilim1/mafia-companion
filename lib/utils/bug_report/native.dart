@@ -9,7 +9,7 @@ import "package:provider/provider.dart";
 import "package:share_plus/share_plus.dart";
 
 import "../game_controller.dart";
-import "stub.dart";
+import "../json.dart";
 
 Future<void> reportBug(BuildContext context) async {
   final controller = context.read<GameController>();
@@ -24,7 +24,7 @@ Future<void> reportBug(BuildContext context) async {
     "packageInfo": packageInfo.data,
     "game": <String, dynamic>{
       "seed": controller.playerRandomSeed,
-      "log": controller.gameLog.map<dynamic>((e) => e.data).toList(),
+      "log": controller.gameLog.map<dynamic>((e) => e.jsonData).toList(),
     },
   };
   await report.writeAsString(jsonEncode(data));
