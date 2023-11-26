@@ -17,6 +17,7 @@ import "downloader.dart";
 import "errors.dart";
 import "extensions.dart";
 import "github.dart";
+import "log.dart";
 import "updates_checker/stub.dart"
     if (dart.library.ffi) "updates_checker/native.dart"
     if (dart.library.html) "updates_checker/web.dart" show getReleaseDownloadUrl;
@@ -196,6 +197,8 @@ enum OtaAction {
 }
 
 class UpdatesChecker with ChangeNotifier {
+  static final _log = Logger("UpdatesChecker");
+
   NewVersionInfo? _info;
   _OtaUpdateSession? _currentOtaSession;
 
@@ -228,16 +231,12 @@ class UpdatesChecker with ChangeNotifier {
     try {
       info = await _checkForUpdates();
     } on http.ClientException catch (e) {
-      // TODO: log warning
-      // ignore: avoid_print
-      print("Error while checking for updates: $e");
+      _log.w("Error while checking for updates: $e");
       if (rethrow_) {
         rethrow;
       }
     } catch (e, stackTrace) {
-      // TODO: log error
-      // ignore: avoid_print
-      print("Error while checking for updates: $e\n$stackTrace");
+      _log.e("Error while checking for updates: $e\n$stackTrace");
       if (rethrow_) {
         rethrow;
       }
@@ -263,9 +262,7 @@ class UpdatesChecker with ChangeNotifier {
     if (File(await _OtaUpdateSession.getUpdateFilePath()).existsSync() && _info!.sha1sum != null) {
       checksumOk = await _currentOtaSession!.checkSha1sum();
     }
-    // TODO: log debug
-    // ignore: avoid_print
-    print("Checksum check result: $checksumOk");
+    _log.d("Checksum check result: $checksumOk");
     try {
       if (!checksumOk) {
         await _currentOtaSession!.download(
@@ -293,9 +290,7 @@ class UpdatesChecker with ChangeNotifier {
         notifyListeners();
       }
     } on Exception catch (e, s) {
-      // TODO: log error
-      // ignore: avoid_print
-      print("Error while running OTA update: $e\n$s");
+      _log.e("Error while running OTA update: $e\n$s");
       _currentAction = OtaAction.error;
       if (e is! PlatformException) {
         rethrow;

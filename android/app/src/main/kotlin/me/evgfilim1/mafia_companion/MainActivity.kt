@@ -22,6 +22,40 @@ class MainActivity : FlutterActivity() {
                 updater.updateFromPath(apkPath)
                 result.success(null)
             }
+            registerMethodHandler("log") { call, result ->
+                val message = call.argument<String>("message")
+                if (message == null) {
+                    result.error("INVALID_ARGUMENT", "message is null", null)
+                    return@registerMethodHandler
+                }
+                val tag = call.argument<String>("tag")
+                if (tag == null) {
+                    result.error("INVALID_ARGUMENT", "tag is null", null)
+                    return@registerMethodHandler
+                }
+                val level = call.argument<Int>("level")
+                if (level == null) {
+                    result.error("INVALID_ARGUMENT", "level is null", null)
+                    return@registerMethodHandler
+                }
+                when (level) {
+                    0 -> Log.v(tag, message)
+                    1 -> Log.d(tag, message)
+                    2 -> Log.i(tag, message)
+                    3 -> Log.w(tag, message)
+                    4 -> Log.e(tag, message)
+                    100 -> Log.wtf(tag, message)
+                    else -> {
+                        result.error(
+                            "INVALID_ARGUMENT",
+                            "level is invalid",
+                            null,
+                        )
+                        return@registerMethodHandler
+                    }
+                }
+                result.success(null)
+            }
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             updater.registerSessionCallback(
