@@ -53,6 +53,8 @@ enum GameStage {
   /// Final stage, game is over
   finish,
   ;
+
+  factory GameStage.byName(String name) => GameStage.values.singleWhere((e) => e.name == name);
 }
 
 /// Base class for all game states.

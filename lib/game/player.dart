@@ -16,6 +16,8 @@ enum PlayerRole {
 
   /// Returns true if this role is one of [PlayerRole.citizen] or [PlayerRole.sheriff]
   bool get isCitizen => isAnyOf(const [PlayerRole.citizen, PlayerRole.sheriff]);
+
+  factory PlayerRole.byName(String name) => PlayerRole.values.singleWhere((e) => e.name == name);
 }
 
 @immutable

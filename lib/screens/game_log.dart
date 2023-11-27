@@ -14,7 +14,7 @@ import "../utils/ui.dart";
 
 final _fileNameDateFormat = DateFormat("yyyy-MM-dd_HH-mm-ss");
 
-extension DescribeLogItem on BaseGameLogItem {
+extension _DescribeLogItem on BaseGameLogItem {
   List<String> get description {
     final result = <String>[];
     switch (this) {
@@ -81,7 +81,7 @@ class GameLogScreen extends StatelessWidget {
             icon: const Icon(Icons.save),
             tooltip: "Сохранить журнал",
             onPressed: () async {
-              final jsonData = jsonEncode(controller.gameLog.map((e) => e.jsonData).toList());
+              final jsonData = jsonEncode(controller.gameLog.map((e) => e.toJson()).toList());
               final data = Uint8List.fromList(jsonData.codeUnits);
               final fileName = "mafia_game_log_${_fileNameDateFormat.format(DateTime.now())}";
               final String? path;

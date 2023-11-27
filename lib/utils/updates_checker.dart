@@ -17,6 +17,7 @@ import "downloader.dart";
 import "errors.dart";
 import "extensions.dart";
 import "github.dart";
+import "json.dart";
 import "log.dart";
 import "updates_checker/stub.dart"
     if (dart.library.ffi) "updates_checker/native.dart"
@@ -67,10 +68,7 @@ Future<List<GitHubRelease>> _getAllReleases([http.Client? client]) async {
   client ??= http.Client();
   final response = await client.get(_releasesUri);
   response.raiseForStatus();
-  return (jsonDecode(response.body) as List<dynamic>)
-      .cast<Map<String, dynamic>>()
-      .map(GitHubRelease.fromJson)
-      .toList();
+  return (jsonDecode(response.body) as List<dynamic>).parseJsonList(GitHubRelease.fromJson);
 }
 
 String _formatChangelog({

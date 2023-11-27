@@ -1,3 +1,5 @@
+import "json.dart";
+
 class GitHubAsset {
   final String name;
   final String browserDownloadUrl;
@@ -29,15 +31,11 @@ class GitHubRelease {
     required this.body,
   });
 
-  GitHubRelease.fromJson(Map<String, dynamic> json)
-      : this(
-          htmlUrl: json["html_url"] as String,
-          tagName: json["tag_name"] as String,
-          publishedAt: DateTime.parse(json["published_at"] as String),
-          assets: (json["assets"] as List<dynamic>)
-              .cast<Map<String, dynamic>>()
-              .map(GitHubAsset.fromJson)
-              .toList(),
-          body: json["body"] as String,
-        );
+  factory GitHubRelease.fromJson(Map<String, dynamic> json) => GitHubRelease(
+        htmlUrl: json["html_url"] as String,
+        tagName: json["tag_name"] as String,
+        publishedAt: DateTime.parse(json["published_at"] as String),
+        assets: (json["assets"] as List<dynamic>).parseJsonList(GitHubAsset.fromJson),
+        body: json["body"] as String,
+      );
 }
