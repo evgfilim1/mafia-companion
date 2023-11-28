@@ -1,5 +1,4 @@
 import "dart:async";
-import "dart:math";
 
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
@@ -8,29 +7,9 @@ import "package:provider/provider.dart";
 import "../game/player.dart";
 import "../utils/errors.dart";
 import "../utils/extensions.dart";
+import "../utils/find_seed.dart";
 import "../utils/game_controller.dart";
 import "../utils/ui.dart";
-
-int? _generateSeed((int initialSeed, List<Set<PlayerRole>> requiredRoles) data) {
-  final (initialSeed, requiredRoles) = data;
-  var newSeed = initialSeed;
-  var isOk = true;
-  for (; newSeed < initialSeed + 500000; newSeed++) {
-    final newRoles =
-        generatePlayers(random: Random(newSeed)).map((p) => p.role).toUnmodifiableList();
-    isOk = true;
-    for (var i = 0; i < 10; i++) {
-      if (!requiredRoles[i].contains(newRoles[i])) {
-        isOk = false;
-        break;
-      }
-    }
-    if (isOk) {
-      break;
-    }
-  }
-  return isOk ? newSeed : null;
-}
 
 class _ValidationErrorInfo {
   final String message;
@@ -166,7 +145,7 @@ class _ChooseRolesScreenState extends State<ChooseRolesScreen> {
     setState(() {
       _isInProgress = true;
     });
-    final newSeed = await compute(_generateSeed, (initialSeed, _roles));
+    final newSeed = await compute(findSeedIsolateWrapper, (initialSeed, _roles));
     setState(() {
       _isInProgress = false;
     });
