@@ -1,5 +1,6 @@
 import "dart:convert";
 
+import "package:file_picker/file_picker.dart";
 import "package:file_saver/file_saver.dart";
 import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
@@ -8,8 +9,10 @@ import "package:provider/provider.dart";
 
 import "../game/log.dart";
 import "../game/states.dart";
+import "../utils/bug_report/stub.dart";
 import "../utils/game_controller.dart";
 import "../utils/json.dart";
+import "../utils/log.dart";
 import "../utils/ui.dart";
 
 final _fileNameDateFormat = DateFormat("yyyy-MM-dd_HH-mm-ss");
@@ -68,51 +71,100 @@ extension _DescribeLogItem on BaseGameLogItem {
 }
 
 class GameLogScreen extends StatelessWidget {
-  const GameLogScreen({super.key});
+  static final _log = Logger("GameLogScreen");
+  final List<BaseGameLogItem>? log;
+  final bool isExternal;
+
+  const GameLogScreen({
+    super.key,
+    this.log,
+    this.isExternal = false,
+  });
+
+  Future<void> _onLoadPressed(BuildContext context) async {
+    final pickerResult = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ["json"],
+      withData: true,
+    );
+    if (!context.mounted || pickerResult == null) {
+      return;
+    }
+    assert(pickerResult.isSinglePick, "Only single file pick is supported");
+    final rawJsonString = String.fromCharCodes(pickerResult.files.single.bytes!);
+    final data = jsonDecode(rawJsonString);
+    final List<BaseGameLogItem> log;
+    if (data is Map<String, dynamic>) {
+      log = BugReportInfo.fromJson(data).game.log;
+    } else if (data is List<dynamic>) {
+      log = data.parseJsonList(fromJson<BaseGameLogItem>);
+    } else {
+      showSnackBar(context, const SnackBar(content: Text("Ошибка загрузки журнала")));
+      _log.error(
+        "Unknown data type received: ${data.runtimeType}\n"
+        "rawJsonString[0]=${rawJsonString[0]}",
+      );
+      return;
+    }
+    await Navigator.push(
+      context,
+      MaterialPageRoute<void>(builder: (_) => GameLogScreen(log: log, isExternal: true)),
+    );
+  }
+
+  Future<void> _onSavePressed(BuildContext context) async {
+    final controller = context.read<GameController>();
+    final jsonData = jsonEncode(controller.gameLog.map((e) => e.toJson()).toList());
+    final data = Uint8List.fromList(jsonData.codeUnits);
+    final fileName = "mafia_game_log_${_fileNameDateFormat.format(DateTime.now())}";
+    final String? path;
+    if (kIsWeb) {
+      // web doesn't support `saveAs`
+      path = await FileSaver.instance.saveFile(
+        name: fileName,
+        ext: "json",
+        bytes: data,
+        mimeType: MimeType.json,
+      );
+    } else {
+      path = await FileSaver.instance.saveAs(
+        name: fileName,
+        ext: "json",
+        bytes: data,
+        mimeType: MimeType.json,
+      );
+    }
+    if (!context.mounted || path == null) {
+      return;
+    }
+    showSnackBar(context, const SnackBar(content: Text("Журнал сохранён")));
+  }
 
   @override
   Widget build(BuildContext context) {
     final controller = context.read<GameController>();
+    final String title;
+    title = isExternal ? "Загруженный журнал игры" : "Журнал игры";
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Журнал игры"),
+        title: Text(title),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.file_open),
+            tooltip: "Открыть журнал",
+            onPressed: () => _onLoadPressed(context),
+          ),
           IconButton(
             icon: const Icon(Icons.save),
             tooltip: "Сохранить журнал",
-            onPressed: () async {
-              final jsonData = jsonEncode(controller.gameLog.map((e) => e.toJson()).toList());
-              final data = Uint8List.fromList(jsonData.codeUnits);
-              final fileName = "mafia_game_log_${_fileNameDateFormat.format(DateTime.now())}";
-              final String? path;
-              if (kIsWeb) {
-                // web doesn't support `saveAs`
-                path = await FileSaver.instance.saveFile(
-                  name: fileName,
-                  ext: "json",
-                  bytes: data,
-                  mimeType: MimeType.json,
-                );
-              } else {
-                path = await FileSaver.instance.saveAs(
-                  name: fileName,
-                  ext: "json",
-                  bytes: data,
-                  mimeType: MimeType.json,
-                );
-              }
-              if (!context.mounted || path == null) {
-                return;
-              }
-              showSnackBar(context, const SnackBar(content: Text("Журнал сохранён")));
-            },
+            onPressed: () => _onSavePressed(context),
           ),
         ],
       ),
       body: controller.gameLog.isNotEmpty
           ? ListView(
               children: <ListTile>[
-                for (final item in controller.gameLog)
+                for (final item in log ?? controller.gameLog)
                   for (final desc in item.description)
                     ListTile(
                       title: Text(desc),

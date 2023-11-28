@@ -8,9 +8,9 @@ extension MapToJson<T> on Map<int, T> {
   Map<String, T> toJson() => map((k, v) => MapEntry(k.toString(), v));
 }
 
-extension MapParseJson<C, T> on LinkedHashMap<String, T> {
-  LinkedHashMap<int, T> parseJsonMap() =>
-      LinkedHashMap.from(map((k, v) => MapEntry(int.parse(k), v)));
+extension MapParseJson on Map<String, dynamic> {
+  LinkedHashMap<int, VT> parseJsonMap<VT>() =>
+      LinkedHashMap.from(cast<String, VT>().map((k, v) => MapEntry(int.parse(k), v)));
 }
 
 extension ListPlayerToJson on List<Player> {
@@ -97,8 +97,9 @@ extension PlayerJson on Player {
 
 BaseGameLogItem _gameLogFromJson(Map<String, dynamic> json) => json["newState"] != null
     ? StateChangeGameLogItem(
-        oldState:
-            json["oldState"] != null ? fromJson(json["oldState"] as Map<String, dynamic>) : null,
+        oldState: json["oldState"] != null
+            ? fromJson<BaseGameState>(json["oldState"] as Map<String, dynamic>)
+            : null,
         newState: fromJson(json["newState"] as Map<String, dynamic>),
       )
     : PlayerCheckedGameLogItem(
@@ -128,13 +129,13 @@ BaseGameState _gameStateFromJson(Map<String, dynamic> json) {
         day: day,
         players: players,
         currentPlayerNumber: json["currentPlayerNumber"] as int,
-        accusations: (json["accusations"] as LinkedHashMap<String, int>).parseJsonMap(),
+        accusations: (json["accusations"] as Map<String, dynamic>).parseJsonMap(),
       ),
     GameStage.voting || GameStage.finalVoting => GameStateVoting(
         stage: stage,
         day: day,
         players: players,
-        votes: (json["votes"] as LinkedHashMap<String, int?>).parseJsonMap(),
+        votes: (json["votes"] as Map<String, dynamic>).parseJsonMap(),
         currentPlayerNumber: json["currentPlayerNumber"] as int,
         currentPlayerVotes: json["currentPlayerVotes"] as int?,
       ),
@@ -183,8 +184,8 @@ Player _playerFromJson(Map<String, dynamic> json) => Player(
     );
 
 T fromJson<T>(Map<String, dynamic> json) => switch (T) {
-      BaseGameLogItem _ => _gameLogFromJson(json) as T,
-      BaseGameState _ => _gameStateFromJson(json) as T,
-      Player _ => _playerFromJson(json) as T,
+      const (BaseGameLogItem) => _gameLogFromJson(json) as T,
+      const (BaseGameState) => _gameStateFromJson(json) as T,
+      const (Player) => _playerFromJson(json) as T,
       _ => throw UnimplementedError("fromJson for $T"),
     };
