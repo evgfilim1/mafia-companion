@@ -8,6 +8,7 @@ on:
       - "lib/**"
       - "web/**"
       - "analysis_options.yaml"
+      - "CHANGELOG.md"
       - "pubspec.yaml"
       - "pubspec.lock"
   pull_request:
