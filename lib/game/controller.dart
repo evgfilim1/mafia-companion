@@ -90,21 +90,21 @@ class Game {
       case GameStatePrepare():
         return GameStateWithPlayers(
           stage: GameStage.night0,
-          day: 0,
+          day: 1,
           players: state.players,
           playerNumbers: players.mafiaTeam.map((player) => player.number).toUnmodifiableList(),
         );
       case GameStateWithPlayers(stage: GameStage.night0):
         return GameStateWithPlayer(
           stage: GameStage.night0SheriffCheck,
-          day: 0,
+          day: 1,
           players: state.players,
           currentPlayerNumber: players.sheriff.number,
         );
       case GameStateWithPlayer(stage: GameStage.night0SheriffCheck):
         return GameStateSpeaking(
           currentPlayerNumber: 1,
-          day: state.day + 1,
+          day: state.day,
           players: state.players,
           accusations: LinkedHashMap(),
         );
@@ -119,7 +119,7 @@ class Game {
         if (alreadySpokeCount == players.aliveCount) {
           if (accusations.isEmpty || state.day == 1 && accusations.length == 1) {
             return GameStateNightKill(
-              day: state.day,
+              day: state.day + 1,
               players: state.players,
               thisNightKilledPlayerNumber: null,
             );
@@ -200,7 +200,7 @@ class Game {
           if (maxVotesPlayers.length == players.aliveCount) {
             // Rule 7.8
             return GameStateNightKill(
-              day: state.day,
+              day: state.day + 1,
               players: state.players,
               thisNightKilledPlayerNumber: null,
             );
@@ -242,7 +242,7 @@ class Game {
       case GameStateDropTableVoting(votesForDropTable: final votes, playerNumbers: final pns):
         if (votes <= players.aliveCount ~/ 2) {
           return GameStateNightKill(
-            day: state.day,
+            day: state.day + 1,
             players: state.players,
             thisNightKilledPlayerNumber: null,
           );
@@ -270,7 +270,7 @@ class Game {
             );
           }
           return GameStateNightKill(
-            day: state.day,
+            day: state.day + 1,
             players: newPlayers,
             thisNightKilledPlayerNumber: null,
           );
@@ -302,7 +302,7 @@ class Game {
                 .oldState! as GameStateNightKill)
             .thisNightKilledPlayerNumber;
         if (killedPlayerNumber != null) {
-          if (state.day == 1 && players.aliveCount >= players.count - 1) {
+          if (state.day == 2 && players.aliveCount >= players.count - 1) {
             return GameStateBestTurn(
               day: state.day,
               players: state.players,
@@ -325,7 +325,7 @@ class Game {
           );
         }
         return GameStateSpeaking(
-          day: state.day + 1,
+          day: state.day,
           players: state.players,
           currentPlayerNumber: _firstSpeakingPlayerNumber,
           accusations: LinkedHashMap(),
@@ -349,7 +349,7 @@ class Game {
         }
         return GameStateSpeaking(
           currentPlayerNumber: _firstSpeakingPlayerNumber,
-          day: state.day + 1,
+          day: state.day,
           players: newPlayers.toUnmodifiableList(),
           accusations: LinkedHashMap(),
         );
@@ -590,7 +590,7 @@ class Game {
     final previousFirstSpeakingPlayer = _log
         .whereType<StateChangeGameLogItem>()
         .map((e) => e.oldState)
-        .where((e) => e is GameStateSpeaking && e.day == state.day)
+        .where((e) => e is GameStateSpeaking && e.day == state.day - 1)
         .cast<GameStateSpeaking>()
         .firstOrNull
         ?.currentPlayerNumber;
@@ -621,7 +621,7 @@ class Game {
         )
         .lastOrNull
         ?.day;
-    return state.day - (lastKillDay ?? 0);
+    return state.day - (lastKillDay ?? 1);
   }
 // endregion
 }
