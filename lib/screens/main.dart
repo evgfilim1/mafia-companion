@@ -62,7 +62,7 @@ class _MainScreenState extends State<MainScreen> {
     if (update == null) {
       return;
     }
-    if (!context.mounted) {
+    if (!mounted) {
       return;
     }
     showSnackBar(

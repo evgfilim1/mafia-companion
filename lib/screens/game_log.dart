@@ -143,8 +143,7 @@ class GameLogScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = context.read<GameController>();
-    final String title;
-    title = isExternal ? "Загруженный журнал игры" : "Журнал игры";
+    final title = isExternal ? "Загруженный журнал игры" : "Журнал игры";
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
