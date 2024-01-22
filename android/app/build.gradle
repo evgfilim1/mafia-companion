@@ -63,14 +63,18 @@ android {
                 storePassword System.getenv("KEYSTORE_PASSWORD")
                 keyAlias System.getenv("KEY_ALIAS") ?: "sign"
                 keyPassword System.getenv("KEY_PASSWORD")
-            } else {
-                println '$KEYSTORE_PASSWORD and/or $KEY_PASSWORD are not set, release signing will NOT be configured and used'
             }
         }
     }
 
     buildTypes {
+        debug {
+            applicationIdSuffix ".debug"
+        }
         release {
+            if (!keystoreAvailable) {
+                println '$KEYSTORE_PASSWORD and/or $KEY_PASSWORD are not set, will use debug keys to sign release app variant'
+            }
             signingConfig keystoreAvailable ? signingConfigs.release : signingConfigs.debug
         }
     }
