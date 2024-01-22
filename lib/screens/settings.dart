@@ -91,7 +91,7 @@ class SettingsScreen extends StatelessWidget {
             index: settings.timerType.index,
             onChanged: settings.setTimerType,
           ),
-          if (!kIsWeb)
+          if (!kIsWeb && !kDebugMode)
             ChoiceListTile(
               leading: const Icon(Icons.update),
               title: const Text("Проверка обновлений"),
@@ -103,7 +103,7 @@ class SettingsScreen extends StatelessWidget {
               index: settings.checkUpdatesType.index,
               onChanged: settings.setCheckUpdatesType,
             ),
-          if (!kIsWeb)
+          if (!kIsWeb && !kDebugMode)
             ListTile(
               leading: const Icon(Icons.refresh),
               title: const Text("Проверить обновления"),

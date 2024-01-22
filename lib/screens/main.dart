@@ -50,7 +50,7 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Future<void> _checkForUpdates() async {
-    if (kIsWeb) {
+    if (kIsWeb || kDebugMode) {
       return;
     }
     final checker = context.read<UpdatesChecker>();

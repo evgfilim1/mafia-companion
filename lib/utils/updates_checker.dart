@@ -225,6 +225,9 @@ class UpdatesChecker with ChangeNotifier {
     if (kIsWeb) {
       throw UnsupportedError("Web platform is not supported");
     }
+    if (kDebugMode) {
+      _log.w("Checking updates in debug mode");
+    }
     NewVersionInfo? info;
     try {
       info = await _checkForUpdates();
