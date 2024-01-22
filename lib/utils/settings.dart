@@ -19,7 +19,7 @@ enum CheckUpdatesType {
   manually,
 }
 
-const defaultTimerType = TimerType.plus5;
+const defaultTimerType = TimerType.strict;
 const defaultThemeMode = ThemeMode.system;
 const defaultColorSchemeType = ColorSchemeType.system;
 const defaultCheckUpdatesType = CheckUpdatesType.onLaunch;
