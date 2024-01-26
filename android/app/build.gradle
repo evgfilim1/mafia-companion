@@ -28,6 +28,34 @@ apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 def keystoreAvailable = System.getenv("KEYSTORE_PASSWORD") != null
     && System.getenv("KEY_PASSWORD") != null
 
+static Boolean isGitRepository() {
+    try {
+        def proc = "git rev-parse --is-inside-work-tree".execute()
+        proc.waitFor()
+        return proc.exitValue() == 0
+    } catch (ignored) {
+        return false
+    }
+}
+
+static String getGitSuffix() {
+    if (!isGitRepository()) {
+        return ""
+    }
+    def proc = "git describe --tags --always --dirty".execute()
+    proc.waitFor()
+    def matcher = (proc.text =~ /(?:-(\d+)-g([0-9a-f]+))?(-dirty)?$/)
+    def match = matcher[0]
+    def result = ""
+    if (match[1] != null) {
+        result = ".r${match[1]}-${match[2]}"
+    }
+    if (match[3] != null) {
+        result += match[3]
+    }
+    return result
+}
+
 android {
     namespace 'me.evgfilim1.mafia_companion'
     compileSdkVersion flutter.compileSdkVersion
@@ -53,7 +81,7 @@ android {
         minSdkVersion 19 // required minimum for `package_info_plus`
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
-        versionName flutterVersionName
+        versionName flutterVersionName + getGitSuffix()
     }
 
     signingConfigs {
