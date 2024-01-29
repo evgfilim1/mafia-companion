@@ -1,17 +1,32 @@
 import "package:flutter/material.dart";
+import "package:flutter_colorpicker/flutter_colorpicker.dart";
 import "package:provider/provider.dart";
 
 import "../../utils/settings.dart";
 import "../../widgets/list_tiles/choice.dart";
 
-class AppearanceSettingsScreen extends StatefulWidget {
+class AppearanceSettingsScreen extends StatelessWidget {
   const AppearanceSettingsScreen({super.key});
 
-  @override
-  State<AppearanceSettingsScreen> createState() => _AppearanceSettingsState();
-}
+  Future<void> _setSeedColor(BuildContext context, SettingsModel settings) async {
+    final newColor = await showDialog<Color>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Выберите цвет"),
+        content: SingleChildScrollView(
+          child: BlockPicker(
+            pickerColor: settings.seedColor,
+            onColorChanged: (color) => Navigator.of(context).pop(color),
+            availableColors: Colors.primaries,
+          ),
+        ),
+      ),
+    );
+    if (newColor != null) {
+      settings.setSeedColor(newColor);
+    }
+  }
 
-class _AppearanceSettingsState extends State<AppearanceSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsModel>();
@@ -33,16 +48,26 @@ class _AppearanceSettingsState extends State<AppearanceSettingsScreen> {
             onChanged: settings.setThemeMode,
           ),
           ChoiceListTile(
-            // TODO: add color picker
             leading: const Icon(Icons.color_lens),
             title: const Text("Цветовая схема"),
             items: ColorSchemeType.values,
             itemToString: (item) => switch (item) {
               ColorSchemeType.system => "Системная",
-              ColorSchemeType.app => "Фиолетовая",
+              ColorSchemeType.app => "Пользовательская",
             },
             index: settings.colorSchemeType.index,
             onChanged: settings.setColorSchemeType,
+          ),
+          ListTile(
+            enabled: settings.colorSchemeType == ColorSchemeType.app,
+            leading: const Icon(Icons.color_lens),
+            title: const Text("Основной цвет"),
+            subtitle: Text(
+                settings.colorSchemeType == ColorSchemeType.app
+                    ? "#${(settings.seedColor.value & 0xFFFFFF).toRadixString(16).padLeft(6, "0")}"
+                    : "Системный",
+            ),
+            onTap: () => _setSeedColor(context, settings),
           ),
         ],
       ),

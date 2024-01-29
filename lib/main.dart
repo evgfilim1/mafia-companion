@@ -40,14 +40,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsModel>();
-    const seedColor = Colors.purple;
     return DynamicColorBuilder(
       builder: (light, dark) => MaterialApp(
         title: "Mafia companion",
         theme: ThemeData(
           colorScheme: (settings.colorSchemeType == ColorSchemeType.system ? light : null) ??
               ColorScheme.fromSeed(
-                seedColor: seedColor,
+                seedColor: settings.seedColor,
                 brightness: Brightness.light,
               ),
           useMaterial3: true,
@@ -55,7 +54,7 @@ class MyApp extends StatelessWidget {
         darkTheme: ThemeData(
           colorScheme: (settings.colorSchemeType == ColorSchemeType.system ? dark : null) ??
               ColorScheme.fromSeed(
-                seedColor: seedColor,
+                seedColor: settings.seedColor,
                 brightness: Brightness.dark,
               ),
           useMaterial3: true,
