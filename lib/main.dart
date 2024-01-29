@@ -10,7 +10,9 @@ import "screens/game_log.dart";
 import "screens/main.dart";
 import "screens/roles.dart";
 import "screens/seat_randomizer.dart";
-import "screens/settings.dart";
+import "screens/settings/appearance.dart";
+import "screens/settings/behavior.dart";
+import "screens/settings/main.dart";
 import "utils/game_controller.dart";
 import "utils/settings.dart";
 import "utils/updates_checker.dart";
@@ -63,6 +65,8 @@ class MyApp extends StatelessWidget {
           "/": (context) => const MainScreen(),
           "/roles": (context) => const RolesScreen(),
           "/settings": (context) => const SettingsScreen(),
+          "/settings/appearance": (context) => const AppearanceSettingsScreen(),
+          "/settings/behavior": (context) => const BehaviorSettingsScreen(),
           "/seats": (context) => const SeatRandomizerScreen(),
           "/log": (context) => const GameLogScreen(),
           "/chooseRoles": (context) => const ChooseRolesScreen(),
