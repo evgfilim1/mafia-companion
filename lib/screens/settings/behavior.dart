@@ -1,5 +1,6 @@
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
+import "package:vibration/vibration.dart";
 
 import "../../utils/settings.dart";
 import "../../widgets/list_tiles/choice.dart";
@@ -33,6 +34,26 @@ class _BehaviorSettingsScreenState extends State<BehaviorSettingsScreen> {
             },
             index: settings.timerType.index,
             onChanged: settings.setTimerType,
+          ),
+          ChoiceListTile(
+            leading: const Icon(Icons.vibration),
+            title: const Text("Длительность вибрации"),
+            items: VibrationDuration.values,
+            itemToString: (item) => switch (item) {
+              VibrationDuration.disabled => "Отключена",
+              VibrationDuration.xShort => "Очень короткая",
+              VibrationDuration.short => "Короткая",
+              VibrationDuration.medium => "Средняя",
+              VibrationDuration.long => "Длинная",
+              VibrationDuration.xLong => "Очень длинная",
+            },
+            index: settings.vibrationDuration.index,
+            onChanged: (length) {
+              settings.setVibrationDuration(length);
+              if (length != VibrationDuration.disabled) {
+                Vibration.vibrate(duration: length.milliseconds);
+              }
+            },
           ),
           ChoiceListTile(
             leading: const Icon(Icons.update),
