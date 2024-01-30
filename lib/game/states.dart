@@ -292,11 +292,6 @@ class GameStateDropTableVoting extends BaseGameState {
   @override
   int get hashCode => Object.hash(stage, day, players, playerNumbers, votesForDropTable);
 
-  @override
-  bool hasStateChanged(BaseGameState oldState) =>
-      oldState is GameStateDropTableVoting && playerNumbers != oldState.playerNumbers ||
-      super.hasStateChanged(oldState);
-
   GameStateDropTableVoting copyWith({
     int? day,
     List<Player>? players,
