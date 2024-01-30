@@ -63,9 +63,9 @@ class AppearanceSettingsScreen extends StatelessWidget {
             leading: const Icon(Icons.color_lens),
             title: const Text("Основной цвет"),
             subtitle: Text(
-                settings.colorSchemeType == ColorSchemeType.app
-                    ? "#${(settings.seedColor.value & 0xFFFFFF).toRadixString(16).padLeft(6, "0")}"
-                    : "Системный",
+              settings.colorSchemeType == ColorSchemeType.app
+                  ? "#${(settings.seedColor.value & 0xFFFFFF).toRadixString(16).padLeft(6, "0")}"
+                  : "Системный",
             ),
             onTap: () => _setSeedColor(context, settings),
           ),
