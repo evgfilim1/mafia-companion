@@ -147,6 +147,9 @@ class BottomGameStateWidget extends StatelessWidget {
         key: GameStateKey(gameState),
         duration: timeLimit,
         onTimerTick: (duration) async {
+          if (settings.vibrationDuration == VibrationDuration.disabled) {
+            return;
+          }
           if (duration == Duration.zero) {
             await Vibration.vibrate(duration: 100);
             await Future<void>.delayed(
@@ -154,7 +157,7 @@ class BottomGameStateWidget extends StatelessWidget {
             ); // 100 vibration + 200 pause
             await Vibration.vibrate(duration: 100);
           } else if (duration <= const Duration(seconds: 5)) {
-            await Vibration.vibrate(duration: 20);
+            await Vibration.vibrate(duration: settings.vibrationDuration.milliseconds);
           }
         },
       );
