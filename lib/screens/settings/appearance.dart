@@ -36,7 +36,11 @@ class AppearanceSettingsScreen extends StatelessWidget {
       body: ListView(
         children: [
           ChoiceListTile(
-            leading: const Icon(Icons.color_lens),
+            leading: switch (settings.themeMode) {
+              ThemeMode.system => const Icon(Icons.brightness_auto),
+              ThemeMode.dark => const Icon(Icons.dark_mode),
+              ThemeMode.light => const Icon(Icons.light_mode),
+            },
             title: const Text("Тема"),
             items: ThemeMode.values,
             itemToString: (item) => switch (item) {
@@ -60,7 +64,10 @@ class AppearanceSettingsScreen extends StatelessWidget {
           ),
           ListTile(
             enabled: settings.colorSchemeType == ColorSchemeType.app,
-            leading: const Icon(Icons.color_lens),
+            leading: Icon(
+              Icons.colorize,
+              color: settings.colorSchemeType == ColorSchemeType.app ? settings.seedColor : null,
+            ),
             title: const Text("Основной цвет"),
             subtitle: Text(
               settings.colorSchemeType == ColorSchemeType.app
