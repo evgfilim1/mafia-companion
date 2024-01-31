@@ -40,7 +40,7 @@ class AppDrawer extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.format_list_numbered),
-            title: const Text("Официальные правила"),
+            title: const Text("Официальные правила ФИИМ"),
             onTap: () {
               Navigator.pop(context);
               launchUrlOrCopy(context, "https://mafiaworldtour.com/fiim-rules");
@@ -53,14 +53,6 @@ class AppDrawer extends StatelessWidget {
             onTap: () {
               Navigator.pop(context);
               Navigator.pushNamed(context, "/settings");
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.bug_report),
-            title: const Text("Отладочное меню"),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.pushNamed(context, "/debug");
             },
           ),
         ],

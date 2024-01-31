@@ -5,7 +5,11 @@ import "package:flutter/material.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import "package:provider/provider.dart";
 
+import "../../utils/bug_report/stub.dart"
+    if (dart.library.io) "../../utils/bug_report/native.dart"
+    if (dart.library.html) "../../utils/bug_report/web.dart";
 import "../../utils/errors.dart";
+import "../../utils/game_controller.dart";
 import "../../utils/ui.dart";
 import "../../utils/updates_checker.dart";
 import "../../widgets/notification_dot.dart";
@@ -46,6 +50,7 @@ class SettingsScreen extends StatelessWidget {
     final packageInfo = context.read<PackageInfo>();
     final appVersion = packageInfo.version;
     final checker = context.watch<UpdatesChecker>();
+    final controller = context.watch<GameController>();
     const updaterUnavailableReason = kIsWeb
         ? "в браузере"
         : kDebugMode
@@ -79,6 +84,12 @@ class SettingsScreen extends StatelessWidget {
               ),
             ),
           ),
+          if (kDebugMode)
+            ListTile(
+              leading: const Icon(Icons.bug_report),
+              title: const Text("Меню отладки"),
+              onTap: () => Navigator.pushNamed(context, "/debug"),
+            ),
           ListTile(
             enabled: updaterUnavailableReason == null,
             leading: const Icon(Icons.refresh),
@@ -92,6 +103,32 @@ class SettingsScreen extends StatelessWidget {
             ),
             trailing: checker.hasUpdate ? const NotificationDot(size: 8) : null,
             onTap: () => _checkForUpdates(context),
+          ),
+          ListTile(
+            leading: const Icon(Icons.bug_report),
+            title: const Text("Сообщить о проблеме"),
+            onTap: () {
+              showSimpleDialog(
+                context: context,
+                title: const Text("Сообщить о проблеме"),
+                content: Text(
+                  "Для сообщения о проблеме нужно поделиться файлом мне в ЛС в Telegram.\n\n"
+                  "Зерно генерации ролей: ${controller.playerRandomSeed}",
+                ),
+                extraActions: [
+                  TextButton(
+                    onPressed: () async {
+                      await reportBug(context);
+                      if (!context.mounted) {
+                        throw ContextNotMountedError();
+                      }
+                      Navigator.pop(context);
+                    },
+                    child: const Text("Сформировать отчёт"),
+                  ),
+                ],
+              );
+            },
           ),
           ListTile(
             leading: const Icon(Icons.info),
