@@ -44,6 +44,7 @@ dependencies:
   # TODO: upgrade once `flutter_localizations` is updated in sdk.
   http: ^1.1.0
   intl: ^0.18.1
+  material_color_utilities: ^0.8.0
   package_info_plus: ^5.0.1
   path: ^1.8.3
   path_provider: ^2.1.1

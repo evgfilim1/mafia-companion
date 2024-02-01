@@ -1,7 +1,9 @@
+import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:flutter_colorpicker/flutter_colorpicker.dart";
 import "package:provider/provider.dart";
 
+import "../../utils/color_scheme.dart";
 import "../../utils/settings.dart";
 import "../../widgets/list_tiles/choice.dart";
 
@@ -30,6 +32,14 @@ class AppearanceSettingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final settings = context.watch<SettingsModel>();
+    final colorScheme = context.read<BrightnessAwareColorScheme>();
+    final dynamicColorUnavailableReason = kIsWeb
+        ? "в браузере"
+        : !colorScheme.isDynamicColorSupported
+            ? "на этом устройстве"
+            : null;
+    final canSelectSeedColor =
+        settings.colorSchemeType == ColorSchemeType.custom || dynamicColorUnavailableReason != null;
 
     return Scaffold(
       appBar: AppBar(title: const Text("Внешний вид")),
@@ -52,25 +62,31 @@ class AppearanceSettingsScreen extends StatelessWidget {
             onChanged: settings.setThemeMode,
           ),
           ChoiceListTile(
+            enabled: dynamicColorUnavailableReason == null,
             leading: const Icon(Icons.color_lens),
             title: const Text("Цветовая схема"),
+            subtitle: dynamicColorUnavailableReason != null
+                ? Text("Недоступно $dynamicColorUnavailableReason")
+                : null,
             items: ColorSchemeType.values,
             itemToString: (item) => switch (item) {
               ColorSchemeType.system => "Системная",
-              ColorSchemeType.app => "Пользовательская",
+              ColorSchemeType.custom => "Пользовательская",
             },
-            index: settings.colorSchemeType.index,
+            index: dynamicColorUnavailableReason == null
+                ? settings.colorSchemeType.index
+                : ColorSchemeType.custom.index,
             onChanged: settings.setColorSchemeType,
           ),
           ListTile(
-            enabled: settings.colorSchemeType == ColorSchemeType.app,
+            enabled: canSelectSeedColor,
             leading: Icon(
               Icons.colorize,
-              color: settings.colorSchemeType == ColorSchemeType.app ? settings.seedColor : null,
+              color: canSelectSeedColor ? settings.seedColor : null,
             ),
             title: const Text("Основной цвет"),
             subtitle: Text(
-              settings.colorSchemeType == ColorSchemeType.app
+              canSelectSeedColor
                   ? "#${(settings.seedColor.value & 0xFFFFFF).toRadixString(16).padLeft(6, "0")}"
                   : "Системный",
             ),

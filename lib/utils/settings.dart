@@ -11,7 +11,7 @@ enum TimerType {
 
 enum ColorSchemeType {
   system,
-  app,
+  custom,
 }
 
 enum CheckUpdatesType {
@@ -99,8 +99,8 @@ Future<SettingsModel> getSettings() async {
   switch (colorSchemeTypeString) {
     case "system":
       colorSchemeType = ColorSchemeType.system;
-    case "app":
-      colorSchemeType = ColorSchemeType.app;
+    case "app" || "custom":
+      colorSchemeType = ColorSchemeType.custom;
     default:
       assert(false, "Unknown color scheme type: $colorSchemeTypeString"); // fail for debug builds
       colorSchemeType = defaults.colorSchemeType; // use default for release builds
