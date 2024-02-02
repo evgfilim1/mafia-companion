@@ -24,7 +24,10 @@ Future<BrightnessAwareColorScheme> loadColorScheme({required Color fallbackSeedC
     // ignore
   }
 
-  return BrightnessAwareColorScheme.fromAccentColor(fallbackSeedColor, isDynamicColorSupported: false);
+  return BrightnessAwareColorScheme.fromAccentColor(
+    fallbackSeedColor,
+    isDynamicColorSupported: false,
+  );
 }
 
 class BrightnessAwareColorScheme {
