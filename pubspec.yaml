@@ -30,7 +30,7 @@ environment:
 dependencies:
   async: ^2.11.0
   crypto: ^3.0.3
-  dynamic_color: ^1.6.8
+  dynamic_color: ^1.6.9
   file_picker: ^6.1.1
   file_saver: ^0.2.9
   flutter:
@@ -39,10 +39,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   flutter_markdown: ^0.6.18
-  # Latest `http: ^1.1.1` depends on `web: ^0.4.0`, but `flutter_localizations` pins
-  # `web: 0.3.0` in Flutter `3.17.0-0.0.pre` => cannot use `http: ^1.1.1` yet.
-  # TODO: upgrade once `flutter_localizations` is updated in sdk.
-  http: ^1.1.0
+  http: ^1.2.0
   intl: ^0.18.1
   material_color_utilities: ^0.8.0
   package_info_plus: ^5.0.1
@@ -50,11 +47,11 @@ dependencies:
   path_provider: ^2.1.1
   permission_handler: ^11.1.0
   provider: ^6.1.1
-  share_plus: ^7.2.1
+  share_plus: ^7.2.2
   shared_preferences: ^2.2.2
   url_launcher: ^6.1.14
-  vibration: ^1.8.3
-  vibration_web: ^1.6.5  # adds web support for `vibration` package
+  vibration: ^1.8.4
+  vibration_web: ^1.6.6  # adds web support for `vibration` package
 
 dev_dependencies:
   flutter_lints: ^3.0.0
