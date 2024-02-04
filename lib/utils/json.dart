@@ -4,6 +4,25 @@ import "../game/log.dart";
 import "../game/player.dart";
 import "../game/states.dart";
 
+enum GameLogVersion {
+  v0(0),
+  v1(1),
+  ;
+
+  static const latest = v1;
+
+  final int value;
+
+  const GameLogVersion(this.value);
+
+  factory GameLogVersion.byValue(int value) => values.firstWhere(
+        (e) => e.value == value,
+        orElse: () => throw ArgumentError(
+          "Unknown value, must be one of: ${values.map((e) => e.value).join(", ")}",
+        ),
+      );
+}
+
 extension MapToJson<T> on Map<int, T> {
   Map<String, T> toJson() => map((k, v) => MapEntry(k.toString(), v));
 }
@@ -41,9 +60,9 @@ extension BaseGameStateJson on BaseGameState {
             "currentPlayerNumber": currentPlayerNumber,
             "currentPlayerVotes": currentPlayerVotes,
           },
-        GameStateDropTableVoting(:final playerNumbers, :final votesForDropTable) => {
+        GameStateKnockoutVoting(:final playerNumbers, :final votes) => {
             "playerNumbers": playerNumbers,
-            "votesForDropTable": votesForDropTable,
+            "votes": votes,
           },
         GameStateWithPlayers(:final playerNumbers) => {
             "playerNumbers": playerNumbers,
@@ -95,22 +114,34 @@ extension PlayerJson on Player {
       };
 }
 
-BaseGameLogItem _gameLogFromJson(Map<String, dynamic> json) => json["newState"] != null
-    ? StateChangeGameLogItem(
-        oldState: json["oldState"] != null
-            ? fromJson<BaseGameState>(json["oldState"] as Map<String, dynamic>)
-            : null,
-        newState: fromJson(json["newState"] as Map<String, dynamic>),
-      )
-    : PlayerCheckedGameLogItem(
-        playerNumber: json["playerNumber"] as int,
-        checkedByRole: PlayerRole.byName(json["checkedByRole"] as String),
-      );
+BaseGameLogItem _gameLogFromJson(Map<String, dynamic> json, {required GameLogVersion version}) =>
+    json["newState"] != null
+        ? StateChangeGameLogItem(
+            oldState: json["oldState"] != null
+                ? fromJson<BaseGameState>(
+                    json["oldState"] as Map<String, dynamic>,
+                    gameLogVersion: version,
+                  )
+                : null,
+            newState: fromJson(
+              json["newState"] as Map<String, dynamic>,
+              gameLogVersion: version,
+            ),
+          )
+        : PlayerCheckedGameLogItem(
+            playerNumber: json["playerNumber"] as int,
+            checkedByRole: PlayerRole.byName(json["checkedByRole"] as String),
+          );
 
-BaseGameState _gameStateFromJson(Map<String, dynamic> json) {
-  final stage = GameStage.byName(json["stage"] as String);
+BaseGameState _gameStateFromJson(Map<String, dynamic> json, {required GameLogVersion version}) {
+  var stageString = json["stage"] as String;
+  if (version == GameLogVersion.v0 && stageString == "dropTableVoting") {
+    stageString = GameStage.knockoutVoting.name; // compatibility for old logs
+  }
+  final stage = GameStage.byName(stageString);
   final day = json["day"] as int;
-  final players = (json["players"] as List<dynamic>).parseJsonList(fromJson<Player>);
+  final players = (json["players"] as List<dynamic>)
+      .parseJsonList((e) => fromJson<Player>(e, gameLogVersion: version));
   return switch (stage) {
     GameStage.prepare => GameStatePrepare(players: players),
     GameStage.night0 || GameStage.preVoting || GameStage.preFinalVoting => GameStateWithPlayers(
@@ -146,11 +177,14 @@ BaseGameState _gameStateFromJson(Map<String, dynamic> json) {
         playerNumbers: (json["playerNumbers"] as List<dynamic>).cast<int>(),
         currentPlayerIndex: json["currentPlayerIndex"] as int,
       ),
-    GameStage.dropTableVoting => GameStateDropTableVoting(
+    GameStage.knockoutVoting => GameStateKnockoutVoting(
         day: day,
         players: players,
         playerNumbers: (json["playerNumbers"] as List<dynamic>).cast<int>(),
-        votesForDropTable: json["votesForDropTable"] as int,
+        votes: switch (version) {
+          GameLogVersion.v0 => json["votesForDropTable"] as int,
+          GameLogVersion.v1 => json["votes"] as int,
+        },
       ),
     GameStage.nightKill => GameStateNightKill(
         day: day,
@@ -176,16 +210,57 @@ BaseGameState _gameStateFromJson(Map<String, dynamic> json) {
   };
 }
 
-Player _playerFromJson(Map<String, dynamic> json) => Player(
+Player _playerFromJson(Map<String, dynamic> json, {required GameLogVersion version}) => Player(
       role: PlayerRole.byName(json["role"] as String),
       number: json["number"] as int,
       isAlive: json["isAlive"] as bool,
       warns: json["warns"] as int,
     );
 
-T fromJson<T>(Map<String, dynamic> json) => switch (T) {
-      const (BaseGameLogItem) => _gameLogFromJson(json) as T,
-      const (BaseGameState) => _gameStateFromJson(json) as T,
-      const (Player) => _playerFromJson(json) as T,
+T fromJson<T>(Map<String, dynamic> json, {required GameLogVersion gameLogVersion}) => switch (T) {
+      const (BaseGameLogItem) => _gameLogFromJson(json, version: gameLogVersion) as T,
+      const (BaseGameState) => _gameStateFromJson(json, version: gameLogVersion) as T,
+      const (Player) => _playerFromJson(json, version: gameLogVersion) as T,
       _ => throw UnimplementedError("fromJson for $T"),
     };
+
+class VersionedGameLog {
+  final List<BaseGameLogItem> log;
+  final GameLogVersion version;
+
+  const VersionedGameLog(
+    this.log, {
+    this.version = GameLogVersion.latest,
+  });
+
+  Map<String, dynamic> toJson() => {
+        "version": version.value,
+        "log": log.map((e) => e.toJson()).toList(),
+      };
+
+  factory VersionedGameLog.fromJson(dynamic json, {GameLogVersion? requiredVersion}) {
+    final logVersionInt = switch (json) {
+      Map<String, dynamic>() => json["version"] as int,
+      List<dynamic>() => 0,
+      _ => throw UnsupportedError("Unexpected type: ${json.runtimeType}"),
+    };
+    final logVersion = GameLogVersion.byValue(logVersionInt);
+    if (requiredVersion != null && logVersion != requiredVersion) {
+      throw ArgumentError.value(
+        logVersion,
+        "logVersion",
+        "Expected $requiredVersion, but got $logVersion",
+      );
+    }
+    final logData = switch (logVersion) {
+      GameLogVersion.v0 => (json as List<dynamic>)
+          .parseJsonList((e) => fromJson<BaseGameLogItem>(e, gameLogVersion: logVersion)),
+      GameLogVersion.v1 => (json["log"] as List<dynamic>)
+          .parseJsonList((e) => fromJson<BaseGameLogItem>(e, gameLogVersion: logVersion)),
+    };
+    return VersionedGameLog(
+      logData,
+      version: logVersion,
+    );
+  }
+}

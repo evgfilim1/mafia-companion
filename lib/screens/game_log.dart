@@ -47,9 +47,9 @@ extension _DescribeLogItem on BaseGameLogItem {
               result.add("Игрок #$pn выставил на голосование игрока #${accusations[pn]}");
             }
           case GameStateVoting(currentPlayerNumber: final pn, currentPlayerVotes: final votes):
-            result.add("За игрока #$pn отдано голосов: ${votes ?? 0}"); // FIXME: i18n
-          case GameStateDropTableVoting(votesForDropTable: final votes):
-            result.add("За подъём стола отдано голосов: $votes"); // FIXME: i18n
+            result.add("За игрока #$pn отдано голосов: ${votes ?? 0}");
+          case GameStateKnockoutVoting(votes: final votes):
+            result.add("За подъём стола отдано голосов: $votes");
           case GameStateBestTurn(currentPlayerNumber: final pn, playerNumbers: final pns):
             if (pns.isNotEmpty) {
               result.add(
@@ -93,22 +93,25 @@ class GameLogScreen extends StatelessWidget {
     assert(pickerResult.isSinglePick, "Only single file pick is supported");
     final rawJsonString = String.fromCharCodes(pickerResult.files.single.bytes!);
     final data = jsonDecode(rawJsonString);
-    final List<BaseGameLogItem> log;
-    if (data is Map<String, dynamic>) {
-      log = BugReportInfo.fromJson(data).game.log;
-    } else if (data is List<dynamic>) {
-      log = data.parseJsonList(fromJson<BaseGameLogItem>);
-    } else {
+    final List<BaseGameLogItem> logFromFile;
+    try {
+      if (data is Map<String, dynamic> && data.containsKey("packageInfo")) {
+        logFromFile = BugReportInfo.fromJson(data).game.log;
+      } else if (data is List<dynamic> || data is Map<String, dynamic>) {
+        logFromFile = VersionedGameLog.fromJson(data).log;
+      } else {
+        throw ArgumentError("Unknown data: ${data.runtimeType}, [0]=${rawJsonString[0]}");
+      }
+    } catch (e, s) {
       showSnackBar(context, const SnackBar(content: Text("Ошибка загрузки журнала")));
       _log.error(
-        "Unknown data type received: ${data.runtimeType}\n"
-        "rawJsonString[0]=${rawJsonString[0]}",
+        "Error loading game log: e=$e\n$s",
       );
       return;
     }
     await Navigator.push(
       context,
-      MaterialPageRoute<void>(builder: (_) => GameLogScreen(log: log, isExternal: true)),
+      MaterialPageRoute<void>(builder: (_) => GameLogScreen(log: logFromFile, isExternal: true)),
     );
   }
 

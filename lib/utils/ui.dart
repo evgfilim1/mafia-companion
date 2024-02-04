@@ -55,7 +55,7 @@ extension GameStatePrettyString on BaseGameState {
         return "Повторное голосование";
       case GameStateVoting(stage: GameStage.finalVoting, currentPlayerNumber: final playerNumber):
         return "Повторное голосование против игрока $playerNumber";
-      case GameStateDropTableVoting():
+      case GameStateKnockoutVoting():
         return "Голосование за подъём стола";
       case GameStateWithIterablePlayers(
           stage: GameStage.dayLastWords,

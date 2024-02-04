@@ -33,7 +33,7 @@ enum GameStage {
   finalVoting,
 
   /// Ask players if they want to kill all accused players
-  dropTableVoting,
+  knockoutVoting,
 
   /// Last words of players who were killed during day
   dayLastWords,
@@ -54,7 +54,7 @@ enum GameStage {
   finish,
   ;
 
-  factory GameStage.byName(String name) => GameStage.values.singleWhere((e) => e.name == name);
+  factory GameStage.byName(String name) => GameStage.values.firstWhere((e) => e.name == name);
 }
 
 /// Base class for all game states.
@@ -263,46 +263,46 @@ class GameStateVoting extends BaseGameState {
       );
 }
 
-/// Represents state with [playerNumbers] and [votesForDropTable].
+/// Represents state with [playerNumbers] and [votes].
 ///
-/// [stage] is always [GameStage.dropTableVoting].
+/// [stage] is always [GameStage.knockoutVoting].
 @immutable
-class GameStateDropTableVoting extends BaseGameState {
+class GameStateKnockoutVoting extends BaseGameState {
   final List<int> playerNumbers;
-  final int votesForDropTable;
+  final int votes;
 
-  const GameStateDropTableVoting({
+  const GameStateKnockoutVoting({
     required super.day,
     required super.players,
     required this.playerNumbers,
-    required this.votesForDropTable,
-  }) : super(stage: GameStage.dropTableVoting);
+    required this.votes,
+  }) : super(stage: GameStage.knockoutVoting);
 
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is GameStateDropTableVoting &&
+      other is GameStateKnockoutVoting &&
           runtimeType == other.runtimeType &&
           stage == other.stage &&
           day == other.day &&
           players == other.players &&
           playerNumbers == other.playerNumbers &&
-          votesForDropTable == other.votesForDropTable;
+          votes == other.votes;
 
   @override
-  int get hashCode => Object.hash(stage, day, players, playerNumbers, votesForDropTable);
+  int get hashCode => Object.hash(stage, day, players, playerNumbers, votes);
 
-  GameStateDropTableVoting copyWith({
+  GameStateKnockoutVoting copyWith({
     int? day,
     List<Player>? players,
     List<int>? playerNumbers,
     int? votesForDropTable,
   }) =>
-      GameStateDropTableVoting(
+      GameStateKnockoutVoting(
         day: day ?? this.day,
         players: players ?? this.players,
         playerNumbers: playerNumbers ?? this.playerNumbers,
-        votesForDropTable: votesForDropTable ?? this.votesForDropTable,
+        votes: votesForDropTable ?? this.votes,
       );
 }
 
@@ -638,33 +638,39 @@ const timeLimitsShortened = <GameStage, Duration>{
   GameStage.nightLastWords: Duration(seconds: 30),
 };
 
-const validTransitions = <GameStage, List<GameStage>>{
-  GameStage.prepare: [GameStage.night0],
-  GameStage.night0: [GameStage.night0SheriffCheck],
-  GameStage.night0SheriffCheck: [GameStage.speaking],
-  GameStage.speaking: [GameStage.speaking, GameStage.preVoting, GameStage.nightKill],
-  GameStage.preVoting: [GameStage.voting, GameStage.dayLastWords],
-  GameStage.voting: [GameStage.voting, GameStage.excuse, GameStage.dayLastWords],
-  GameStage.excuse: [GameStage.excuse, GameStage.preFinalVoting],
-  GameStage.preFinalVoting: [GameStage.finalVoting],
-  GameStage.finalVoting: [
+const validTransitions = <GameStage, Set<GameStage>>{
+  GameStage.prepare: {GameStage.night0},
+  GameStage.night0: {GameStage.night0SheriffCheck, GameStage.finish},
+  GameStage.night0SheriffCheck: {GameStage.speaking, GameStage.finish},
+  GameStage.speaking: {
+    GameStage.speaking,
+    GameStage.preVoting,
+    GameStage.nightKill,
+    GameStage.finish,
+  },
+  GameStage.preVoting: {GameStage.voting, GameStage.dayLastWords, GameStage.finish},
+  GameStage.voting: {GameStage.voting, GameStage.excuse, GameStage.dayLastWords, GameStage.finish},
+  GameStage.excuse: {GameStage.excuse, GameStage.preFinalVoting, GameStage.finish},
+  GameStage.preFinalVoting: {GameStage.finalVoting, GameStage.finish},
+  GameStage.finalVoting: {
     GameStage.finalVoting,
     GameStage.excuse,
     GameStage.dayLastWords,
-    GameStage.dropTableVoting,
+    GameStage.knockoutVoting,
     GameStage.nightKill,
-  ],
-  GameStage.dropTableVoting: [GameStage.dayLastWords, GameStage.nightKill],
-  GameStage.dayLastWords: [GameStage.dayLastWords, GameStage.nightKill, GameStage.finish],
-  GameStage.nightKill: [GameStage.nightCheck],
-  GameStage.nightCheck: [
+    GameStage.finish,
+  },
+  GameStage.knockoutVoting: {GameStage.dayLastWords, GameStage.nightKill, GameStage.finish},
+  GameStage.dayLastWords: {GameStage.dayLastWords, GameStage.nightKill, GameStage.finish},
+  GameStage.nightKill: {GameStage.nightCheck, GameStage.finish},
+  GameStage.nightCheck: {
     GameStage.nightCheck,
     GameStage.bestTurn,
     GameStage.nightLastWords,
     GameStage.speaking,
     GameStage.finish,
-  ],
-  GameStage.bestTurn: [GameStage.nightLastWords],
-  GameStage.nightLastWords: [GameStage.speaking, GameStage.finish],
-  GameStage.finish: [],
+  },
+  GameStage.bestTurn: {GameStage.nightLastWords, GameStage.finish},
+  GameStage.nightLastWords: {GameStage.speaking, GameStage.finish},
+  GameStage.finish: {},
 };

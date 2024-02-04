@@ -87,13 +87,13 @@ class BottomGameStateWidget extends StatelessWidget {
       );
     }
 
-    if (gameState is GameStateDropTableVoting) {
+    if (gameState is GameStateKnockoutVoting) {
       return Counter(
         key: const ValueKey("dropTableVoting"),
         min: 0,
         max: controller.alivePlayersCount,
         onValueChanged: (value) => controller.vote(null, value),
-        initialValue: gameState.votesForDropTable,
+        initialValue: gameState.votes,
       );
     }
 

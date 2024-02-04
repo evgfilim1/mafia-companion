@@ -205,11 +205,11 @@ class Game {
               thisNightKilledPlayerNumber: null,
             );
           }
-          return GameStateDropTableVoting(
+          return GameStateKnockoutVoting(
             day: state.day,
             players: state.players,
             playerNumbers: maxVotesPlayers,
-            votesForDropTable: 0,
+            votes: 0,
           );
         }
         return GameStateWithIterablePlayers(
@@ -239,7 +239,7 @@ class Game {
           playerNumbers: pns,
           currentPlayerIndex: i + 1,
         );
-      case GameStateDropTableVoting(votesForDropTable: final votes, playerNumbers: final pns):
+      case GameStateKnockoutVoting(votes: final votes, playerNumbers: final pns):
         if (votes <= players.aliveCount ~/ 2) {
           return GameStateNightKill(
             day: state.day + 1,
@@ -455,10 +455,10 @@ class Game {
   }
 
   /// Vote for [playerNumber] with [count] votes. [playerNumber] is ignored (can be `null`) if
-  /// game [state] is [GameStateDropTableVoting].
+  /// game [state] is [GameStateKnockoutVoting].
   void vote(int? playerNumber, int count) {
     final currentState = state;
-    if (currentState is GameStateDropTableVoting) {
+    if (currentState is GameStateKnockoutVoting) {
       _log.add(
         StateChangeGameLogItem(
           oldState: currentState,
@@ -502,7 +502,7 @@ class Game {
       GameStateWithPlayer() => currentState.copyWith(players: newPlayers),
       GameStateSpeaking() => currentState.copyWith(players: newPlayers),
       GameStateVoting() => currentState.copyWith(players: newPlayers),
-      GameStateDropTableVoting() => currentState.copyWith(players: newPlayers),
+      GameStateKnockoutVoting() => currentState.copyWith(players: newPlayers),
       GameStateWithPlayers() => currentState.copyWith(players: newPlayers),
       GameStateNightKill() => currentState.copyWith(players: newPlayers),
       GameStateNightCheck() => currentState.copyWith(players: newPlayers),

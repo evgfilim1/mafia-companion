@@ -49,7 +49,10 @@ class GameInfo {
 
   factory GameInfo.fromJson(Map<String, dynamic> json) => GameInfo(
         seed: json["seed"] as int,
-        log: (json["log"] as List<dynamic>).parseJsonList(fromJson<BaseGameLogItem>),
+        // assuming bug reports are checked in the same app version as the game was played
+        log: (json["log"] as List<dynamic>).parseJsonList(
+          (e) => fromJson<BaseGameLogItem>(e, gameLogVersion: GameLogVersion.latest),
+        ),
       );
 }
 
