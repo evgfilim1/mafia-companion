@@ -91,10 +91,10 @@ class GameLogScreen extends StatelessWidget {
       return;
     }
     assert(pickerResult.isSinglePick, "Only single file pick is supported");
-    final rawJsonString = String.fromCharCodes(pickerResult.files.single.bytes!);
-    final data = jsonDecode(rawJsonString);
     final List<BaseGameLogItem> logFromFile;
     try {
+      final rawJsonString = String.fromCharCodes(pickerResult.files.single.bytes!);
+      final data = jsonDecode(rawJsonString);
       if (data is Map<String, dynamic> && data.containsKey("packageInfo")) {
         logFromFile = BugReportInfo.fromJson(data).game.log;
       } else if (data is List<dynamic> || data is Map<String, dynamic>) {
