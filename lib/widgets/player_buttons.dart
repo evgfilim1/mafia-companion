@@ -1,14 +1,10 @@
-import "dart:async";
-
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 
 import "../game/player.dart";
 import "../game/states.dart";
-import "../utils/errors.dart";
 import "../utils/game_controller.dart";
 import "../utils/ui.dart";
-import "confirmation_dialog.dart";
 import "orientation_dependent.dart";
 import "player_button.dart";
 
@@ -55,27 +51,6 @@ class PlayerButtons extends OrientationDependentWidget {
     }
   }
 
-  Future<void> _onWarnPlayerTap(BuildContext context, int playerNumber) async {
-    final controller = context.read<GameController>();
-    final res = await showDialog<bool>(
-      context: context,
-      builder: (context) => ConfirmationDialog(
-        title: const Text("Выдать фол"),
-        content: Text("Вы уверены, что хотите выдать фол игроку #$playerNumber?"),
-      ),
-    );
-    if (res ?? false) {
-      controller.warnPlayer(playerNumber);
-      if (!context.mounted) {
-        throw ContextNotMountedError();
-      }
-      showSnackBar(
-        context,
-        SnackBar(content: Text("Выдан фол игроку $playerNumber")),
-      );
-    }
-  }
-
   Widget _buildPlayerButton(BuildContext context, int playerNumber, BaseGameState gameState) {
     final controller = context.watch<GameController>();
     final isActive = switch (gameState) {
@@ -101,20 +76,12 @@ class PlayerButtons extends OrientationDependentWidget {
     };
     final player = controller.getPlayerByNumber(playerNumber);
     return PlayerButton(
-      player: player,
+      playerNumber: player.number,
       isSelected: isSelected,
       isActive: isActive,
-      warnCount: controller.getPlayerWarnCount(playerNumber),
       onTap: player.isAlive || gameState.stage == GameStage.nightCheck
           ? () => _onPlayerButtonTap(context, playerNumber)
           : null,
-      longPressActions: [
-        TextButton(
-          onPressed:
-              controller.isGameActive ? () => _onWarnPlayerTap(context, player.number) : null,
-          child: const Text("Выдать фол"),
-        ),
-      ],
       showRole: showRoles,
     );
   }

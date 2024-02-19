@@ -296,13 +296,13 @@ class GameStateKnockoutVoting extends BaseGameState {
     int? day,
     List<Player>? players,
     List<int>? playerNumbers,
-    int? votesForDropTable,
+    int? votes,
   }) =>
       GameStateKnockoutVoting(
         day: day ?? this.day,
         players: players ?? this.players,
         playerNumbers: playerNumbers ?? this.playerNumbers,
-        votes: votesForDropTable ?? this.votes,
+        votes: votes ?? this.votes,
       );
 }
 

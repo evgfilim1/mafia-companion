@@ -41,3 +41,7 @@ extension RaiseForStatus on http.Response {
     throw http.ClientException("Unexpected status code: $statusCode", request?.url);
   }
 }
+
+extension CountWhere<T> on Iterable<T> {
+  int countWhere(bool Function(T) test) => where(test).length;
+}

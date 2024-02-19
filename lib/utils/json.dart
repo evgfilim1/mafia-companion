@@ -98,9 +98,15 @@ extension BaseGameLogItemJson on BaseGameLogItem {
             "oldState": oldState?.toJson(),
             "newState": newState.toJson(),
           },
-        PlayerCheckedGameLogItem(:final playerNumber, :final checkedByRole) => {
+        PlayerCheckedGameLogItem(:final day, :final playerNumber, :final checkedByRole) => {
+            "day": day,
             "playerNumber": playerNumber,
             "checkedByRole": checkedByRole.name,
+          },
+        PlayerKickedGameLogItem(:final day, :final playerNumber, :final isOtherTeamWin) => {
+            "day": day,
+            "playerNumber": playerNumber,
+            "isOtherTeamWin": isOtherTeamWin,
           },
       };
 }
@@ -114,24 +120,40 @@ extension PlayerJson on Player {
       };
 }
 
-BaseGameLogItem _gameLogFromJson(Map<String, dynamic> json, {required GameLogVersion version}) =>
-    json["newState"] != null
-        ? StateChangeGameLogItem(
-            oldState: json["oldState"] != null
-                ? fromJson<BaseGameState>(
-                    json["oldState"] as Map<String, dynamic>,
-                    gameLogVersion: version,
-                  )
-                : null,
-            newState: fromJson(
-              json["newState"] as Map<String, dynamic>,
+BaseGameLogItem _gameLogFromJson(Map<String, dynamic> json, {required GameLogVersion version}) {
+  if (json.containsKey("newState")) {
+    return StateChangeGameLogItem(
+      oldState: json["oldState"] != null
+          ? fromJson<BaseGameState>(
+              json["oldState"] as Map<String, dynamic>,
               gameLogVersion: version,
-            ),
-          )
-        : PlayerCheckedGameLogItem(
-            playerNumber: json["playerNumber"] as int,
-            checkedByRole: PlayerRole.byName(json["checkedByRole"] as String),
-          );
+            )
+          : null,
+      newState: fromJson(
+        json["newState"] as Map<String, dynamic>,
+        gameLogVersion: version,
+      ),
+    );
+  }
+  if (json.containsKey("checkedByRole")) {
+    return PlayerCheckedGameLogItem(
+      day: switch (version) {
+        GameLogVersion.v0 => 0,
+        GameLogVersion.v1 => json["day"] as int,
+      },
+      playerNumber: json["playerNumber"] as int,
+      checkedByRole: PlayerRole.byName(json["checkedByRole"] as String),
+    );
+  }
+  if (json.containsKey("isOtherTeamWin")) {
+    return PlayerKickedGameLogItem(
+      day: json["day"] as int,
+      playerNumber: json["playerNumber"] as int,
+      isOtherTeamWin: json["isOtherTeamWin"] as bool,
+    );
+  }
+  throw ArgumentError.value(json, "json", "Unknown game log item");
+}
 
 BaseGameState _gameStateFromJson(Map<String, dynamic> json, {required GameLogVersion version}) {
   var stageString = json["stage"] as String;

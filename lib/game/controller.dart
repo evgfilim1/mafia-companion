@@ -55,10 +55,12 @@ class Game {
               currentPlayerNumber: final playerNumber,
             )) {
       final player = players.getByNumber(playerNumber);
-      if (player.role.isMafia) {
-        aliveMafia--;
-      } else {
-        aliveCitizens--;
+      if (player.isAlive) {
+        if (player.role.isMafia) {
+          aliveMafia--;
+        } else {
+          aliveCitizens--;
+        }
       }
     }
     if (aliveMafia == 0) {
@@ -86,6 +88,9 @@ class Game {
   /// Assumes next game state according to game internal state, and returns it.
   /// Doesn't change internal state. May throw exceptions if game internal state is inconsistent.
   BaseGameState? get nextStateAssumption {
+    if (isGameOver) {
+      return GameStateFinish(day: state.day, players: state.players, winner: winTeamAssumption);
+    }
     switch (state) {
       case GameStatePrepare():
         return GameStateWithPlayers(
@@ -102,22 +107,64 @@ class Game {
           currentPlayerNumber: players.sheriff.number,
         );
       case GameStateWithPlayer(stage: GameStage.night0SheriffCheck):
+        final next = _nextAlivePlayer(fromNumber: 0);
+        assert(next.isAlive, "Next player must be alive");
         return GameStateSpeaking(
-          currentPlayerNumber: 1,
+          currentPlayerNumber: next.number,
           day: state.day,
           players: state.players,
           accusations: LinkedHashMap(),
         );
       case GameStateSpeaking(accusations: final accusations, currentPlayerNumber: final pn):
-        final alreadySpokeCount = _log
+        final alreadySpoke = _log
             .whereType<StateChangeGameLogItem>()
             .where((e) => e.oldState != null && e.newState.hasStateChanged(e.oldState!))
             .map((e) => e.newState)
             .where((e) => e is GameStateSpeaking && e.day == state.day)
             .cast<GameStateSpeaking>()
-            .length;
-        if (alreadySpokeCount == players.aliveCount) {
-          if (accusations.isEmpty || state.day == 1 && accusations.length == 1) {
+            .map((e) => e.currentPlayerNumber)
+            .toSet();
+        final shouldSpeakCount = players.aliveCount +
+            _log
+                .whereType<PlayerKickedGameLogItem>()
+                .where((e) => e.day == state.day && alreadySpoke.contains(e.playerNumber))
+                .length;
+        if (alreadySpoke.length == shouldSpeakCount) {
+          final kickedPlayers = _log
+              .whereType<PlayerKickedGameLogItem>()
+              .where((e) => e.day == state.day)
+              .map((e) => e.playerNumber)
+              .toSet();
+          final thisNightKilledPlayer = (_log
+                  .whereType<StateChangeGameLogItem>()
+                  .where(
+                    (e) =>
+                        e.newState.day == state.day && e.newState.stage == GameStage.nightLastWords,
+                  )
+                  .firstOrNull
+                  ?.newState as GameStateWithPlayer?)
+              ?.currentPlayerNumber;
+          final lastDayKickedPlayers = _log
+              .whereType<PlayerKickedGameLogItem>()
+              .where((e) => e.day == state.day - 1)
+              .map((e) => e.playerNumber)
+              .toSet();
+          final lastDayVotedOutPlayers = (_log
+                  .whereType<StateChangeGameLogItem>()
+                  .where(
+                    (e) =>
+                        e.newState.day == state.day - 1 &&
+                        e.newState.stage == GameStage.dayLastWords,
+                  )
+                  .firstOrNull
+                  ?.newState as GameStateWithIterablePlayers?)
+              ?.playerNumbers
+              .toSet();
+          final skipVoting = state.day == 1 && accusations.length < 2 ||
+              accusations.isEmpty ||
+              kickedPlayers.length == 1 && kickedPlayers.single != thisNightKilledPlayer ||
+              lastDayKickedPlayers.difference(lastDayVotedOutPlayers ?? <int>{}).isNotEmpty;
+          if (skipVoting) {
             return GameStateNightKill(
               day: state.day + 1,
               players: state.players,
@@ -317,7 +364,7 @@ class Game {
             currentPlayerNumber: killedPlayerNumber,
           );
         }
-        if (_consequentDaysWithoutKills >= 3) {
+        if (_consequentDaysWithoutDeaths >= 3) {
           return GameStateFinish(
             day: state.day,
             players: state.players,
@@ -462,7 +509,7 @@ class Game {
       _log.add(
         StateChangeGameLogItem(
           oldState: currentState,
-          newState: currentState.copyWith(votesForDropTable: count),
+          newState: currentState.copyWith(votes: count),
         ),
       );
       return;
@@ -487,13 +534,85 @@ class Game {
   }
 
   void warnPlayer(int number) {
-    final currentState = state;
     if (!isActive) {
       throw StateError("Can't warn player in state ${state.runtimeType}");
     }
-    final newPlayers = List.of(currentState.players);
-    newPlayers[number - 1] =
-        newPlayers[number - 1].copyWith(warns: newPlayers[number - 1].warns + 1);
+    final newPlayers = List.of(state.players);
+    final i = number - 1;
+    final warnCount = newPlayers[i].warns;
+    final newWarnCount = (newPlayers[i].warns + 1).clamp(1, 4);
+    newPlayers[i] = newPlayers[i].copyWith(
+      warns: newWarnCount,
+      isAlive: newPlayers[i].isAlive && warnCount < 3,
+    );
+    if (newWarnCount == 4) {
+      _log.add(PlayerKickedGameLogItem(day: state.day, playerNumber: number));
+    }
+    _editPlayers(newPlayers);
+  }
+
+  void warnMinusPlayer(int number) {
+    if (!isActive) {
+      throw StateError("Can't -warn player in state ${state.runtimeType}");
+    }
+    final newPlayers = List.of(state.players);
+    final i = number - 1;
+    newPlayers[i] = newPlayers[i].copyWith(warns: (newPlayers[i].warns - 1).clamp(0, 3));
+    _editPlayers(newPlayers);
+  }
+
+  void kickPlayer(int number) {
+    if (!isActive) {
+      throw StateError("Can't kick player in state ${state.runtimeType}");
+    }
+    final newPlayers = List.of(state.players);
+    final i = number - 1;
+    newPlayers[i] = newPlayers[i].copyWith(warns: 4, isAlive: false);
+    _log.add(PlayerKickedGameLogItem(day: state.day, playerNumber: number));
+    _editPlayers(newPlayers);
+  }
+
+  void kickPlayerTeam(int number) {
+    if (!isActive) {
+      throw StateError("Can't kick player's team in state ${state.runtimeType}");
+    }
+    final newPlayers = List.of(state.players);
+    final targetPlayer = players.getByNumber(number);
+    for (final player
+        in newPlayers.where((p) => targetPlayer.role.isMafia ? p.role.isMafia : p.role.isCitizen)) {
+      newPlayers[player.number - 1] = player.copyWith(warns: 4, isAlive: false);
+    }
+    _log.add(PlayerKickedGameLogItem(day: state.day, playerNumber: number, isOtherTeamWin: true));
+    _editPlayers(newPlayers);
+  }
+
+  int getPlayerWarnCount(int number) => players.getByNumber(number).warns;
+
+  bool checkPlayer(int number) {
+    final checkedPlayer = players.getByNumber(number);
+    if (state case GameStateNightCheck(activePlayerNumber: final playerNumber)) {
+      final activePlayer = players.getByNumber(playerNumber);
+      _log.add(
+        PlayerCheckedGameLogItem(
+          day: state.day,
+          playerNumber: number,
+          checkedByRole: activePlayer.role,
+        ),
+      );
+      if (activePlayer.role == PlayerRole.don) {
+        return checkedPlayer.role == PlayerRole.sheriff;
+      }
+      if (activePlayer.role == PlayerRole.sheriff) {
+        return checkedPlayer.role.isMafia;
+      }
+      throw AssertionError();
+    }
+    throw StateError("Cannot check player in state ${state.runtimeType}");
+  }
+
+  // region Private helpers
+  void _editPlayers(List<Player> newPlayers) {
+    final currentState = state;
     // This weird thing is needed to make Dart analyzer happy and to be type safe.
     // I could make it prettier like below, but it may lead to runtime errors in future.
     // final newState = (currentState as dynamic).copyWith(players: newPlayers);
@@ -513,25 +632,6 @@ class Game {
     _log.add(StateChangeGameLogItem(oldState: currentState, newState: newState));
   }
 
-  int getPlayerWarnCount(int number) => players.getByNumber(number).warns;
-
-  bool checkPlayer(int number) {
-    final checkedPlayer = players.getByNumber(number);
-    if (state case GameStateNightCheck(activePlayerNumber: final playerNumber)) {
-      final activePlayer = players.getByNumber(playerNumber);
-      _log.add(PlayerCheckedGameLogItem(playerNumber: number, checkedByRole: activePlayer.role));
-      if (activePlayer.role == PlayerRole.don) {
-        return checkedPlayer.role == PlayerRole.sheriff;
-      }
-      if (activePlayer.role == PlayerRole.sheriff) {
-        return checkedPlayer.role.isMafia;
-      }
-      throw AssertionError();
-    }
-    throw StateError("Cannot check player in state ${state.runtimeType}");
-  }
-
-  // region Private helpers
   Player _nextAlivePlayer({required int fromNumber}) {
     for (var i = fromNumber % 10 + 1; i != fromNumber; i = i % 10 + 1) {
       final player = players.getByNumber(i);
@@ -610,18 +710,19 @@ class Game {
     return result;
   }
 
-  int get _consequentDaysWithoutKills {
-    final lastKillDay = _log
+  int get _consequentDaysWithoutDeaths {
+    final lastDeathDay = _log
         .whereType<StateChangeGameLogItem>()
-        .map((e) => e.oldState)
         .where(
           (e) =>
-              (e is GameStateWithPlayer && e.stage == GameStage.nightLastWords) ||
-              (e is GameStateWithIterablePlayers && e.stage == GameStage.dayLastWords),
+              e.oldState != null &&
+              e.oldState!.players.countWhere((e) => e.isAlive) !=
+                  e.newState.players.countWhere((e) => e.isAlive),
         )
         .lastOrNull
-        ?.day;
-    return state.day - (lastKillDay ?? 1);
+        ?.newState
+        .day;
+    return state.day - (lastDeathDay ?? 1);
   }
 // endregion
 }

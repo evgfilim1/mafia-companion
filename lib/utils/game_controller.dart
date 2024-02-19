@@ -80,6 +80,21 @@ class GameController with ChangeNotifier {
     notifyListeners();
   }
 
+  void warnMinusPlayer(int player) {
+    _game.warnMinusPlayer(player);
+    notifyListeners();
+  }
+
+  void kickPlayer(int player) {
+    _game.kickPlayer(player);
+    notifyListeners();
+  }
+
+  void kickPlayerTeam(int player) {
+    _game.kickPlayerTeam(player);
+    notifyListeners();
+  }
+
   int getPlayerWarnCount(int player) => _game.getPlayerWarnCount(player);
 
   bool checkPlayer(int number) => _game.checkPlayer(number);

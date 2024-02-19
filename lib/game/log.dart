@@ -23,12 +23,27 @@ class StateChangeGameLogItem extends BaseGameLogItem {
 
 @immutable
 class PlayerCheckedGameLogItem extends BaseGameLogItem {
+  final int day;
   final int playerNumber;
   final PlayerRole checkedByRole;
 
   const PlayerCheckedGameLogItem({
+    required this.day,
     required this.playerNumber,
     required this.checkedByRole,
+  });
+}
+
+@immutable
+class PlayerKickedGameLogItem extends BaseGameLogItem {
+  final int day;
+  final int playerNumber;
+  final bool isOtherTeamWin;
+
+  const PlayerKickedGameLogItem({
+    required this.day,
+    required this.playerNumber,
+    this.isOtherTeamWin = false,
   });
 }
 
