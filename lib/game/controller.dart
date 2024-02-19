@@ -130,25 +130,8 @@ class Game {
                 .where((e) => e.day == state.day && alreadySpoke.contains(e.playerNumber))
                 .length;
         if (alreadySpoke.length == shouldSpeakCount) {
-          final kickedPlayers = _log
-              .whereType<PlayerKickedGameLogItem>()
-              .where((e) => e.day == state.day)
-              .map((e) => e.playerNumber)
-              .toSet();
-          final thisNightKilledPlayer = (_log
-                  .whereType<StateChangeGameLogItem>()
-                  .where(
-                    (e) =>
-                        e.newState.day == state.day && e.newState.stage == GameStage.nightLastWords,
-                  )
-                  .firstOrNull
-                  ?.newState as GameStateWithPlayer?)
-              ?.currentPlayerNumber;
-          final lastDayKickedPlayers = _log
-              .whereType<PlayerKickedGameLogItem>()
-              .where((e) => e.day == state.day - 1)
-              .map((e) => e.playerNumber)
-              .toSet();
+          final kickedPlayers = _getKickedPlayers();
+          final lastDayKickedPlayers = _getKickedPlayers(daysBack: 1);
           final lastDayVotedOutPlayers = (_log
                   .whereType<StateChangeGameLogItem>()
                   .where(
@@ -162,8 +145,9 @@ class Game {
               .toSet();
           final skipVoting = state.day == 1 && accusations.length < 2 ||
               accusations.isEmpty ||
-              kickedPlayers.length == 1 && kickedPlayers.single != thisNightKilledPlayer ||
-              lastDayKickedPlayers.difference(lastDayVotedOutPlayers ?? <int>{}).isNotEmpty;
+              kickedPlayers.length == 1 && kickedPlayers.single != _thisNightKilledPlayer ||
+              lastDayVotedOutPlayers != null &&
+                  lastDayKickedPlayers.difference(lastDayVotedOutPlayers).isNotEmpty;
           if (skipVoting) {
             return GameStateNightKill(
               day: state.day + 1,
@@ -190,6 +174,17 @@ class Game {
           stage: GameStage.preVoting || GameStage.preFinalVoting,
           playerNumbers: final pns,
         ):
+        final kickedPlayers = _getKickedPlayers();
+        final skipVoting =
+            kickedPlayers.length == 1 && kickedPlayers.single != _thisNightKilledPlayer ||
+                kickedPlayers.length > 1;
+        if (skipVoting) {
+          return GameStateNightKill(
+            day: state.day + 1,
+            players: state.players,
+            thisNightKilledPlayerNumber: null,
+          );
+        }
         if (pns.length == 1) {
           return GameStateWithIterablePlayers(
             stage: GameStage.dayLastWords,
@@ -215,6 +210,17 @@ class Game {
         ):
         final maxVotesPlayers = _maxVotesPlayers;
         if (maxVotesPlayers == null) {
+          final kickedPlayers = _getKickedPlayers();
+          final skipVoting =
+              kickedPlayers.length == 1 && kickedPlayers.single != _thisNightKilledPlayer ||
+                  kickedPlayers.length > 1;
+          if (skipVoting) {
+            return GameStateNightKill(
+              day: state.day + 1,
+              players: state.players,
+              thisNightKilledPlayerNumber: null,
+            );
+          }
           int? nextPlayerNumber;
           for (final p in votes.keys) {
             if (votes[p] == null && p != pn) {
@@ -724,5 +730,20 @@ class Game {
         .day;
     return state.day - (lastDeathDay ?? 1);
   }
+
+  Set<int> _getKickedPlayers({int daysBack = 0}) => _log
+      .whereType<PlayerKickedGameLogItem>()
+      .where((e) => e.day == state.day - daysBack)
+      .map((e) => e.playerNumber)
+      .toSet();
+
+  int? get _thisNightKilledPlayer => (_log
+          .whereType<StateChangeGameLogItem>()
+          .where(
+            (e) => e.newState.day == state.day && e.newState.stage == GameStage.nightLastWords,
+          )
+          .firstOrNull
+          ?.newState as GameStateWithPlayer?)
+      ?.currentPlayerNumber;
 // endregion
 }

@@ -648,8 +648,19 @@ const validTransitions = <GameStage, Set<GameStage>>{
     GameStage.nightKill,
     GameStage.finish,
   },
-  GameStage.preVoting: {GameStage.voting, GameStage.dayLastWords, GameStage.finish},
-  GameStage.voting: {GameStage.voting, GameStage.excuse, GameStage.dayLastWords, GameStage.finish},
+  GameStage.preVoting: {
+    GameStage.voting,
+    GameStage.dayLastWords,
+    GameStage.nightKill,
+    GameStage.finish,
+  },
+  GameStage.voting: {
+    GameStage.voting,
+    GameStage.excuse,
+    GameStage.dayLastWords,
+    GameStage.nightKill,
+    GameStage.finish,
+  },
   GameStage.excuse: {GameStage.excuse, GameStage.preFinalVoting, GameStage.finish},
   GameStage.preFinalVoting: {GameStage.finalVoting, GameStage.finish},
   GameStage.finalVoting: {
