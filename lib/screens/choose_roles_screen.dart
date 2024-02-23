@@ -138,6 +138,7 @@ class _ChooseRolesScreenState extends State<ChooseRolesScreen> {
         ..addAll(errors);
     });
     if (errors.isNotEmpty) {
+      showSnackBar(context, const SnackBar(content: Text("Для продолжения исправьте ошибки")));
       return;
     }
     final controller = context.read<GameController>();
@@ -167,7 +168,8 @@ class _ChooseRolesScreenState extends State<ChooseRolesScreen> {
     unawaited(Navigator.pushReplacementNamed(context, "/roles"));
   }
 
-  void _reset(bool checked) {
+  void _toggleAll() {
+    final checked = !_roles.every((rs) => rs.length == PlayerRole.values.length);
     setState(() {
       for (var i = 0; i < 10; i++) {
         if (checked) {
@@ -196,13 +198,14 @@ class _ChooseRolesScreenState extends State<ChooseRolesScreen> {
         actions: [
           IconButton(
             tooltip: "Сбросить",
-            onPressed: () => _reset(true),
+            onPressed: _toggleAll,
             icon: const Icon(Icons.restart_alt),
           ),
         ],
       ),
       body: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Table(
             defaultVerticalAlignment: TableCellVerticalAlignment.middle,
@@ -240,19 +243,28 @@ class _ChooseRolesScreenState extends State<ChooseRolesScreen> {
                 ),
             ],
           ),
-          Flexible(
-            child: ListView(
-              children: _errors
-                  .map(
-                    (e) => Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Text(
-                        e.message,
-                        style: const TextStyle(color: Colors.red),
-                      ),
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Column(
+              mainAxisSize: MainAxisSize.max,
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (_errors.isNotEmpty)
+                  const Text(
+                    "❌ Ошибки:",
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                     ),
-                  )
-                  .toList(),
+                  ),
+                for (final error in _errors)
+                  Text(
+                    error.message,
+                    style: const TextStyle(color: Colors.red),
+                  ),
+              ],
             ),
           ),
         ],
