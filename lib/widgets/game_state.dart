@@ -128,7 +128,7 @@ class BottomGameStateWidget extends StatelessWidget {
       );
     }
 
-    final Duration? timeLimit;
+    Duration? timeLimit;
     switch (settings.timerType) {
       case TimerType.disabled:
         timeLimit = null;
@@ -141,6 +141,9 @@ class BottomGameStateWidget extends StatelessWidget {
         timeLimit = timeLimits[gameState.stage];
       case TimerType.shortened:
         timeLimit = timeLimitsShortened[gameState.stage] ?? timeLimits[gameState.stage];
+    }
+    if (gameState case GameStateSpeaking(hasHalfTime: true)) {
+      timeLimit = timeLimit != null ? timeLimit ~/ 2 : null;
     }
     if (timeLimit != null) {
       return PlayerTimer(

@@ -114,6 +114,8 @@ class Game {
           day: state.day,
           players: state.players,
           accusations: LinkedHashMap(),
+          canOnlyAccuse: _canOnlyAccuse(next),
+          hasHalfTime: _hasHalfTime(next),
         );
       case GameStateSpeaking(accusations: final accusations, currentPlayerNumber: final pn):
         final alreadySpoke = _log
@@ -169,6 +171,8 @@ class Game {
           day: state.day,
           players: state.players,
           accusations: LinkedHashMap.of(accusations),
+          canOnlyAccuse: _canOnlyAccuse(next),
+          hasHalfTime: _hasHalfTime(next),
         );
       case GameStateWithPlayers(
           stage: GameStage.preVoting || GameStage.preFinalVoting,
@@ -377,11 +381,14 @@ class Game {
             winner: null,
           );
         }
+        final firstSpeakingPlayer = players.getByNumber(_firstSpeakingPlayerNumber);
         return GameStateSpeaking(
           day: state.day,
           players: state.players,
-          currentPlayerNumber: _firstSpeakingPlayerNumber,
+          currentPlayerNumber: firstSpeakingPlayer.number,
           accusations: LinkedHashMap(),
+          canOnlyAccuse: _canOnlyAccuse(firstSpeakingPlayer),
+          hasHalfTime: _hasHalfTime(firstSpeakingPlayer),
         );
       case GameStateBestTurn(currentPlayerNumber: final pn):
         return GameStateWithPlayer(
@@ -400,11 +407,14 @@ class Game {
             players: newPlayers.toUnmodifiableList(),
           );
         }
+        final firstSpeakingPlayer = players.getByNumber(_firstSpeakingPlayerNumber);
         return GameStateSpeaking(
-          currentPlayerNumber: _firstSpeakingPlayerNumber,
+          currentPlayerNumber: firstSpeakingPlayer.number,
           day: state.day,
           players: newPlayers.toUnmodifiableList(),
           accusations: LinkedHashMap(),
+          canOnlyAccuse: _canOnlyAccuse(firstSpeakingPlayer),
+          hasHalfTime: _hasHalfTime(firstSpeakingPlayer),
         );
       case GameStateFinish():
         return null;
@@ -551,6 +561,14 @@ class Game {
       warns: newWarnCount,
       isAlive: newPlayers[i].isAlive && warnCount < 3,
     );
+    _log.add(
+      PlayerWarnsChangedGameLogItem(
+        day: state.day,
+        playerNumber: number,
+        oldWarns: warnCount,
+        currentWarns: newWarnCount,
+      ),
+    );
     if (newWarnCount == 4) {
       _log.add(PlayerKickedGameLogItem(day: state.day, playerNumber: number));
     }
@@ -564,6 +582,14 @@ class Game {
     final newPlayers = List.of(state.players);
     final i = number - 1;
     newPlayers[i] = newPlayers[i].copyWith(warns: (newPlayers[i].warns - 1).clamp(0, 3));
+    _log.add(
+      PlayerWarnsChangedGameLogItem(
+        day: state.day,
+        playerNumber: number,
+        oldWarns: state.players[i].warns,
+        currentWarns: newPlayers[i].warns,
+      ),
+    );
     _editPlayers(newPlayers);
   }
 
@@ -745,5 +771,58 @@ class Game {
           .firstOrNull
           ?.newState as GameStateWithPlayer?)
       ?.currentPlayerNumber;
+
+  bool _hasPlayerBeenMutedForToday(Player player) {
+    if (player.warns != 3) {
+      return false;
+    }
+    var hasSpoke = false;
+    var hasThirdWarn = false;
+    for (final item in _log.reversed) {
+      if (item
+          case StateChangeGameLogItem(
+                newState: GameStateSpeaking(currentPlayerNumber: final pn, :final day)
+              ) ||
+              PlayerWarnsChangedGameLogItem(playerNumber: final pn, currentWarns: 3, :final day)) {
+        if (day < state.day - 1) {
+          break;
+        }
+        if (pn != player.number) {
+          continue;
+        }
+      }
+      switch (item) {
+        case StateChangeGameLogItem(newState: GameStateSpeaking(:final canOnlyAccuse)):
+          if (canOnlyAccuse) {
+            return false;
+          }
+          if (hasThirdWarn) {
+            return true;
+          }
+          hasSpoke = true;
+        case PlayerWarnsChangedGameLogItem(currentWarns: 3):
+          hasThirdWarn = true;
+        default:
+          continue;
+      }
+    }
+    if (!hasThirdWarn) {
+      return false;
+    }
+    if (!hasSpoke) {
+      return true;
+    }
+    throw AssertionError("BUG in _hasPlayerBeenMutedForToday");
+  }
+
+  bool _canOnlyAccuse(Player player) =>
+      !state.stage.isAnyOf([GameStage.excuse, GameStage.voting]) &&
+      players.aliveCount > 4 &&
+      _hasPlayerBeenMutedForToday(player);
+
+  bool _hasHalfTime(Player player) =>
+      (players.aliveCount <= 4 ||
+          players.aliveCount == 5 && state.stage == GameStage.nightLastWords) &&
+      _hasPlayerBeenMutedForToday(player);
 // endregion
 }

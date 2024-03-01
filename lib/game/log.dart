@@ -47,6 +47,21 @@ class PlayerKickedGameLogItem extends BaseGameLogItem {
   });
 }
 
+@immutable
+class PlayerWarnsChangedGameLogItem extends BaseGameLogItem {
+  final int day;
+  final int playerNumber;
+  final int oldWarns;
+  final int currentWarns;
+
+  const PlayerWarnsChangedGameLogItem({
+    required this.day,
+    required this.playerNumber,
+    required this.oldWarns,
+    required this.currentWarns,
+  });
+}
+
 class GameLog with IterableMixin<BaseGameLogItem> {
   final _log = <BaseGameLogItem>[];
 
@@ -54,6 +69,8 @@ class GameLog with IterableMixin<BaseGameLogItem> {
 
   @override
   Iterator<BaseGameLogItem> get iterator => _log.iterator;
+
+  Iterable<BaseGameLogItem> get reversed => _log.reversed;
 
   @override
   int get length => _log.length;

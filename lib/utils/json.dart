@@ -51,9 +51,17 @@ extension BaseGameStateJson on BaseGameState {
         GameStateWithPlayer(:final currentPlayerNumber) => {
             "currentPlayerNumber": currentPlayerNumber,
           },
-        GameStateSpeaking(:final currentPlayerNumber, :final accusations) => {
+        GameStateSpeaking(
+          :final currentPlayerNumber,
+          :final accusations,
+          :final canOnlyAccuse,
+          :final hasHalfTime,
+        ) =>
+          {
             "currentPlayerNumber": currentPlayerNumber,
             "accusations": accusations.toJson(),
+            "canOnlyAccuse": canOnlyAccuse,
+            "hasHalfTime": hasHalfTime,
           },
         GameStateVoting(:final votes, :final currentPlayerNumber, :final currentPlayerVotes) => {
             "votes": votes.toJson(),
@@ -102,6 +110,18 @@ extension BaseGameLogItemJson on BaseGameLogItem {
             "day": day,
             "playerNumber": playerNumber,
             "checkedByRole": checkedByRole.name,
+          },
+        PlayerWarnsChangedGameLogItem(
+          :final day,
+          :final playerNumber,
+          :final oldWarns,
+          :final currentWarns,
+        ) =>
+          {
+            "day": day,
+            "playerNumber": playerNumber,
+            "oldWarns": oldWarns,
+            "currentWarns": currentWarns,
           },
         PlayerKickedGameLogItem(:final day, :final playerNumber, :final isOtherTeamWin) => {
             "day": day,
@@ -152,6 +172,14 @@ BaseGameLogItem _gameLogFromJson(Map<String, dynamic> json, {required GameLogVer
       isOtherTeamWin: json["isOtherTeamWin"] as bool,
     );
   }
+  if (json.containsKey("oldWarns")) {
+    return PlayerWarnsChangedGameLogItem(
+      day: json["day"] as int,
+      playerNumber: json["playerNumber"] as int,
+      oldWarns: json["oldWarns"] as int,
+      currentWarns: json["currentWarns"] as int,
+    );
+  }
   throw ArgumentError.value(json, "json", "Unknown game log item");
 }
 
@@ -183,6 +211,14 @@ BaseGameState _gameStateFromJson(Map<String, dynamic> json, {required GameLogVer
         players: players,
         currentPlayerNumber: json["currentPlayerNumber"] as int,
         accusations: (json["accusations"] as Map<String, dynamic>).parseJsonMap(),
+        canOnlyAccuse: switch (version) {
+          GameLogVersion.v0 => false,
+          GameLogVersion.v1 => json["canOnlyAccuse"] as bool,
+        },
+        hasHalfTime: switch (version) {
+          GameLogVersion.v0 => false,
+          GameLogVersion.v1 => json["hasHalfTime"] as bool,
+        },
       ),
     GameStage.voting || GameStage.finalVoting => GameStateVoting(
         stage: stage,

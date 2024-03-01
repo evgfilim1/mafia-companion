@@ -23,21 +23,6 @@ extension _DescribeLogItem on BaseGameLogItem {
     switch (this) {
       case StateChangeGameLogItem(oldState: final oldState, newState: final newState):
         if (oldState != null && !newState.hasStateChanged(oldState)) {
-          for (var i = 0; i < newState.players.length; i++) {
-            final oldWarns = oldState.players[i].warns;
-            final newWarns = newState.players[i].warns;
-            if (oldWarns != newWarns) {
-              if (newWarns > oldWarns) {
-                result.add(
-                  "Игрок #${newState.players[i].number} получил фол: $oldWarns -> $newWarns",
-                );
-              } else {
-                result.add(
-                  "У игрока #${newState.players[i].number} снят фол: $oldWarns -> $newWarns",
-                );
-              }
-            }
-          }
           break;
         }
         switch (oldState) {
@@ -73,6 +58,12 @@ extension _DescribeLogItem on BaseGameLogItem {
           checkedByRole: final checkedByRole,
         ):
         result.add("${checkedByRole.prettyName} проверил игрока #$playerNumber");
+      case PlayerWarnsChangedGameLogItem(:final playerNumber, :final oldWarns, :final currentWarns):
+        if (currentWarns > oldWarns) {
+          result.add("Игроку #$playerNumber выдан фол: $oldWarns -> $currentWarns");
+        } else {
+          result.add("У игрока #$playerNumber снят фол: $oldWarns -> $currentWarns");
+        }
       case PlayerKickedGameLogItem(
           playerNumber: final playerNumber,
           isOtherTeamWin: final isOtherTeamWin,

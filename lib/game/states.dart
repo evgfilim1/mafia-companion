@@ -161,12 +161,16 @@ class GameStateWithPlayer extends BaseGameState {
 class GameStateSpeaking extends BaseGameState {
   final int currentPlayerNumber;
   final LinkedHashMap<int, int> accusations;
+  final bool canOnlyAccuse;
+  final bool hasHalfTime;
 
   const GameStateSpeaking({
     required super.day,
     required super.players,
     required this.currentPlayerNumber,
     required this.accusations,
+    required this.canOnlyAccuse,
+    required this.hasHalfTime,
   }) : super(stage: GameStage.speaking);
 
   @override
@@ -178,10 +182,11 @@ class GameStateSpeaking extends BaseGameState {
           day == other.day &&
           players == other.players &&
           currentPlayerNumber == other.currentPlayerNumber &&
-          accusations == other.accusations;
+          accusations == other.accusations &&
+          canOnlyAccuse == other.canOnlyAccuse;
 
   @override
-  int get hashCode => Object.hash(stage, day, players, currentPlayerNumber, accusations);
+  int get hashCode => Object.hash(stage, day, players, currentPlayerNumber, accusations, canOnlyAccuse,);
 
   @override
   bool hasStateChanged(BaseGameState oldState) =>
@@ -193,12 +198,16 @@ class GameStateSpeaking extends BaseGameState {
     List<Player>? players,
     int? currentPlayerNumber,
     LinkedHashMap<int, int>? accusations,
+    bool? canOnlyAccuse,
+    bool? hasHalfTime,
   }) =>
       GameStateSpeaking(
         day: day ?? this.day,
         players: players ?? this.players,
         currentPlayerNumber: currentPlayerNumber ?? this.currentPlayerNumber,
         accusations: accusations ?? this.accusations,
+        canOnlyAccuse: canOnlyAccuse ?? this.canOnlyAccuse,
+        hasHalfTime: hasHalfTime ?? this.hasHalfTime,
       );
 }
 
