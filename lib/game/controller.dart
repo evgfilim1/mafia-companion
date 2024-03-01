@@ -89,6 +89,9 @@ class Game {
   /// Doesn't change internal state. May throw exceptions if game internal state is inconsistent.
   BaseGameState? get nextStateAssumption {
     if (isGameOver) {
+      if (state.stage == GameStage.finish) {
+        return null;
+      }
       return GameStateFinish(day: state.day, players: state.players, winner: winTeamAssumption);
     }
     switch (state) {
