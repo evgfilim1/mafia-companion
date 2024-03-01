@@ -186,7 +186,14 @@ class GameStateSpeaking extends BaseGameState {
           canOnlyAccuse == other.canOnlyAccuse;
 
   @override
-  int get hashCode => Object.hash(stage, day, players, currentPlayerNumber, accusations, canOnlyAccuse,);
+  int get hashCode => Object.hash(
+        stage,
+        day,
+        players,
+        currentPlayerNumber,
+        accusations,
+        canOnlyAccuse,
+      );
 
   @override
   bool hasStateChanged(BaseGameState oldState) =>
