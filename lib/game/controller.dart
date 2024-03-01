@@ -88,7 +88,7 @@ class Game {
   /// Assumes next game state according to game internal state, and returns it.
   /// Doesn't change internal state. May throw exceptions if game internal state is inconsistent.
   BaseGameState? get nextStateAssumption {
-    if (isGameOver) {
+    if (!state.stage.isAnyOf([GameStage.nightLastWords, GameStage.dayLastWords]) && isGameOver) {
       if (state.stage == GameStage.finish) {
         return null;
       }
