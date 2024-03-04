@@ -6,12 +6,15 @@
 
 ## [Новое][unreleased]
 
+## [v0.3.0-rc.1] - 2024-03-04
+
 ### Добавлено
 
 - Корректная поддержка фолов и дисквалификаций.
 - Другая иконка и название приложения для отладочных версий.
 - Возможность выбрать свой основной цвет приложения.
 - Возможность изменить длительность вибрации или отключить её. Полезно для некоторых устройств.
+- При повторном нажатии на кнопку сброса на экране выбора ролей, все отметки снимаются.
 
 ### Изменено
 
@@ -233,7 +236,8 @@
 - Больше информации об игроке при долгом нажатии на номер.
 - Автоматическая сборка при помощи GitHub Actions.
 
-[unreleased]: https://github.com/evgfilim1/mafia-companion/compare/v0.3.0-rc.0...HEAD
+[unreleased]: https://github.com/evgfilim1/mafia-companion/compare/v0.3.0-rc.1...HEAD
+[v0.3.0-rc.1]: https://github.com/evgfilim1/mafia-companion/releases/tag/v0.3.0-rc.1
 [v0.3.0-rc.0]: https://github.com/evgfilim1/mafia-companion/releases/tag/v0.3.0-rc.0
 [v0.2.0-rc.1]: https://github.com/evgfilim1/mafia-companion/releases/tag/v0.2.0-rc.1
 [v0.2.0-rc.0]: https://github.com/evgfilim1/mafia-companion/releases/tag/v0.2.0-rc.0
