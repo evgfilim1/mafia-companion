@@ -63,6 +63,25 @@ class Game {
         }
       }
     }
+    if (state.stage.isAnyOf([GameStage.nightLastWords, GameStage.dayLastWords])) {
+      for (final event in _log.reversed) {
+        switch (event) {
+          case StateChangeGameLogItem(:final newState):
+            if (!newState.stage.isAnyOf([GameStage.nightLastWords, GameStage.dayLastWords])) {
+              break;
+            }
+          case PlayerKickedGameLogItem(:final playerNumber):
+            final player = players.getByNumber(playerNumber);
+            if (player.role.isMafia) {
+              aliveMafia++;
+            } else {
+              aliveCitizens++;
+            }
+          default:
+            continue;
+        }
+      }
+    }
     if (aliveMafia == 0) {
       return PlayerRole.citizen;
     }
