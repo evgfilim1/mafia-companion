@@ -20,12 +20,6 @@ import "../widgets/orientation_dependent.dart";
 import "../widgets/player_buttons.dart";
 import "../widgets/restart_dialog.dart";
 
-enum _PopupMenuItems {
-  log,
-  notes,
-  roles,
-}
-
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
@@ -154,35 +148,35 @@ class _MainScreenState extends State<MainScreen> {
               tooltip: "Перезапустить игру",
               icon: const Icon(Icons.restart_alt),
             ),
-            PopupMenuButton<_PopupMenuItems>(
-              onSelected: (value) {
-                switch (value) {
-                  case _PopupMenuItems.log:
-                    Navigator.pushNamed(context, "/log");
-                  case _PopupMenuItems.notes:
-                    _showNotes(context);
-                  case _PopupMenuItems.roles:
-                    setState(() => _showRoles = !_showRoles);
-                }
-              },
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: _PopupMenuItems.log,
-                  child: ListTile(
-                    leading: Icon(Icons.list),
-                    title: Text("Журнал игры"),
-                  ),
+            MenuAnchor(
+              builder: (context, controller, child) => IconButton(
+                onPressed: () {
+                  if (controller.isOpen) {
+                    controller.close();
+                  } else {
+                    controller.open();
+                  }
+                },
+                icon: Icon(Icons.adaptive.more),
+                tooltip: MaterialLocalizations.of(context).showMenuTooltip,
+              ),
+              menuChildren: [
+                MenuItemButton(
+                  leadingIcon: const Icon(Icons.list, size: Checkbox.width),
+                  onPressed: controller.isGameInitialized
+                      ? () => Navigator.pushNamed(context, "/log")
+                      : null,
+                  child: const Text("Журнал игры"),
                 ),
-                const PopupMenuItem(
-                  value: _PopupMenuItems.notes,
-                  child: ListTile(
-                    leading: Icon(Icons.sticky_note_2),
-                    title: Text("Заметки"),
-                  ),
+                MenuItemButton(
+                  leadingIcon: const Icon(Icons.sticky_note_2, size: Checkbox.width),
+                  onPressed: () => _showNotes(context),
+                  child: const Text("Заметки"),
                 ),
-                CheckedPopupMenuItem(
-                  value: _PopupMenuItems.roles,
-                  checked: _showRoles,
+                CheckboxMenuButton(
+                  value: _showRoles,
+                  onChanged: (value) => setState(() => _showRoles = value ?? false),
+                  closeOnActivate: false,
                   child: const Text("Показывать роли"),
                 ),
               ],
