@@ -1,3 +1,4 @@
+import "dart:async";
 import "dart:convert";
 
 import "package:file_picker/file_picker.dart";
@@ -10,6 +11,7 @@ import "package:provider/provider.dart";
 import "../game/log.dart";
 import "../game/states.dart";
 import "../utils/bug_report/stub.dart";
+import "../utils/errors.dart";
 import "../utils/game_controller.dart";
 import "../utils/json.dart";
 import "../utils/log.dart";
@@ -107,16 +109,49 @@ class GameLogScreen extends StatelessWidget {
       if (data is Map<String, dynamic> && data.containsKey("packageInfo")) {
         logFromFile = BugReportInfo.fromJson(data).game.log;
       } else if (data is List<dynamic> || data is Map<String, dynamic>) {
-        logFromFile = VersionedGameLog.fromJson(data).log;
+        final VersionedGameLog vgl;
+        try {
+          vgl = VersionedGameLog.fromJson(data);
+        } on UnsupportedGameLogVersion catch (e) {
+          var content = "Версия этого журнала игры не поддерживается.";
+          if (e is RemovedGameLogVersion) {
+            content += " Попробуйте использовать приложение версии <=v${e.lastSupportedAppVersion}";
+          }
+          await showSimpleDialog(
+            context: context,
+            title: const Text("Ошибка"),
+            content: Text(content),
+          );
+          return;
+        }
+        if (!context.mounted) {
+          throw ContextNotMountedError();
+        }
+        if (vgl.version.isDeprecated) {
+          await showSimpleDialog(
+            context: context,
+            title: const Text("Предупреждение"),
+            content: const Text(
+              "Загрузка журналов игр старого формата устарела и скоро будет невозможна",
+            ),
+          );
+        }
+        logFromFile = vgl.log;
       } else {
         throw ArgumentError("Unknown data: ${data.runtimeType}, [0]=${rawJsonString[0]}");
       }
     } catch (e, s) {
+      if (!context.mounted) {
+        throw ContextNotMountedError();
+      }
       showSnackBar(context, const SnackBar(content: Text("Ошибка загрузки журнала")));
       _log.error(
         "Error loading game log: e=$e\n$s",
       );
       return;
+    }
+    if (!context.mounted) {
+      throw ContextNotMountedError();
     }
     await Navigator.push(
       context,

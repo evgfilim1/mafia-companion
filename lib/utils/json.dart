@@ -3,17 +3,21 @@ import "dart:collection";
 import "../game/log.dart";
 import "../game/player.dart";
 import "../game/states.dart";
+import "errors.dart";
 
 enum GameLogVersion {
-  v0(0),
+  // TODO: remove
+  v0(0, isDeprecated: true, lastSupportedVersion: null),
   v1(1),
   ;
 
   static const latest = v1;
 
   final int value;
+  final bool isDeprecated;
+  final String? lastSupportedVersion;
 
-  const GameLogVersion(this.value);
+  const GameLogVersion(this.value, {this.isDeprecated = false, this.lastSupportedVersion});
 
   factory GameLogVersion.byValue(int value) => values.firstWhere(
         (e) => e.value == value,
@@ -21,6 +25,27 @@ enum GameLogVersion {
           "Unknown value, must be one of: ${values.map((e) => e.value).join(", ")}",
         ),
       );
+
+  static GameLogVersion detectFromJson(dynamic json) {
+    final versionInt = switch (json) {
+      Map<String, dynamic>() => json["version"] as int,
+      List<dynamic>() => 0,
+      _ => throw TypeError(),
+    };
+    final GameLogVersion version;
+    try {
+      version = GameLogVersion.byValue(versionInt);
+    } on ArgumentError {
+      throw UnsupportedGameLogVersion(version: versionInt);
+    }
+    if (version.lastSupportedVersion != null) {
+      throw RemovedGameLogVersion(
+        version: version.value,
+        lastSupportedAppVersion: version.lastSupportedVersion!,
+      );
+    }
+    return version;
+  }
 }
 
 extension MapToJson<T> on Map<int, T> {
@@ -299,18 +324,9 @@ class VersionedGameLog {
       };
 
   factory VersionedGameLog.fromJson(dynamic json, {GameLogVersion? requiredVersion}) {
-    final logVersionInt = switch (json) {
-      Map<String, dynamic>() => json["version"] as int,
-      List<dynamic>() => 0,
-      _ => throw UnsupportedError("Unexpected type: ${json.runtimeType}"),
-    };
-    final logVersion = GameLogVersion.byValue(logVersionInt);
+    final logVersion = GameLogVersion.detectFromJson(json);
     if (requiredVersion != null && logVersion != requiredVersion) {
-      throw ArgumentError.value(
-        logVersion,
-        "logVersion",
-        "Expected $requiredVersion, but got $logVersion",
-      );
+      throw StateError("Expected $requiredVersion, but got $logVersion");
     }
     final logData = switch (logVersion) {
       GameLogVersion.v0 => (json as List<dynamic>)
