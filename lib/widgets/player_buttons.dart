@@ -8,13 +8,24 @@ import "../utils/ui.dart";
 import "orientation_dependent.dart";
 import "player_button.dart";
 
-class PlayerButtons extends OrientationDependentWidget {
+class PlayerButtons extends StatefulWidget {
   final bool showRoles;
 
   const PlayerButtons({
     super.key,
     this.showRoles = false,
   });
+
+  @override
+  State<PlayerButtons> createState() => _PlayerButtonsState();
+}
+
+class _PlayerButtonsState extends OrientationDependentState<PlayerButtons> {
+  bool _expanded = false;
+
+  _PlayerButtonsState();
+
+  bool get showRoles => widget.showRoles;
 
   void _onPlayerButtonTap(BuildContext context, int playerNumber) {
     final controller = context.read<GameController>();
@@ -83,15 +94,17 @@ class PlayerButtons extends OrientationDependentWidget {
           ? () => _onPlayerButtonTap(context, playerNumber)
           : null,
       showRole: showRoles,
+      expanded: _expanded,
     );
   }
 
   @override
   Widget buildPortrait(BuildContext context) {
     final controller = context.watch<GameController>();
-    const itemsPerRow = 5;
+    final itemsPerRow = _expanded ? 2 : 5;
     final totalPlayers = controller.totalPlayersCount;
-    final size = (MediaQuery.of(context).size.width / itemsPerRow).floorToDouble();
+    final width = (MediaQuery.of(context).size.width / itemsPerRow).floorToDouble();
+    final height = (MediaQuery.of(context).size.width / 5).floorToDouble();
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -101,8 +114,8 @@ class PlayerButtons extends OrientationDependentWidget {
             children: [
               for (var j = i; j < i + itemsPerRow && j < totalPlayers; j++)
                 SizedBox(
-                  width: size,
-                  height: size,
+                  width: width,
+                  height: height,
                   child: Padding(
                     padding: const EdgeInsets.all(4),
                     child:
@@ -110,6 +123,12 @@ class PlayerButtons extends OrientationDependentWidget {
                   ),
                 ),
             ],
+          ),
+        if (totalPlayers > 0)
+          TextButton.icon(
+            onPressed: () => setState(() => _expanded = !_expanded),
+            icon: Icon(_expanded ? Icons.expand_less : Icons.expand_more),
+            label: Text(_expanded ? "Свернуть" : "Развернуть"),
           ),
       ],
     );

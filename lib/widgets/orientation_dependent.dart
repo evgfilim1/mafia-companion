@@ -15,3 +15,17 @@ abstract class OrientationDependentWidget extends StatelessWidget {
     return buildLandscape(context);
   }
 }
+
+abstract class OrientationDependentState<T extends StatefulWidget> extends State<T> {
+  Widget buildPortrait(BuildContext context);
+
+  Widget buildLandscape(BuildContext context);
+
+  @override
+  Widget build(BuildContext context) {
+    if (MediaQuery.of(context).orientation == Orientation.portrait) {
+      return buildPortrait(context);
+    }
+    return buildLandscape(context);
+  }
+}
