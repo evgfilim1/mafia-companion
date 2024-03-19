@@ -23,7 +23,7 @@ class PlayersView with IterableMixin<Player> {
   int get aliveCount => _players.where((player) => player.isAlive).length;
 
   int get aliveMafiaCount =>
-      _players.where((player) => player.role.isMafia && player.isAlive).length;
+      _players.where((player) => player.role.team == RoleTeam.mafia && player.isAlive).length;
 
   Player get don => _players.singleWhere((player) => player.role == PlayerRole.don);
 
@@ -36,8 +36,8 @@ class PlayersView with IterableMixin<Player> {
       _players.where((player) => player.role == PlayerRole.mafia).toUnmodifiableList();
 
   List<Player> get mafiaTeam =>
-      _players.where((player) => player.role.isMafia).toUnmodifiableList();
+      _players.where((player) => player.role.team == RoleTeam.mafia).toUnmodifiableList();
 
   List<Player> get citizenTeam =>
-      _players.where((player) => player.role.isCitizen).toUnmodifiableList();
+      _players.where((player) => player.role.team == RoleTeam.citizen).toUnmodifiableList();
 }

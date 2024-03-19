@@ -14,18 +14,25 @@ const roles = {
 final rolesList =
     roles.entries.expand((entry) => List.filled(entry.value, entry.key)).toUnmodifiableList();
 
-enum PlayerRole {
+enum RoleTeam {
   mafia,
-  don,
-  sheriff,
   citizen,
   ;
 
-  /// Returns true if this role is one of [PlayerRole.mafia] or [PlayerRole.don]
-  bool get isMafia => isAnyOf(const [PlayerRole.mafia, PlayerRole.don]);
+  factory RoleTeam.byName(String name) => RoleTeam.values.singleWhere((e) => e.name == name);
+}
 
-  /// Returns true if this role is one of [PlayerRole.citizen] or [PlayerRole.sheriff]
-  bool get isCitizen => isAnyOf(const [PlayerRole.citizen, PlayerRole.sheriff]);
+enum PlayerRole {
+  mafia(RoleTeam.mafia),
+  don(RoleTeam.mafia),
+  sheriff(RoleTeam.citizen),
+  citizen(RoleTeam.citizen),
+  ;
+
+  /// The team this role belongs to.
+  final RoleTeam team;
+
+  const PlayerRole(this.team);
 
   factory PlayerRole.byName(String name) => PlayerRole.values.singleWhere((e) => e.name == name);
 }

@@ -50,9 +50,8 @@ class Game {
   /// Returns convenient players view.
   PlayersView get players => PlayersView(state.players);
 
-  /// Assumes team that will win if game ends right now. Returns [PlayerRole.mafia],
-  /// [PlayerRole.citizen] or `null` if the game can't end right now.
-  PlayerRole? get winTeamAssumption {
+  /// Assumes team that will win if game ends right now. Returns `null` if the game can't end now.
+  RoleTeam? get winTeamAssumption {
     var aliveMafia = players.aliveMafiaCount;
     var aliveCitizens = players.aliveCount - aliveMafia;
     if (state
@@ -66,7 +65,7 @@ class Game {
             )) {
       final player = players.getByNumber(playerNumber);
       if (player.isAlive) {
-        if (player.role.isMafia) {
+        if (player.role.team == RoleTeam.mafia) {
           aliveMafia--;
         } else {
           aliveCitizens--;
@@ -86,7 +85,7 @@ class Game {
             }
           case PlayerKickedGameLogItem(:final playerNumber):
             final player = players.getByNumber(playerNumber);
-            if (player.role.isMafia) {
+            if (player.role.team == RoleTeam.mafia) {
               aliveMafia++;
             } else {
               aliveCitizens++;
@@ -97,10 +96,10 @@ class Game {
       }
     }
     if (aliveMafia == 0) {
-      return PlayerRole.citizen;
+      return RoleTeam.citizen;
     }
     if (aliveCitizens <= aliveMafia) {
-      return PlayerRole.mafia;
+      return RoleTeam.mafia;
     }
     return null;
   }
@@ -646,8 +645,7 @@ class Game {
     }
     final newPlayers = List.of(state.players);
     final targetPlayer = players.getByNumber(number);
-    for (final player
-        in newPlayers.where((p) => targetPlayer.role.isMafia ? p.role.isMafia : p.role.isCitizen)) {
+    for (final player in newPlayers.where((p) => targetPlayer.role.team == p.role.team)) {
       newPlayers[player.number - 1] = player.copyWith(warns: 4, isAlive: false);
     }
     _log.add(PlayerKickedGameLogItem(day: state.day, playerNumber: number, isOtherTeamWin: true));
@@ -671,7 +669,7 @@ class Game {
         return checkedPlayer.role == PlayerRole.sheriff;
       }
       if (activePlayer.role == PlayerRole.sheriff) {
-        return checkedPlayer.role.isMafia;
+        return checkedPlayer.role.team == RoleTeam.mafia;
       }
       throw AssertionError();
     }

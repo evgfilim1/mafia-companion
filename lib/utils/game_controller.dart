@@ -43,7 +43,7 @@ class GameController with ChangeNotifier {
 
   int get totalVotes => _game?.totalVotes ?? 0;
 
-  PlayerRole? get winTeamAssumption => _game?.winTeamAssumption;
+  RoleTeam? get winTeamAssumption => _game?.winTeamAssumption;
 
   List<Player> get players => _game?.players.toUnmodifiableList() ?? const [];
 

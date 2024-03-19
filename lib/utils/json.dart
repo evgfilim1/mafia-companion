@@ -264,7 +264,7 @@ BaseGameState _gameStateFromJson(Map<String, dynamic> json, {required GameLogVer
     GameStage.finish => GameStateFinish(
         day: day,
         players: players,
-        winner: json["winner"] != null ? PlayerRole.byName(json["winner"]! as String) : null,
+        winner: json["winner"] != null ? RoleTeam.byName(json["winner"]! as String) : null,
       ),
   };
 }

@@ -38,17 +38,9 @@ class _PlayerButtonsState extends OrientationDependentState<PlayerButtons> {
       final result = controller.checkPlayer(playerNumber);
       final String msg;
       if (p.role == PlayerRole.don) {
-        if (result) {
-          msg = "ШЕРИФ";
-        } else {
-          msg = "НЕ шериф";
-        }
+        msg = result ? "ШЕРИФ" : "НЕ шериф";
       } else if (p.role == PlayerRole.sheriff) {
-        if (player.role.isMafia) {
-          msg = "МАФИЯ 👎";
-        } else {
-          msg = "НЕ мафия 👍";
-        }
+        msg = result ? "МАФИЯ 👎" : "НЕ мафия 👍";
       } else {
         throw AssertionError();
       }
@@ -76,7 +68,8 @@ class _PlayerButtonsState extends OrientationDependentState<PlayerButtons> {
       GameStateWithPlayers(playerNumbers: final ps) ||
       GameStateKnockoutVoting(playerNumbers: final ps) =>
         ps.contains(playerNumber),
-      GameStateNightKill() => controller.getPlayerByNumber(playerNumber).role.isMafia,
+      GameStateNightKill() =>
+        controller.getPlayerByNumber(playerNumber).role.team == RoleTeam.mafia,
     };
     final isSelected = switch (gameState) {
       GameStateSpeaking(accusations: final accusations) => accusations.containsValue(playerNumber),

@@ -128,10 +128,9 @@ class BottomGameStateWidget extends StatelessWidget {
 
     if (gameState case GameStateFinish(winner: final winner)) {
       final resultText = switch (winner) {
-        PlayerRole.citizen => "Победа команды мирных жителей",
-        PlayerRole.mafia => "Победа команды мафии",
+        RoleTeam.citizen => "Победа команды мирных жителей",
+        RoleTeam.mafia => "Победа команды мафии",
         null => "Ничья",
-        PlayerRole.don || PlayerRole.sheriff => throw AssertionError(),
       };
       return Column(
         mainAxisSize: MainAxisSize.min,

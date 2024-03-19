@@ -577,7 +577,7 @@ class GameStateWithIterablePlayers extends BaseGameState {
 /// [stage] is always [GameStage.finish].
 @immutable
 class GameStateFinish extends BaseGameState {
-  final PlayerRole? winner;
+  final RoleTeam? winner;
 
   const GameStateFinish({
     required super.day,
@@ -605,7 +605,7 @@ class GameStateFinish extends BaseGameState {
   GameStateFinish copyWith({
     int? day,
     List<Player>? players,
-    PlayerRole? winner,
+    RoleTeam? winner,
   }) =>
       GameStateFinish(
         day: day ?? this.day,
