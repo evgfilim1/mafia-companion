@@ -219,19 +219,19 @@ class _ChooseRolesScreenState extends State<ChooseRolesScreen> {
                   (role) {
                     final errorText = _getErrorText(role);
                     return Tooltip(
-                    message: errorText ?? "",
-                    child: Center(
-                      child: Text(
-                        role.prettyName,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: errorText != null ? Colors.red : null,
+                      message: errorText ?? "",
+                      child: Center(
+                        child: Text(
+                          role.prettyName,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: errorText != null ? Colors.red : null,
+                          ),
                         ),
                       ),
-                    ),
-                  );
+                    );
                   },
                 ),
               ],
