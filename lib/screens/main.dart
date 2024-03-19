@@ -86,7 +86,7 @@ class _MainScreenState extends State<MainScreen> {
       throw ContextNotMountedError();
     }
     if (restartGame ?? false) {
-      context.read<GameController>().restart();
+      context.read<GameController>().stopGame();
       showSnackBar(context, const SnackBar(content: Text("Игра перезапущена")));
     }
   }
@@ -234,10 +234,10 @@ class _MainScreenMainBodyContent extends StatelessWidget {
         // FIXME: timer resets when the screen is rotated
         const Expanded(child: Center(child: GameStateInfo())),
         BottomControlBar(
-          backLabel: previousState?.prettyName ?? "(отмена невозможна)",
+          backLabel: previousState?.prettyName ?? "(недоступно)",
           onTapBack: previousState != null ? controller.setPreviousState : null,
           onTapNext: nextStateAssumption != null ? controller.setNextState : null,
-          nextLabel: nextStateAssumption?.prettyName ?? "(игра окончена)",
+          nextLabel: nextStateAssumption?.prettyName ?? "(недоступно)",
         ),
       ],
     );

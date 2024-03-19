@@ -4,6 +4,16 @@ import "package:flutter/foundation.dart";
 
 import "../utils/extensions.dart";
 
+const roles = {
+  PlayerRole.citizen: 6,
+  PlayerRole.mafia: 2,
+  PlayerRole.sheriff: 1,
+  PlayerRole.don: 1,
+};
+
+final rolesList =
+    roles.entries.expand((entry) => List.filled(entry.value, entry.key)).toUnmodifiableList();
+
 enum PlayerRole {
   mafia,
   don,
@@ -26,24 +36,25 @@ class Player {
   final int number;
   final bool isAlive;
   final int warns;
+  final String? nickname;
 
   const Player({
     required this.role,
     required this.number,
+    required this.nickname,
     this.isAlive = true,
     this.warns = 0,
   });
 
   Player copyWith({
-    PlayerRole? role,
-    int? number,
     bool? isAlive,
     int? warns,
   }) =>
       Player(
         isAlive: isAlive ?? this.isAlive,
-        role: role ?? this.role,
-        number: number ?? this.number,
+        role: role,
+        number: number,
+        nickname: nickname,
         warns: warns ?? this.warns,
       );
 
@@ -61,32 +72,18 @@ class Player {
 }
 
 List<Player> generatePlayers({
-  Map<PlayerRole, int> roles = const {
-    PlayerRole.citizen: 6,
-    PlayerRole.mafia: 2,
-    PlayerRole.sheriff: 1,
-    PlayerRole.don: 1,
-  },
+  List<String?>? nicknames,
   Random? random,
 }) {
-  if (roles[PlayerRole.sheriff]! + roles[PlayerRole.don]! != 2) {
-    throw ArgumentError("Only one sheriff and one don are allowed");
-  }
-  if (roles[PlayerRole.mafia]! < 1) {
-    throw ArgumentError("At least one mafia is required");
-  }
-  if (roles[PlayerRole.mafia]! >= roles[PlayerRole.citizen]!) {
-    throw ArgumentError("Too many mafia");
-  }
-  final playerRoles = roles.entries
-      .expand((entry) => List.filled(entry.value, entry.key))
-      .toList(growable: false)
-    ..shuffle(random);
-  return playerRoles
-      .asMap()
-      .entries
-      .map((entry) => Player(role: entry.value, number: entry.key + 1))
-      .toList(growable: false)
-    ..sort((a, b) => a.number.compareTo(b.number))
-    ..toUnmodifiableList();
+  final playerRoles = List.of(rolesList)..shuffle(random);
+  return [
+    for (var i = 0; i < playerRoles.length; i++)
+      Player(
+        role: playerRoles[i],
+        number: i + 1,
+        nickname: nicknames?.elementAt(i),
+        isAlive: true,
+        warns: 0,
+      ),
+  ].toUnmodifiableList();
 }

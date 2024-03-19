@@ -135,6 +135,7 @@ extension PlayerJson on Player {
   Map<String, dynamic> toJson() => {
         "role": role.name,
         "number": number,
+        "nickname": nickname,
         "isAlive": isAlive,
         "warns": warns,
       };
@@ -271,6 +272,7 @@ BaseGameState _gameStateFromJson(Map<String, dynamic> json, {required GameLogVer
 Player _playerFromJson(Map<String, dynamic> json, {required GameLogVersion version}) => Player(
       role: PlayerRole.byName(json["role"] as String),
       number: json["number"] as int,
+      nickname: json["nickname"] as String?,
       isAlive: json["isAlive"] as bool,
       warns: json["warns"] as int,
     );

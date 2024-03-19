@@ -52,11 +52,16 @@ jobs:
       - name: Get Flutter dependencies
         run: flutter pub get
 
+      - name: Generate missing files
+        run: dart run build_runner build
+
       - name: Analyze code
         run: flutter analyze
 
       - name: Check formatting
-        run: dart format --set-exit-if-changed --output none --line-length=100 lib/
+        run: >
+          find lib/ -name '*.dart' -not -name '*.g.dart'
+          | xargs dart format --set-exit-if-changed --output none --line-length=100
 
   build-apk:
     name: Build app for Android
@@ -82,6 +87,9 @@ jobs:
 
       - name: Get Flutter dependencies
         run: flutter pub get
+
+      - name: Generate missing files
+        run: dart run build_runner build
 
       - name: Decode keystore file
         env:
@@ -127,6 +135,9 @@ jobs:
 
       - name: Get Flutter dependencies
         run: flutter pub get
+
+      - name: Generate missing files
+        run: dart run build_runner build
 
       - name: Build app for web
         run: flutter build web

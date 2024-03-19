@@ -10,6 +10,7 @@ import "../utils/errors.dart";
 import "../utils/game_controller.dart";
 import "../utils/settings.dart";
 import "../utils/ui.dart";
+import "confirmation_dialog.dart";
 import "counter.dart";
 import "player_timer.dart";
 import "restart_dialog.dart";
@@ -19,13 +20,13 @@ class GameStateInfo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final gameState = context.watch<GameController>().state;
+    final controller = context.watch<GameController>();
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          gameState.prettyName,
+          controller.isGameInitialized ? controller.state.prettyName : "Игра не начата",
           style: const TextStyle(fontSize: 32),
           textAlign: TextAlign.center,
         ),
@@ -41,25 +42,53 @@ class GameStateInfo extends StatelessWidget {
 class BottomGameStateWidget extends StatelessWidget {
   const BottomGameStateWidget({super.key});
 
+  Future<void> _onStartGamePressed(BuildContext context, GameController controller) async {
+    final randomizeSeats = await showDialog<bool>(
+      context: context,
+      builder: (context) => const ConfirmationDialog(
+        title: Text("Провести случайную рассадку?"),
+        // todo: remember choice
+        content: Text("Перед началом игры можно провести случайную рассадку"),
+      ),
+    );
+    if (randomizeSeats ?? false) {
+      if (!context.mounted) {
+        throw ContextNotMountedError();
+      }
+      await Navigator.pushNamed(context, "/seats");
+    }
+    if (!context.mounted) {
+      throw ContextNotMountedError();
+    }
+    await Navigator.pushNamed(context, "/chooseRoles");
+    if (controller.rolesSeed != null) {
+      // roles were initialized, so we can start the game
+      controller.startNewGame();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<GameController>();
     final settings = context.watch<SettingsModel>();
-    final gameState = controller.state;
 
-    if (gameState.stage == GameStage.prepare) {
+    if (!controller.isGameInitialized) {
       return Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           TextButton(
-            onPressed: () => Navigator.pushNamed(context, "/seats"),
-            child: const Text("Случайная рассадка", style: TextStyle(fontSize: 20)),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pushNamed(context, "/chooseRoles"),
-            child: const Text("Раздача ролей", style: TextStyle(fontSize: 20)),
+            onPressed: () => _onStartGamePressed(context, controller),
+            child: const Text("Начать игру", style: TextStyle(fontSize: 20)),
           ),
         ],
+      );
+    }
+
+    final gameState = controller.state;
+    if (gameState is GameStatePrepare) {
+      return TextButton(
+        onPressed: () => Navigator.pushNamed(context, "/roles"),
+        child: const Text("Раздача ролей", style: TextStyle(fontSize: 20)),
       );
     }
 
@@ -102,7 +131,7 @@ class BottomGameStateWidget extends StatelessWidget {
         PlayerRole.citizen => "Победа команды мирных жителей",
         PlayerRole.mafia => "Победа команды мафии",
         null => "Ничья",
-        _ => throw AssertionError(),
+        PlayerRole.don || PlayerRole.sheriff => throw AssertionError(),
       };
       return Column(
         mainAxisSize: MainAxisSize.min,
@@ -115,7 +144,7 @@ class BottomGameStateWidget extends StatelessWidget {
                 builder: (context) => const RestartGameDialog(),
               );
               if (restartGame ?? false) {
-                controller.restart();
+                controller.stopGame();
                 if (!context.mounted) {
                   throw ContextNotMountedError();
                 }

@@ -108,12 +108,19 @@ class SettingsScreen extends StatelessWidget {
             leading: const Icon(Icons.bug_report),
             title: const Text("Сообщить о проблеме"),
             onTap: () {
+              if (!controller.isGameInitialized) {
+                showSnackBar(
+                  context,
+                  const SnackBar(content: Text("Это работает только во время игры")),
+                );
+                return;
+              }
               showSimpleDialog(
                 context: context,
                 title: const Text("Сообщить о проблеме"),
                 content: Text(
                   "Для сообщения о проблеме нужно поделиться файлом мне в ЛС в Telegram.\n\n"
-                  "Зерно генерации ролей: ${controller.playerRandomSeed}",
+                  "Зерно генерации ролей: ${controller.rolesSeed}",
                 ),
                 extraActions: [
                   TextButton(

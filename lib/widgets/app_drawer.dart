@@ -24,18 +24,10 @@ class AppDrawer extends StatelessWidget {
           ),
           ListTile(
             leading: const Icon(Icons.group),
-            title: const Text("Случайная рассадка"),
+            title: const Text("Игроки"),
             onTap: () {
               Navigator.pop(context);
-              Navigator.pushNamed(context, "/seats");
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.person),
-            title: const Text("Раздача ролей"),
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.pushNamed(context, "/roles");
+              Navigator.pushNamed(context, "/players");
             },
           ),
           ListTile(

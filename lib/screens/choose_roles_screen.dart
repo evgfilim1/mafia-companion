@@ -5,22 +5,18 @@ import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 
 import "../game/player.dart";
+import "../utils/db/adapters.dart";
 import "../utils/errors.dart";
 import "../utils/extensions.dart";
 import "../utils/find_seed.dart";
 import "../utils/game_controller.dart";
 import "../utils/ui.dart";
+import "../widgets/confirmation_dialog.dart";
 
-class _ValidationErrorInfo {
-  final String message;
-  final int? index;
-  final PlayerRole? role;
-
-  const _ValidationErrorInfo({
-    required this.message,
-    required this.index,
-    required this.role,
-  });
+enum _ValidationErrorType {
+  tooMany,
+  tooFew,
+  missing,
 }
 
 class ChooseRolesScreen extends StatefulWidget {
@@ -33,19 +29,21 @@ class ChooseRolesScreen extends StatefulWidget {
 class _ChooseRolesScreenState extends State<ChooseRolesScreen> {
   final _roles = List<Set<PlayerRole>>.generate(
     10,
-    (_) => {},
+    (_) => PlayerRole.values.toSet(),
     growable: false,
   );
   var _isInProgress = false;
-  final _errors = <_ValidationErrorInfo>[];
+  final _errorsByRole = <PlayerRole, _ValidationErrorType>{};
+  final _errorsByIndex = <int>{};
+  final _chosenNicknames = List<String?>.generate(rolesList.length, (index) => null);
 
   @override
   void initState() {
     super.initState();
     final controller = context.read<GameController>();
     final roles = controller.players.map((p) => p.role).toUnmodifiableList();
-    for (var i = 0; i < 10; i++) {
-      _roles[i].add(roles[i]);
+    for (final (i, role) in roles.indexed) {
+      _roles[i] = {role};
     }
   }
 
@@ -56,142 +54,142 @@ class _ChooseRolesScreenState extends State<ChooseRolesScreen> {
       } else {
         _roles[index].remove(role);
       }
-      _errors
-        ..clear()
-        ..addAll(_rolesValidator());
+      _validate();
     });
   }
 
-  List<_ValidationErrorInfo> _rolesValidator() {
-    final errors = <_ValidationErrorInfo>[];
+  /// Validates roles. Must be called from `setState` to update errors.
+  void _validate() {
+    final byRole = <PlayerRole, _ValidationErrorType>{};
+    final byIndex = <int>{};
 
     // check if no roles are selected for player
     for (var i = 0; i < 10; i++) {
       if (_roles[i].isEmpty) {
-        errors.add(
-          _ValidationErrorInfo(
-            message: "Игрок ${i + 1} не может быть без роли",
-            index: i,
-            role: null,
-          ),
-        );
+        byIndex.add(i);
       }
     }
 
-    const requiredRoles = <PlayerRole, int>{
-      PlayerRole.mafia: 2,
-      PlayerRole.don: 1,
-      PlayerRole.sheriff: 1,
-      PlayerRole.citizen: 6,
-    };
     // check if role is not chosen at least given amount of times
     final counter = <PlayerRole, int>{
       for (final role in PlayerRole.values) role: 0,
     };
-    for (var i = 0; i < 10; i++) {
-      for (final role in _roles[i]) {
+
+    for (final rolesChoice in _roles) {
+      if (rolesChoice.length == 1) {
+        counter.update(rolesChoice.single, (value) => value + 1);
+      }
+    }
+    for (final entry in counter.entries) {
+      final requiredCount = roles[entry.key]!;
+      if (entry.value > requiredCount) {
+        byRole[entry.key] = _ValidationErrorType.tooMany;
+      }
+    }
+    for (final rolesChoice in _roles) {
+      if (rolesChoice.length <= 1) {
+        continue;
+      }
+      for (final role in rolesChoice) {
         counter.update(role, (value) => value + 1);
       }
     }
-    for (final role in PlayerRole.values) {
-      if (counter[role]! < requiredRoles[role]!) {
-        errors.add(
-          _ValidationErrorInfo(
-            message: 'Роль "${role.prettyName}" должна быть выбрана как минимум'
-                " ${requiredRoles[role]} раз",
-            index: null,
-            role: role,
-          ),
-        );
+    for (final entry in counter.entries) {
+      final minimumCount = roles[entry.key]!;
+      if (entry.value < minimumCount) {
+        byRole[entry.key] =
+            entry.value > 0 ? _ValidationErrorType.tooFew : _ValidationErrorType.missing;
       }
     }
 
-    // check if single role is not chosen more than given amount of times
-    counter.updateAll((key, value) => 0);
-    for (var i = 0; i < 10; i++) {
-      if (_roles[i].length != 1) {
-        continue;
-      }
-      counter.update(_roles[i].single, (value) => value + 1);
-    }
-    for (final role in PlayerRole.values) {
-      if (counter[role]! > requiredRoles[role]!) {
-        errors.add(
-          _ValidationErrorInfo(
-            message: 'Роль "${role.prettyName}" не может быть выбрана больше'
-                " ${requiredRoles[role]} раз",
-            index: null,
-            role: role,
-          ),
-        );
-      }
-    }
-
-    return errors;
+    _errorsByRole
+      ..clear()
+      ..addAll(byRole);
+    _errorsByIndex
+      ..clear()
+      ..addAll(byIndex);
   }
 
   Future<void> _onFabPressed(BuildContext context) async {
-    final errors = _rolesValidator();
-    setState(() {
-      _errors
-        ..clear()
-        ..addAll(errors);
-    });
-    if (errors.isNotEmpty) {
+    setState(_validate);
+    if (_errorsByIndex.isNotEmpty || _errorsByRole.isNotEmpty) {
       showSnackBar(context, const SnackBar(content: Text("Для продолжения исправьте ошибки")));
       return;
     }
     final controller = context.read<GameController>();
-    final initialSeed = controller.playerRandomSeed;
-    setState(() {
-      _isInProgress = true;
-    });
+    final initialSeed = controller.rolesSeed ?? getNewSeed();
+    setState(() => _isInProgress = true);
     final newSeed = await compute(findSeedIsolateWrapper, (initialSeed, _roles));
-    setState(() {
-      _isInProgress = false;
-    });
+    setState(() => _isInProgress = false);
+    if (!context.mounted) {
+      throw ContextNotMountedError();
+    }
     if (newSeed == null) {
-      if (!context.mounted) {
-        throw ContextNotMountedError();
-      }
       showSnackBar(
         context,
         const SnackBar(content: Text("Невозможно применить выбранные роли")),
       );
       return;
     }
-    controller.restart(seed: newSeed);
+    controller
+      ..rolesSeed = newSeed
+      ..nicknames = _chosenNicknames;
+    final showRoles = await showDialog<bool>(
+      context: context,
+      builder: (context) => const ConfirmationDialog(
+        title: Text("Показать роли?"),
+        content: Text("После применения ролей можно провести их раздачу игрокам"),
+      ),
+    );
     if (!context.mounted) {
       throw ContextNotMountedError();
     }
-    showSnackBar(context, const SnackBar(content: Text("Роли применены")));
-    unawaited(Navigator.pushReplacementNamed(context, "/roles"));
+    if (showRoles ?? false) {
+      await Navigator.pushNamed(context, "/roles");
+      if (!context.mounted) {
+        throw ContextNotMountedError();
+      }
+    }
+    Navigator.pop(context);
   }
 
   void _toggleAll() {
-    final checked = !_roles.every((rs) => rs.length == PlayerRole.values.length);
+    final anyChecked = _roles.any((rs) => rs.isNotEmpty);
     setState(() {
       for (var i = 0; i < 10; i++) {
-        if (checked) {
-          _roles[i] = Set.of(PlayerRole.values);
-        } else {
+        if (anyChecked) {
           _roles[i].clear();
+        } else {
+          _roles[i] = PlayerRole.values.toSet();
         }
       }
-      _errors
-        ..clear()
-        ..addAll(_rolesValidator());
+      _validate();
     });
   }
 
+  String? _getErrorText(PlayerRole role) => switch (_errorsByRole[role]) {
+        _ValidationErrorType.tooMany => "Выбрана более ${roles[role]!} раз(-а)",
+        _ValidationErrorType.tooFew => "Выбрана менее ${roles[role]!} раз(-а)",
+        _ValidationErrorType.missing => "Роль не выбрана",
+        null => null,
+      };
+
   @override
   Widget build(BuildContext context) {
-    final errorsByRole = <PlayerRole, List<_ValidationErrorInfo>>{
-      for (final role in PlayerRole.values) role: _errors.where((e) => e.role == role).toList(),
-    };
-    final errorsByIndex = <int, List<_ValidationErrorInfo>>{
-      for (var i = 0; i < 10; i++) i: _errors.where((e) => e.index == i).toList(),
-    };
+    final players = context.watch<PlayerList>();
+    final nicknameEntries = [
+      const DropdownMenuEntry(
+        value: null,
+        label: "",
+        labelWidget: Text("(*без никнейма*)"),
+      ),
+      for (final nickname in players.data.map((p) => p.nickname))
+        DropdownMenuEntry(
+          value: nickname,
+          label: nickname,
+          enabled: !_chosenNicknames.contains(nickname),
+        ),
+    ];
     return Scaffold(
       appBar: AppBar(
         title: const Text("Выбор ролей"),
@@ -203,71 +201,73 @@ class _ChooseRolesScreenState extends State<ChooseRolesScreen> {
           ),
         ],
       ),
-      body: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Table(
-            defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-            children: [
+      body: SingleChildScrollView(
+        child: Table(
+          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+          columnWidths: const {
+            0: FlexColumnWidth(7),
+            1: FlexColumnWidth(2),
+            2: FlexColumnWidth(2),
+            3: FlexColumnWidth(2),
+            4: FlexColumnWidth(2),
+          },
+          children: [
+            TableRow(
+              children: [
+                const Center(child: Text("Никнейм")),
+                ...PlayerRole.values.map(
+                  (role) {
+                    final errorText = _getErrorText(role);
+                    return Tooltip(
+                    message: errorText ?? "",
+                    child: Center(
+                      child: Text(
+                        role.prettyName,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: errorText != null ? Colors.red : null,
+                        ),
+                      ),
+                    ),
+                  );
+                  },
+                ),
+              ],
+            ),
+            for (var i = 0; i < 10; i++)
               TableRow(
                 children: [
-                  const SizedBox.shrink(),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                    child: DropdownMenu(
+                      expandedInsets: EdgeInsets.zero,
+                      enableFilter: true,
+                      enableSearch: true,
+                      label: Text("Игрок ${i + 1}"),
+                      menuHeight: 256,
+                      inputDecorationTheme: const InputDecorationTheme(
+                        isDense: true,
+                        border: OutlineInputBorder(),
+                      ),
+                      errorText: _errorsByIndex.contains(i) ? "Роль не выбрана" : null,
+                      requestFocusOnTap: true,
+                      initialSelection: _chosenNicknames[i],
+                      dropdownMenuEntries: nicknameEntries,
+                      onSelected: (value) => setState(() => _chosenNicknames[i] = value),
+                    ),
+                  ),
                   for (final role in PlayerRole.values)
-                    Text(
-                      role.prettyName,
-                      textAlign: TextAlign.center,
-                      style: errorsByRole[role]!.isNotEmpty
-                          ? const TextStyle(color: Colors.red)
-                          : null,
+                    Checkbox(
+                      value: _roles[i].contains(role),
+                      onChanged: (value) => _changeValue(i, role, value!),
+                      isError: _errorsByRole.containsKey(role) || _errorsByIndex.contains(i),
                     ),
                 ],
               ),
-              for (var i = 0; i < 10; i++)
-                TableRow(
-                  children: [
-                    Text(
-                      "Игрок ${i + 1}",
-                      textAlign: TextAlign.center,
-                      style:
-                          errorsByIndex[i]!.isNotEmpty ? const TextStyle(color: Colors.red) : null,
-                    ),
-                    for (final role in PlayerRole.values)
-                      Checkbox(
-                        value: _roles[i].contains(role),
-                        onChanged: (value) => _changeValue(i, role, value!),
-                        isError: _errors
-                            .any((e) => e.role.isAnyOf([role, null]) && e.index.isAnyOf([i, null])),
-                      ),
-                  ],
-                ),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.all(8),
-            child: Column(
-              mainAxisSize: MainAxisSize.max,
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (_errors.isNotEmpty)
-                  const Text(
-                    "❌ Ошибки:",
-                    style: TextStyle(
-                      color: Colors.red,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                for (final error in _errors)
-                  Text(
-                    error.message,
-                    style: const TextStyle(color: Colors.red),
-                  ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         tooltip: "Применить",

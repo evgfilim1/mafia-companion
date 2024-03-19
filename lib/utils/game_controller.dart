@@ -7,95 +7,107 @@ import "../game/log.dart";
 import "../game/player.dart";
 import "../game/states.dart";
 import "extensions.dart";
+import "log.dart";
 
-int _getNewRandomSeed() => DateTime.now().millisecondsSinceEpoch;
+extension _EnsureInitialized on Game? {
+  Game get ensureInitialized => this ?? (throw StateError("Game is not initialized"));
+}
+
+int getNewSeed() => DateTime.now().millisecondsSinceEpoch;
 
 class GameController with ChangeNotifier {
-  int _seed;
-  Random _random;
-  Game _game;
+  static final _log = Logger("GameController");
 
-  factory GameController() {
-    final seed = _getNewRandomSeed();
-    final random = Random(seed);
-    final game = Game.withPlayers(generatePlayers(random: random));
-    return GameController._(seed, random, game);
-  }
+  Game? _game;
 
-  GameController._(this._seed, this._random, this._game);
+  int? rolesSeed;
+  List<String?>? nicknames;
 
-  int get playerRandomSeed => _seed;
+  GameController();
 
-  bool get isGameActive => _game.isActive;
+  bool get isGameInitialized => _game != null;
 
-  Iterable<BaseGameLogItem> get gameLog => _game.log;
+  bool get isGameActive => _game?.isActive ?? false;
 
-  BaseGameState get state => _game.state;
+  Iterable<BaseGameLogItem> get gameLog => _game?.log ?? const [];
 
-  BaseGameState? get nextStateAssumption => _game.nextStateAssumption;
+  BaseGameState get state => _game.ensureInitialized.state;
 
-  BaseGameState? get previousState => _game.previousState;
+  BaseGameState? get nextStateAssumption => _game?.nextStateAssumption;
 
-  int get totalPlayersCount => _game.players.count;
+  BaseGameState? get previousState => _game?.previousState;
 
-  int get alivePlayersCount => _game.players.aliveCount;
+  int get totalPlayersCount => _game?.players.count ?? 0;
 
-  int get totalVotes => _game.totalVotes;
+  int get alivePlayersCount => _game?.players.aliveCount ?? 0;
 
-  PlayerRole? get winTeamAssumption => _game.winTeamAssumption;
+  int get totalVotes => _game?.totalVotes ?? 0;
 
-  void restart({int? seed}) {
-    _seed = seed ?? _getNewRandomSeed();
-    _random = Random(_seed);
-    _game = Game.withPlayers(generatePlayers(random: _random));
+  PlayerRole? get winTeamAssumption => _game?.winTeamAssumption;
+
+  List<Player> get players => _game?.players.toUnmodifiableList() ?? const [];
+
+  void startNewGame() {
+    if (rolesSeed == null) {
+      rolesSeed = getNewSeed();
+      _log.warning("Roles seed is not set, generating new one: $rolesSeed");
+    }
+    _game = Game.withPlayers(generatePlayers(nicknames: nicknames, random: Random(rolesSeed)));
+    _log.debug("Game started with seed $rolesSeed");
     notifyListeners();
   }
 
-  Player getPlayerByNumber(int number) => _game.players.getByNumber(number);
+  void stopGame() {
+    _game = null;
+    rolesSeed = null;
+    nicknames = null;
+    _log.debug("Game stopped");
+    notifyListeners();
+  }
 
-  List<Player> get players => _game.players.toUnmodifiableList();
+  Player getPlayerByNumber(int number) => _game.ensureInitialized.players.getByNumber(number);
 
   void vote(int? player, int count) {
-    _game.vote(player, count);
+    _game.ensureInitialized.vote(player, count);
     notifyListeners();
   }
 
   void togglePlayerSelected(int player) {
-    _game.togglePlayerSelected(player);
+    _game.ensureInitialized.togglePlayerSelected(player);
     notifyListeners();
   }
 
   void setNextState() {
-    _game.setNextState();
+    _game.ensureInitialized.setNextState();
     notifyListeners();
   }
 
   void setPreviousState() {
-    _game.setPreviousState();
+    _game.ensureInitialized.setPreviousState();
     notifyListeners();
   }
 
   void warnPlayer(int player) {
-    _game.warnPlayer(player);
+    _game.ensureInitialized.warnPlayer(player);
     notifyListeners();
   }
 
   void warnMinusPlayer(int player) {
-    _game.warnMinusPlayer(player);
+    _game.ensureInitialized.warnMinusPlayer(player);
     notifyListeners();
   }
 
   void kickPlayer(int player) {
-    _game.kickPlayer(player);
+    _game.ensureInitialized.kickPlayer(player);
     notifyListeners();
   }
 
   void kickPlayerTeam(int player) {
-    _game.kickPlayerTeam(player);
+    _game.ensureInitialized.kickPlayerTeam(player);
     notifyListeners();
   }
 
-  int getPlayerWarnCount(int player) => _game.getPlayerWarnCount(player);
+  int getPlayerWarnCount(int player) => _game.ensureInitialized.getPlayerWarnCount(player);
 
-  bool checkPlayer(int number) => _game.checkPlayer(number);
+  bool checkPlayer(int number) => _game.ensureInitialized.checkPlayer(number);
 }

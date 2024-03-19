@@ -60,11 +60,15 @@ Future<String> reportBugCommonImpl(BuildContext context) async {
   final controller = context.read<GameController>();
   final packageInfo = context.read<PackageInfo>();
 
+  if (!controller.isGameInitialized) {
+    throw StateError("Game is not initialized");
+  }
+
   return jsonEncode(
     BugReportInfo(
       packageInfo: packageInfo.data,
       game: GameInfo(
-        seed: controller.playerRandomSeed,
+        seed: controller.rolesSeed!,
         log: controller.gameLog.toUnmodifiableList(),
       ),
     ).toJson(),

@@ -229,3 +229,7 @@ class GameStateKey extends ValueKey<BaseGameState> {
     return other is GameStateKey && !value.hasStateChanged(other.value) || super == other;
   }
 }
+
+extension PlayerNicknameOrNumber on Player {
+  String get nicknameOrNumber => nickname ?? "Игрок #$number";
+}
