@@ -163,9 +163,7 @@ class _MainScreenState extends State<MainScreen> {
               menuChildren: [
                 MenuItemButton(
                   leadingIcon: const Icon(Icons.list, size: Checkbox.width),
-                  onPressed: controller.isGameInitialized
-                      ? () => Navigator.pushNamed(context, "/log")
-                      : null,
+                  onPressed: () => Navigator.pushNamed(context, "/log"),
                   child: const Text("Журнал игры"),
                 ),
                 MenuItemButton(
