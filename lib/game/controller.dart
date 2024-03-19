@@ -74,11 +74,15 @@ class Game {
       }
     }
     if (state.stage.isAnyOf([GameStage.nightLastWords, GameStage.dayLastWords])) {
+      var stop = false;
       for (final event in _log.reversed) {
+        if (stop) {
+          break;
+        }
         switch (event) {
           case StateChangeGameLogItem(:final newState):
             if (!newState.stage.isAnyOf([GameStage.nightLastWords, GameStage.dayLastWords])) {
-              break;
+              stop = true;
             }
           case PlayerKickedGameLogItem(:final playerNumber):
             final player = players.getByNumber(playerNumber);
