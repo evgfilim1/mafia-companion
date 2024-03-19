@@ -1,5 +1,9 @@
 # Mafia companion app
 
+<!-- region nice badges -->
+[![wakatime](https://wakatime.com/badge/github/evgfilim1/mafia-companion.svg)](https://wakatime.com/badge/github/evgfilim1/mafia-companion)
+<!-- endregion -->
+
 Приложение-компаньон для ведущего игры в турнирную (спортивную) Мафию. В разработке.
 
 ## Возможности
