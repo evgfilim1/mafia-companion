@@ -7,7 +7,9 @@ import "package:provider/provider.dart";
 import "../../game/log.dart";
 import "../extensions.dart";
 import "../game_controller.dart";
-import "../json.dart";
+import "../game_log.dart";
+import "../json/from_json.dart";
+import "../json/to_json.dart";
 
 Future<void> reportBug(BuildContext context) async {
   throw UnimplementedError("stub");

@@ -13,7 +13,8 @@ import "../game/states.dart";
 import "../utils/bug_report/stub.dart";
 import "../utils/errors.dart";
 import "../utils/game_controller.dart";
-import "../utils/json.dart";
+import "../utils/game_log.dart";
+import "../utils/json/to_json.dart";
 import "../utils/log.dart";
 import "../utils/ui.dart";
 

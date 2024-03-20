@@ -1,4 +1,4 @@
-import "json.dart";
+import "json/from_json.dart";
 
 class GitHubAsset {
   final String name;

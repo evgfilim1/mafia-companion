@@ -17,7 +17,7 @@ import "downloader.dart";
 import "errors.dart";
 import "extensions.dart";
 import "github.dart";
-import "json.dart";
+import "json/from_json.dart";
 import "log.dart";
 import "updates_checker/stub.dart"
     if (dart.library.ffi) "updates_checker/native.dart"
