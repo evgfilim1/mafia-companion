@@ -1,9 +1,5 @@
 import "dart:async";
-import "dart:convert";
 
-import "package:file_picker/file_picker.dart";
-import "package:file_saver/file_saver.dart";
-import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:intl/intl.dart";
 import "package:provider/provider.dart";
@@ -15,6 +11,7 @@ import "../utils/errors.dart";
 import "../utils/game_controller.dart";
 import "../utils/game_log.dart";
 import "../utils/json/to_json.dart";
+import "../utils/load_save_file.dart";
 import "../utils/log.dart";
 import "../utils/ui.dart";
 
@@ -85,104 +82,81 @@ extension _DescribeLogItem on BaseGameLogItem {
 class GameLogScreen extends StatelessWidget {
   static final _log = Logger("GameLogScreen");
   final List<BaseGameLogItem>? log;
-  final bool isExternal;
 
   const GameLogScreen({
     super.key,
     this.log,
-    this.isExternal = false,
   });
 
-  Future<void> _onLoadPressed(BuildContext context) async {
-    final pickerResult = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ["json"],
-      withData: true,
-    );
-    if (!context.mounted || pickerResult == null) {
-      return;
+  VersionedGameLog _loadLogFromJson(dynamic data) {
+    final VersionedGameLog vgl;
+    if (data is Map<String, dynamic> && data.containsKey("packageInfo")) {
+      vgl = VersionedGameLog(BugReportInfo.fromJson(data).game.log);
+    } else if (data is List<dynamic> || data is Map<String, dynamic>) {
+      vgl = VersionedGameLog.fromJson(data);
+    } else {
+      throw ArgumentError("Unknown data: ${data.runtimeType}");
     }
-    assert(pickerResult.isSinglePick, "Only single file pick is supported");
-    final List<BaseGameLogItem> logFromFile;
-    try {
-      final rawJsonString = String.fromCharCodes(pickerResult.files.single.bytes!);
-      final data = jsonDecode(rawJsonString);
-      if (data is Map<String, dynamic> && data.containsKey("packageInfo")) {
-        logFromFile = BugReportInfo.fromJson(data).game.log;
-      } else if (data is List<dynamic> || data is Map<String, dynamic>) {
-        final VersionedGameLog vgl;
-        try {
-          vgl = VersionedGameLog.fromJson(data);
-        } on UnsupportedGameLogVersion catch (e) {
-          var content = "Версия этого журнала игры не поддерживается.";
-          if (e is RemovedGameLogVersion) {
-            content += " Попробуйте использовать приложение версии <=v${e.lastSupportedAppVersion}";
-          }
-          await showSimpleDialog(
-            context: context,
-            title: const Text("Ошибка"),
-            content: Text(content),
-          );
-          return;
-        }
-        if (!context.mounted) {
-          throw ContextNotMountedError();
-        }
-        if (vgl.version.isDeprecated) {
-          await showSimpleDialog(
-            context: context,
-            title: const Text("Предупреждение"),
-            content: const Text(
-              "Загрузка журналов игр старого формата устарела и скоро будет невозможна",
-            ),
-          );
-        }
-        logFromFile = vgl.log;
-      } else {
-        throw ArgumentError("Unknown data: ${data.runtimeType}, [0]=${rawJsonString[0]}");
+    return vgl;
+  }
+
+  void _onLoadLogFromJsonError(BuildContext context, Object error, StackTrace stackTrace) {
+    if (error is UnsupportedGameLogVersion) {
+      var content = "Версия этого журнала игры не поддерживается.";
+      if (error is RemovedGameLogVersion) {
+        content += " Попробуйте использовать приложение версии <=v${error.lastSupportedAppVersion}";
       }
-    } catch (e, s) {
-      if (!context.mounted) {
-        throw ContextNotMountedError();
-      }
-      showSnackBar(context, const SnackBar(content: Text("Ошибка загрузки журнала")));
-      _log.error(
-        "Error loading game log: e=$e\n$s",
+      showSimpleDialog(
+        context: context,
+        title: const Text("Ошибка"),
+        content: Text(content),
       );
       return;
+    } else {
+      showSnackBar(context, const SnackBar(content: Text("Ошибка загрузки журнала")));
+      _log.error(
+        "Error loading game log: e=$error\n$stackTrace",
+      );
+    }
+  }
+
+  Future<void> _onLoadPressed(BuildContext context) async {
+    final logFromFile = await loadJsonFile(
+      fromJson: _loadLogFromJson,
+      onError: (e, st) => _onLoadLogFromJsonError(context, e, st),
+    );
+    if (logFromFile == null) {
+      return; // error already handled
     }
     if (!context.mounted) {
       throw ContextNotMountedError();
     }
+    if (logFromFile.version.isDeprecated) {
+      await showSimpleDialog(
+        context: context,
+        title: const Text("Предупреждение"),
+        content: const Text(
+          "Загрузка журналов игр старого формата устарела и скоро будет невозможна",
+        ),
+      );
+      if (!context.mounted) {
+        throw ContextNotMountedError();
+      }
+    }
     await Navigator.push(
       context,
-      MaterialPageRoute<void>(builder: (_) => GameLogScreen(log: logFromFile, isExternal: true)),
+      MaterialPageRoute<void>(
+        builder: (_) => GameLogScreen(log: logFromFile.log),
+      ),
     );
   }
 
   Future<void> _onSavePressed(BuildContext context) async {
     final controller = context.read<GameController>();
-    final jsonData = jsonEncode(controller.gameLog.map((e) => e.toJson()).toList());
-    final data = Uint8List.fromList(jsonData.codeUnits);
+    final jsonGameLog = controller.gameLog.map((e) => e.toJson()).toList();
     final fileName = "mafia_game_log_${_fileNameDateFormat.format(DateTime.now())}";
-    final String? path;
-    if (kIsWeb) {
-      // web doesn't support `saveAs`
-      path = await FileSaver.instance.saveFile(
-        name: fileName,
-        ext: "json",
-        bytes: data,
-        mimeType: MimeType.json,
-      );
-    } else {
-      path = await FileSaver.instance.saveAs(
-        name: fileName,
-        ext: "json",
-        bytes: data,
-        mimeType: MimeType.json,
-      );
-    }
-    if (!context.mounted || path == null) {
+    final wasSaved = await saveJsonFile(jsonGameLog, filename: fileName);
+    if (!context.mounted || !wasSaved) {
       return;
     }
     showSnackBar(context, const SnackBar(content: Text("Журнал сохранён")));
@@ -191,7 +165,8 @@ class GameLogScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = context.read<GameController>();
-    final title = isExternal ? "Загруженный журнал игры" : "Журнал игры";
+    final title = this.log != null ? "Загруженный журнал игры" : "Журнал игры";
+    final log = this.log ?? controller.gameLog;
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
@@ -208,10 +183,10 @@ class GameLogScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: controller.gameLog.isNotEmpty
+      body: log.isNotEmpty
           ? ListView(
               children: <ListTile>[
-                for (final item in log ?? controller.gameLog)
+                for (final item in log)
                   for (final desc in item.description)
                     ListTile(
                       title: Text(desc),
