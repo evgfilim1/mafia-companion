@@ -1,6 +1,7 @@
 import "../../game/log.dart";
 import "../../game/player.dart";
 import "../../game/states.dart";
+import "../db/models.dart" as db_models;
 
 extension MapJson<T> on Map<int, T> {
   Map<String, T> toJson() => map((k, v) => MapEntry(k.toString(), v));
@@ -107,5 +108,11 @@ extension PlayerJson on Player {
     "nickname": nickname,
     "isAlive": isAlive,
     "warns": warns,
+  };
+}
+
+extension DbPlayerJson on db_models.Player {
+  Map<String, dynamic> toJson() => {
+    "nickname": nickname,
   };
 }

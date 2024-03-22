@@ -5,12 +5,17 @@ import "../extensions.dart";
 import "models.dart";
 
 class PlayerList with ChangeNotifier {
-  var _data = <dynamic, Player>{};
+  var _data = <int, Player>{};
   final _box = Hive.box<Player>("players");
 
   List<Player> get data {
-    _data = _box.toMap();
+    _data = _box.toMap().cast();
     return _data.values.toUnmodifiableList();
+  }
+
+  List<(int, Player)> get dataWithIDs {
+    _data = _box.toMap().cast();
+    return _data.entries.map((e) => (e.key, e.value)).toUnmodifiableList();
   }
 
   Future<void> add(Player player) async {
@@ -18,27 +23,27 @@ class PlayerList with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<Player?> get(dynamic key, {Player? defaultValue}) async =>
+  Future<void> addAll(Iterable<Player> players) async {
+    await _box.addAll(players);
+    notifyListeners();
+  }
+
+  Future<Player?> get(int key, {Player? defaultValue}) async =>
       _box.get(key, defaultValue: defaultValue);
 
-  Future<void> edit(Player oldPlayer, Player newPlayer) async {
-    final key = getKey(oldPlayer);
-    if (key == null) {
-      return;
-    }
+  Future<void> edit(int key, Player newPlayer) async {
     await _box.put(key, newPlayer);
     notifyListeners();
   }
 
-  Future<void> delete(Player player) async {
-    final key = getKey(player);
-    if (key == null) {
-      return;
-    }
+  Future<void> delete(int key) async {
     await _box.delete(key);
     notifyListeners();
   }
 
-  dynamic getKey(Player player) =>
-      _data.entries.where((entry) => entry.value == player).singleOrNull?.key;
+  Future<void> clear() async {
+    await _box.clear();
+    _data.clear();
+    notifyListeners();
+  }
 }

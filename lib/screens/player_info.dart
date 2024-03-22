@@ -11,7 +11,7 @@ import "../widgets/list_tiles/text_field.dart";
 class PlayerInfoScreen extends StatelessWidget {
   static final _log = Logger("PlayerInfoScreen");
 
-  final dynamic playerKey;
+  final int playerKey;
 
   const PlayerInfoScreen({
     super.key,
@@ -31,7 +31,7 @@ class PlayerInfoScreen extends StatelessWidget {
       ),
     );
     if (confirmed ?? false) {
-      await players.delete(player);
+      await players.delete(playerKey);
       if (!context.mounted) {
         return;
       }
@@ -64,7 +64,7 @@ class PlayerInfoScreen extends StatelessWidget {
                   enabled: false,
                   leading: const Icon(Icons.onetwothree),
                   title: const Text("ID"),
-                  subtitle: Text(players.getKey(player).toString()),
+                  subtitle: Text(playerKey.toString()),
                 ),
               TextFieldListTile(
                 leading: const Icon(Icons.person),
@@ -79,7 +79,7 @@ class PlayerInfoScreen extends StatelessWidget {
                   return null;
                 },
                 onSubmit: (value) async {
-                  await players.edit(player, player.copyWith(nickname: value));
+                  await players.edit(playerKey, player.copyWith(nickname: value));
                   if (!context.mounted) {
                     return;
                   }

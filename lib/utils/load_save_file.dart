@@ -7,7 +7,6 @@ import "package:flutter/foundation.dart";
 import "log.dart";
 
 typedef FromJson<T> = T Function(dynamic json);
-typedef ToJson<T> = dynamic Function(T value);
 typedef ErrorHandler = void Function(Object error, StackTrace stackTrace);
 
 void _defaultErrorHandler(Object error, StackTrace stackTrace, String message) {
@@ -31,7 +30,7 @@ Future<T?> loadJsonFile<T>({
   }
   final file = result.files.single;
   try {
-    final rawJsonString = String.fromCharCodes(file.bytes!);
+    final rawJsonString = utf8.decode(file.bytes!);
     final data = jsonDecode(rawJsonString);
     return fromJson(data);
   } catch (e, st) {
@@ -50,7 +49,7 @@ Future<bool> saveJsonFile(
   // ErrorHandler? onError,
 }) async {
   final json = jsonEncode(data);
-  final bytes = Uint8List.fromList(json.codeUnits);
+  final bytes = utf8.encode(json);
   final fs = FileSaver.instance;
   final String? path;
   if (kIsWeb) {

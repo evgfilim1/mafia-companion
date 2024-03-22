@@ -3,6 +3,7 @@ import "dart:collection";
 import "../../game/log.dart";
 import "../../game/player.dart";
 import "../../game/states.dart";
+import "../db/models.dart" as db_models;
 import "../game_log.dart";
 
 extension MapParseJson on Map<String, dynamic> {
@@ -151,9 +152,18 @@ Player _playerFromJson(Map<String, dynamic> json, {required GameLogVersion versi
   warns: json["warns"] as int,
 );
 
+db_models.Player _dbPlayerFromJson(
+  Map<String, dynamic> json, {
+  required GameLogVersion version,
+}) =>
+    db_models.Player(
+      nickname: json["nickname"] as String,
+    );
+
 T fromJson<T>(Map<String, dynamic> json, {required GameLogVersion gameLogVersion}) => switch (T) {
   const (BaseGameLogItem) => _gameLogFromJson(json, version: gameLogVersion) as T,
   const (BaseGameState) => _gameStateFromJson(json, version: gameLogVersion) as T,
   const (Player) => _playerFromJson(json, version: gameLogVersion) as T,
+  const (db_models.Player) => _dbPlayerFromJson(json, version: gameLogVersion) as T,
   _ => throw UnimplementedError("fromJson for $T"),
 };
