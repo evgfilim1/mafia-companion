@@ -121,6 +121,22 @@ class PlayersScreen extends StatelessWidget {
     }
   }
 
+  Future<void> _onSearchPressed(BuildContext context, PlayerList players) async {
+    final result = await showSearch(
+      context: context,
+      delegate: _PlayerSearchDelegate(players.dataWithIDs),
+    );
+    if (result == null || !context.mounted) {
+      return;
+    }
+    await Navigator.push(
+      context,
+      MaterialPageRoute<void>(
+        builder: (context) => PlayerInfoScreen(playerKey: result),
+      ),
+    );
+  }
+
   List<db_models.Player> _loadFromJson(dynamic data) {
     if (data is! Map<String, dynamic>) {
       throw ArgumentError("Invalid data type: ${data.runtimeType}");
@@ -220,6 +236,11 @@ class PlayersScreen extends StatelessWidget {
         title: const Text("Игроки"),
         actions: [
           IconButton(
+            icon: const Icon(Icons.search),
+            tooltip: "Искать",
+            onPressed: () => _onSearchPressed(context, players),
+          ),
+          IconButton(
             icon: const Icon(Icons.file_open),
             tooltip: "Загрузить список игроков из файла",
             onPressed: () => _onLoadPressed(context),
@@ -269,6 +290,41 @@ class PlayersScreen extends StatelessWidget {
         onPressed: () => _onAddPlayerPressed(context, players),
         child: const Icon(Icons.person_add),
       ),
+    );
+  }
+}
+
+class _PlayerSearchDelegate extends SearchDelegate<int> {
+  final List<(int, db_models.Player)> data;
+
+  _PlayerSearchDelegate(this.data) : super(searchFieldLabel: "Никнейм");
+
+  List<(int, db_models.Player)> get filteredData => data.where((e) => e.$2.nickname.toLowerCase().contains(query.toLowerCase())).toList();
+
+  @override
+  List<Widget>? buildActions(BuildContext context) => [
+    IconButton(onPressed: () => query = "", icon: const Icon(Icons.clear)),
+  ];
+
+  @override
+  Widget? buildLeading(BuildContext context) => const BackButton();
+
+  @override
+  Widget buildResults(BuildContext context) => buildSuggestions(context);
+
+  @override
+  Widget buildSuggestions(BuildContext context) {
+    final results = filteredData;
+    return ListView.builder(
+      itemCount: results.length,
+      itemBuilder: (context, index) {
+        final (key, player) = results[index];
+        return ListTile(
+          leading: const Icon(Icons.person),
+          title: Text(player.nickname),
+          onTap: () => close(context, key),
+        );
+      },
     );
   }
 }
