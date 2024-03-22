@@ -63,11 +63,18 @@ class DebugMenuScreen extends StatelessWidget {
               }
               return null;
             },
-            onSubmit: (value) {
+            onSubmit: (value) async {
               try {
-                Navigator.pushNamed(context, value);
+                await Navigator.pushNamed(context, value);
               } catch (e) {
-                showSnackBar(context, SnackBar(content: Text(e.toString())));
+                if (!context.mounted) {
+                  return;
+                }
+                await showSimpleDialog(
+                  context: context,
+                  title: const Text("Ошибка"),
+                  content: Text(e.toString()),
+                );
               }
             },
           ),
