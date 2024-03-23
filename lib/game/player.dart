@@ -19,7 +19,7 @@ enum RoleTeam {
   citizen,
   ;
 
-  factory RoleTeam.byName(String name) => RoleTeam.values.singleWhere((e) => e.name == name);
+  factory RoleTeam.byName(String name) => RoleTeam.values.byName(name);
 }
 
 enum PlayerRole {
@@ -34,7 +34,7 @@ enum PlayerRole {
 
   const PlayerRole(this.team);
 
-  factory PlayerRole.byName(String name) => PlayerRole.values.singleWhere((e) => e.name == name);
+  factory PlayerRole.byName(String name) => PlayerRole.values.byName(name);
 }
 
 @immutable

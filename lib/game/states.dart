@@ -54,7 +54,7 @@ enum GameStage {
   finish,
   ;
 
-  factory GameStage.byName(String name) => GameStage.values.firstWhere((e) => e.name == name);
+  factory GameStage.byName(String name) => GameStage.values.byName(name);
 }
 
 /// Base class for all game states.
