@@ -3,6 +3,7 @@ import "package:provider/provider.dart";
 
 import "../game/player.dart";
 import "../game/states.dart";
+import "../utils/extensions.dart";
 import "../utils/game_controller.dart";
 import "../utils/ui.dart";
 import "orientation_dependent.dart";
@@ -49,6 +50,10 @@ class _PlayerButtonsState extends OrientationDependentState<PlayerButtons> {
         title: const Text("Результат проверки"),
         content: Text("Игрок ${player.number} — $msg"),
       );
+    } else if (!player.isAlive ||
+        !controller.state.stage
+            .isAnyOf(const [GameStage.nightKill, GameStage.bestTurn, GameStage.speaking])) {
+      return;
     } else {
       controller.togglePlayerSelected(player.number);
     }

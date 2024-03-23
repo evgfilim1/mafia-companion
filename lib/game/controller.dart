@@ -114,7 +114,7 @@ class Game {
     if (state case GameStateVoting(votes: final votes)) {
       return votes.values.nonNulls.sum;
     }
-    throw StateError("Can't get total votes in state ${state.runtimeType}");
+    throw StateError("Can't get total votes in state ${state.stage}");
   }
 
   /// Assumes next game state according to game internal state, and returns it.
@@ -503,7 +503,7 @@ class Game {
   void togglePlayerSelected(int playerNumber) {
     final player = players.getByNumber(playerNumber);
     if (!player.isAlive) {
-      return;
+      throw StateError("Can't select dead player");
     }
     final currentState = state;
     if (currentState
@@ -550,11 +550,11 @@ class Game {
       );
       return;
     }
+    throw StateError("Can't toggle player in state ${state.stage}");
   }
 
-  /// Vote for [playerNumber] with [count] votes. [playerNumber] is ignored (can be `null`) if
-  /// game [state] is [GameStateKnockoutVoting].
-  void vote(int? playerNumber, int count) {
+  /// Vote for current player with [count] votes.
+  void vote(int count) {
     final currentState = state;
     if (currentState is GameStateKnockoutVoting) {
       _log.add(
@@ -566,13 +566,6 @@ class Game {
       return;
     }
     if (currentState is GameStateVoting) {
-      if (playerNumber == null) {
-        throw ArgumentError.value(
-          playerNumber,
-          "playerNumber",
-          "You must specify player number to vote for",
-        );
-      }
       _log.add(
         StateChangeGameLogItem(
           oldState: currentState,
@@ -581,12 +574,12 @@ class Game {
       );
       return;
     }
-    throw StateError("Can't vote in state ${state.runtimeType}");
+    throw StateError("Can't vote in state ${state.stage}");
   }
 
   void warnPlayer(int number) {
     if (!isActive) {
-      throw StateError("Can't warn player in state ${state.runtimeType}");
+      throw StateError("Can't warn player in state ${state.stage}");
     }
     final newPlayers = List.of(state.players);
     final i = number - 1;
@@ -612,7 +605,7 @@ class Game {
 
   void warnMinusPlayer(int number) {
     if (!isActive) {
-      throw StateError("Can't -warn player in state ${state.runtimeType}");
+      throw StateError("Can't -warn player in state ${state.stage}");
     }
     final newPlayers = List.of(state.players);
     final i = number - 1;
@@ -630,7 +623,7 @@ class Game {
 
   void kickPlayer(int number) {
     if (!isActive) {
-      throw StateError("Can't kick player in state ${state.runtimeType}");
+      throw StateError("Can't kick player in state ${state.stage}");
     }
     final newPlayers = List.of(state.players);
     final i = number - 1;
@@ -641,7 +634,7 @@ class Game {
 
   void kickPlayerTeam(int number) {
     if (!isActive) {
-      throw StateError("Can't kick player's team in state ${state.runtimeType}");
+      throw StateError("Can't kick player's team in state ${state.stage}");
     }
     final newPlayers = List.of(state.players);
     final targetPlayer = players.getByNumber(number);
@@ -658,6 +651,9 @@ class Game {
     final checkedPlayer = players.getByNumber(number);
     if (state case GameStateNightCheck(activePlayerNumber: final playerNumber)) {
       final activePlayer = players.getByNumber(playerNumber);
+      if (!activePlayer.isAlive) {
+        throw StateError("Active player is not in the game and therefore cannot check players");
+      }
       _log.add(
         PlayerCheckedGameLogItem(
           day: state.day,
@@ -673,7 +669,7 @@ class Game {
       }
       throw AssertionError();
     }
-    throw StateError("Cannot check player in state ${state.runtimeType}");
+    throw StateError("Cannot check player in state ${state.stage}");
   }
 
   // region Private helpers
@@ -749,7 +745,7 @@ class Game {
       assert(res.isNotEmpty, "BUG in votes calculation");
       return res;
     }
-    throw StateError("Can't get max votes in state ${state.runtimeType}");
+    throw StateError("Can't get max votes in state ${state.stage}");
   }
 
   int get _firstSpeakingPlayerNumber {

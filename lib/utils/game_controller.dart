@@ -67,8 +67,8 @@ class GameController with ChangeNotifier {
 
   Player getPlayerByNumber(int number) => _game.ensureInitialized.players.getByNumber(number);
 
-  void vote(int? player, int count) {
-    _game.ensureInitialized.vote(player, count);
+  void vote(int count) {
+    _game.ensureInitialized.vote(count);
     notifyListeners();
   }
 

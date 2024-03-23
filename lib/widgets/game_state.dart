@@ -111,7 +111,7 @@ class BottomGameStateWidget extends StatelessWidget {
         key: ValueKey(gameState.currentPlayerNumber),
         min: 0,
         max: aliveCount - controller.totalVotes,
-        onValueChanged: (value) => controller.vote(gameState.currentPlayerNumber, value),
+        onValueChanged: controller.vote,
         initialValue: currentPlayerVotes,
       );
     }
@@ -121,7 +121,7 @@ class BottomGameStateWidget extends StatelessWidget {
         key: const ValueKey("dropTableVoting"),
         min: 0,
         max: controller.alivePlayersCount,
-        onValueChanged: (value) => controller.vote(null, value),
+        onValueChanged: controller.vote,
         initialValue: gameState.votes,
       );
     }
