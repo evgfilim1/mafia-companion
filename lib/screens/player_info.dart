@@ -78,12 +78,15 @@ class PlayerInfoScreen extends StatelessWidget {
                   }
                   return null;
                 },
-                onSubmit: (value) async {
-                  await players.edit(playerKey, player.copyWith(nickname: value));
-                  if (!context.mounted) {
-                    return;
-                  }
-                },
+                onSubmit: (value) => players.edit(playerKey, player.copyWith(nickname: value)),
+              ),
+              TextFieldListTile(
+                leading: const Icon(Icons.badge),
+                title: const Text("Имя"),
+                subtitle: Text(player.realName.isNotEmpty ? player.realName : "(не указано)"),
+                initialText: player.realName,
+                textCapitalization: TextCapitalization.words,
+                onSubmit: (value) => players.edit(playerKey, player.copyWith(realName: value)),
               ),
               ListTile(
                 leading: const Icon(Icons.delete, color: Colors.red),

@@ -27,10 +27,21 @@ class _AddPlayerDialog extends StatefulWidget {
 class _AddPlayerDialogState extends State<_AddPlayerDialog> {
   final _formKey = GlobalKey<FormState>();
   final _nicknameController = TextEditingController();
+  final _realNameController = TextEditingController();
+
+  @override
+  void dispose() {
+    _nicknameController.dispose();
+    _realNameController.dispose();
+    super.dispose();
+  }
 
   void _onSubmit() {
     if (_formKey.currentState!.validate()) {
-      Navigator.pop(context, _nicknameController.text);
+      Navigator.pop(
+        context,
+        db_models.Player(nickname: _nicknameController.text, realName: _realNameController.text),
+      );
     }
   }
 
@@ -39,21 +50,36 @@ class _AddPlayerDialogState extends State<_AddPlayerDialog> {
         title: const Text("Добавить игрока"),
         content: Form(
           key: _formKey,
-          child: TextFormField(
-            controller: _nicknameController,
-            decoration: const InputDecoration(
-              border: OutlineInputBorder(),
-              labelText: "Никнейм",
-            ),
-            autofocus: true,
-            textCapitalization: TextCapitalization.words,
-            validator: (value) {
-              if ((value ?? "").isEmpty) {
-                return "Введите никнейм";
-              }
-              return null;
-            },
-            onFieldSubmitted: (_) => _onSubmit(),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: _nicknameController,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: "Никнейм",
+                ),
+                autofocus: true,
+                textCapitalization: TextCapitalization.words,
+                validator: (value) {
+                  if ((value ?? "").isEmpty) {
+                    return "Введите никнейм";
+                  }
+                  return null;
+                },
+                onFieldSubmitted: (_) => _onSubmit(),
+              ),
+              TextFormField(
+                controller: _realNameController,
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  labelText: "Имя",
+                ),
+                autofocus: false,
+                textCapitalization: TextCapitalization.words,
+                onFieldSubmitted: (_) => _onSubmit(),
+              ),
+            ],
           ),
         ),
         actions: [
@@ -104,18 +130,34 @@ class _LoadStrategyDialog extends StatelessWidget {
       );
 }
 
+class _PlayerTile extends StatelessWidget {
+  final db_models.Player player;
+  final VoidCallback onTap;
+
+  const _PlayerTile({required this.player, required this.onTap,});
+
+  @override
+  Widget build(BuildContext context) => ListTile(
+      leading: const Icon(Icons.person),
+      title: Text(player.nickname),
+      subtitle: player.realName.isNotEmpty ? Text(player.realName) : null,
+      onTap: onTap,
+    );
+}
+
+
 class PlayersScreen extends StatelessWidget {
   static final _log = Logger("PlayersScreen");
 
   const PlayersScreen({super.key});
 
   Future<void> _onAddPlayerPressed(BuildContext context, PlayerList players) async {
-    final nickname = await showDialog<String>(
+    final newPlayer = await showDialog<db_models.Player>(
       context: context,
       builder: (context) => const _AddPlayerDialog(),
     );
-    if (nickname != null) {
-      await players.add(db_models.Player(nickname: nickname));
+    if (newPlayer != null) {
+      await players.add(newPlayer);
     }
   }
 
@@ -259,9 +301,8 @@ class PlayersScreen extends StatelessWidget {
                   );
                 }
                 final (key, player) = players.dataWithIDs[index];
-                return ListTile(
-                  leading: const Icon(Icons.person),
-                  title: Text(player.nickname),
+                return _PlayerTile(
+                  player: player,
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute<void>(
@@ -285,8 +326,11 @@ class _PlayerSearchDelegate extends SearchDelegate<int> {
 
   _PlayerSearchDelegate(this.data) : super(searchFieldLabel: "Никнейм");
 
-  List<(int, db_models.Player)> get filteredData =>
-      data.where((e) => e.$2.nickname.toLowerCase().contains(query.toLowerCase())).toList();
+  List<(int, db_models.Player)> get filteredData => data.where((e) {
+        final p = e.$2;
+        final q = query.toLowerCase();
+        return p.nickname.toLowerCase().contains(q) || p.realName.toLowerCase().contains(q);
+      }).toList();
 
   @override
   List<Widget>? buildActions(BuildContext context) => [
@@ -306,9 +350,8 @@ class _PlayerSearchDelegate extends SearchDelegate<int> {
       itemCount: results.length,
       itemBuilder: (context, index) {
         final (key, player) = results[index];
-        return ListTile(
-          leading: const Icon(Icons.person),
-          title: Text(player.nickname),
+        return _PlayerTile(
+          player: player,
           onTap: () => close(context, key),
         );
       },

@@ -167,4 +167,5 @@ db_models.Player dbPlayerFromJson(
 }) =>
     db_models.Player(
       nickname: json["nickname"] as String,
+      realName: json["realName"] as String? ?? "",
     );
