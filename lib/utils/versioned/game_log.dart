@@ -25,7 +25,7 @@ enum GameLogVersion {
       );
 }
 
-class VersionedGameLog extends Versioned<GameLogVersion, List<BaseGameLogItem>> {
+class VersionedGameLog extends Versioned<GameLogVersion, Iterable<BaseGameLogItem>> {
   const VersionedGameLog(
     super.value, {
     super.version = GameLogVersion.latest,
@@ -38,7 +38,7 @@ class VersionedGameLog extends Versioned<GameLogVersion, List<BaseGameLogItem>> 
   dynamic versionToJson(GameLogVersion value) => value.value;
 
   @override
-  dynamic valueToJson(List<BaseGameLogItem> value) => value.map((e) => e.toJson()).toList();
+  dynamic valueToJson(Iterable<BaseGameLogItem> value) => value.map((e) => e.toJson()).toList();
 
   static GameLogVersion _versionFromJson(dynamic value) {
     final versionInt = value as int;

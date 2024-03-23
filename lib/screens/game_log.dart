@@ -8,8 +8,8 @@ import "../game/log.dart";
 import "../game/states.dart";
 import "../utils/bug_report/stub.dart";
 import "../utils/errors.dart";
+import "../utils/extensions.dart";
 import "../utils/game_controller.dart";
-import "../utils/json/to_json.dart";
 import "../utils/load_save_file.dart";
 import "../utils/log.dart";
 import "../utils/ui.dart";
@@ -146,16 +146,16 @@ class GameLogScreen extends StatelessWidget {
     await Navigator.push(
       context,
       MaterialPageRoute<void>(
-        builder: (_) => GameLogScreen(log: logFromFile.value),
+        builder: (_) => GameLogScreen(log: logFromFile.value.toUnmodifiableList()),
       ),
     );
   }
 
   Future<void> _onSavePressed(BuildContext context) async {
     final controller = context.read<GameController>();
-    final jsonGameLog = controller.gameLog.map((e) => e.toJson()).toList();
+    final vgl = VersionedGameLog(controller.gameLog);
     final fileName = "mafia_game_log_${_fileNameDateFormat.format(DateTime.now())}";
-    final wasSaved = await saveJsonFile(jsonGameLog, filename: fileName);
+    final wasSaved = await saveJsonFile(vgl.toJson(), filename: fileName);
     if (!context.mounted || !wasSaved) {
       return;
     }
