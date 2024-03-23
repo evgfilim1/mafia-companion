@@ -73,8 +73,8 @@ class VersionedGameLog extends Versioned<GameLogVersion, List<BaseGameLogItem>> 
         json,
         valueKey: "log",
         versionFromJson: _versionFromJson,
-        valueFromJson: (json, version) => (json as List<dynamic>)
-            .parseJsonList((e) => gameLogFromJson(e, version: version)),
+        valueFromJson: (json, version) =>
+            (json as List<dynamic>).parseJsonList((e) => gameLogFromJson(e, version: version)),
         create: VersionedGameLog.new,
       );
     }

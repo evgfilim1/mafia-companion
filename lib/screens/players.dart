@@ -285,12 +285,13 @@ class _PlayerSearchDelegate extends SearchDelegate<int> {
 
   _PlayerSearchDelegate(this.data) : super(searchFieldLabel: "Никнейм");
 
-  List<(int, db_models.Player)> get filteredData => data.where((e) => e.$2.nickname.toLowerCase().contains(query.toLowerCase())).toList();
+  List<(int, db_models.Player)> get filteredData =>
+      data.where((e) => e.$2.nickname.toLowerCase().contains(query.toLowerCase())).toList();
 
   @override
   List<Widget>? buildActions(BuildContext context) => [
-    IconButton(onPressed: () => query = "", icon: const Icon(Icons.clear)),
-  ];
+        IconButton(onPressed: () => query = "", icon: const Icon(Icons.clear)),
+      ];
 
   @override
   Widget? buildLeading(BuildContext context) => const BackButton();

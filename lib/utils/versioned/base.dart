@@ -21,8 +21,7 @@ abstract class Versioned<V extends Enum, T> {
   @protected
   dynamic valueToJson(T value);
 
-  Map<String, dynamic> toJson() =>
-      {
+  Map<String, dynamic> toJson() => {
         "version": versionToJson.call(version),
         valueKey: valueToJson.call(value),
       };
