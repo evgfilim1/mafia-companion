@@ -36,9 +36,9 @@ extension GameStatePrettyString on BaseGameState {
     switch (this) {
       case GameStatePrepare(stage: GameStage.prepare):
         return "Ожидание игроков...";
-      case GameStateWithPlayers(stage: GameStage.night0):
+      case GameStateWithPlayers(stage: GameStage.firstNight):
         return "Первая ночь";
-      case GameStateWithPlayer(stage: GameStage.night0SheriffCheck):
+      case GameStateWithPlayer(stage: GameStage.firstNightWakeUps):
         return "Шериф осматривает стол";
       case GameStateSpeaking(
           stage: GameStage.speaking,

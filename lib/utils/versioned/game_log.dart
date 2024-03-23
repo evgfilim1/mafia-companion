@@ -4,18 +4,35 @@ import "../json/from_json.dart";
 import "../json/to_json.dart";
 import "base.dart";
 
-enum GameLogVersion {
-  v0(0, isDeprecated: true, lastSupportedVersion: null),
-  v1(1),
+enum _LegacyGameLogVersion {
+  v0(0, "0.3.0-rc.2"),
   ;
 
-  static const latest = v1;
+  final int value;
+  final String lastSupportedAppVersion;
+
+  const _LegacyGameLogVersion(this.value, this.lastSupportedAppVersion);
+
+  factory _LegacyGameLogVersion.byValue(int value) => values.singleWhere(
+        (e) => e.value == value,
+        orElse: () => throw ArgumentError(
+          "Unknown value, must be one of: ${values.map((e) => e.value).join(", ")}",
+        ),
+      );
+}
+
+enum GameLogVersion implements Comparable<GameLogVersion> {
+  v0(0, isDeprecated: true),
+  v1(1),
+  v2(2),
+  ;
+
+  static const latest = v2;
 
   final int value;
   final bool isDeprecated;
-  final String? lastSupportedVersion;
 
-  const GameLogVersion(this.value, {this.isDeprecated = false, this.lastSupportedVersion});
+  const GameLogVersion(this.value, {this.isDeprecated = false});
 
   factory GameLogVersion.byValue(int value) => values.singleWhere(
         (e) => e.value == value,
@@ -23,6 +40,17 @@ enum GameLogVersion {
           "Unknown value, must be one of: ${values.map((e) => e.value).join(", ")}",
         ),
       );
+
+  @override
+  int compareTo(GameLogVersion other) => value.compareTo(other.value);
+
+  bool operator <(GameLogVersion other) => compareTo(other) < 0;
+
+  bool operator <=(GameLogVersion other) => compareTo(other) <= 0;
+
+  bool operator >(GameLogVersion other) => compareTo(other) > 0;
+
+  bool operator >=(GameLogVersion other) => compareTo(other) >= 0;
 }
 
 class VersionedGameLog extends Versioned<GameLogVersion, Iterable<BaseGameLogItem>> {
@@ -46,13 +74,15 @@ class VersionedGameLog extends Versioned<GameLogVersion, Iterable<BaseGameLogIte
     try {
       version = GameLogVersion.byValue(versionInt);
     } on ArgumentError {
-      throw UnsupportedVersion(version: versionInt);
-    }
-    if (version.lastSupportedVersion != null) {
-      throw RemovedVersion(
-        version: versionInt,
-        lastSupportedAppVersion: version.lastSupportedVersion!,
-      );
+      try {
+        final legacyVersion = _LegacyGameLogVersion.byValue(versionInt);
+        throw RemovedVersion(
+          version: versionInt,
+          lastSupportedAppVersion: legacyVersion.lastSupportedAppVersion,
+        );
+      } on ArgumentError {
+        throw UnsupportedVersion(version: versionInt);
+      }
     }
     return version;
   }

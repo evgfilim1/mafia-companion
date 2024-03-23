@@ -5,14 +5,17 @@ import "package:flutter/foundation.dart";
 import "player.dart";
 
 enum GameStage {
-  /// Initial stage, game is not started yet, giving roles
+  /// Initial stage, game is not started yet
   prepare,
 
   /// First night, nobody dies
-  night0,
+  firstNight,
 
-  /// Sheriff wakes up and looks on the players, but doesn't check anyone
-  night0SheriffCheck,
+  /// First night, don and/or sheriff wakes up, no checks
+  firstNightWakeUps,
+
+  /// First night rest, nothing happens
+  // firstNightRest,
 
   /// Players speak during day and make accusations
   speaking,
@@ -106,7 +109,7 @@ class GameStatePrepare extends BaseGameState {
 
 /// Represents game state with related [currentPlayerNumber].
 ///
-/// [stage] can be [GameStage.night0SheriffCheck] or [GameStage.nightLastWords].
+/// [stage] can be [GameStage.firstNightWakeUps] or [GameStage.nightLastWords].
 @immutable
 class GameStateWithPlayer extends BaseGameState {
   final int currentPlayerNumber;
@@ -117,7 +120,7 @@ class GameStateWithPlayer extends BaseGameState {
     required super.players,
     required this.currentPlayerNumber,
   }) : assert(
-          stage == GameStage.night0SheriffCheck || stage == GameStage.nightLastWords,
+          stage == GameStage.firstNightWakeUps || stage == GameStage.nightLastWords,
           "Invalid stage for GameStateWithPlayer: $stage",
         );
 
@@ -324,7 +327,7 @@ class GameStateKnockoutVoting extends BaseGameState {
 
 /// Represents game state with related [playerNumbers].
 ///
-/// [stage] can be [GameStage.night0], [GameStage.preVoting] or [GameStage.preFinalVoting].
+/// [stage] can be [GameStage.firstNight], [GameStage.preVoting] or [GameStage.preFinalVoting].
 @immutable
 class GameStateWithPlayers extends BaseGameState {
   final List<int> playerNumbers;
@@ -335,7 +338,7 @@ class GameStateWithPlayers extends BaseGameState {
     required super.players,
     required this.playerNumbers,
   }) : assert(
-          stage == GameStage.night0 ||
+          stage == GameStage.firstNight ||
               stage == GameStage.preVoting ||
               stage == GameStage.preFinalVoting,
           "Invalid stage for GameStateWithPlayers: $stage",
@@ -616,8 +619,8 @@ class GameStateFinish extends BaseGameState {
 
 const timeLimits = <GameStage, Duration>{
   // GameStage.prepare: null,
-  GameStage.night0: Duration(minutes: 1),
-  GameStage.night0SheriffCheck: Duration(seconds: 20),
+  GameStage.firstNight: Duration(minutes: 1),
+  GameStage.firstNightWakeUps: Duration(seconds: 20),
   GameStage.speaking: Duration(minutes: 1),
   // GameStage.preVoting: null,
   // GameStage.voting: null,
@@ -634,7 +637,7 @@ const timeLimits = <GameStage, Duration>{
 };
 
 const timeLimitsExtended = <GameStage, Duration>{
-  GameStage.night0: Duration(minutes: 2),
+  GameStage.firstNight: Duration(minutes: 2),
   GameStage.speaking: Duration(minutes: 1, seconds: 30),
   GameStage.excuse: Duration(minutes: 1),
   GameStage.dayLastWords: Duration(minutes: 1, seconds: 30),
@@ -644,8 +647,8 @@ const timeLimitsExtended = <GameStage, Duration>{
 };
 
 const timeLimitsShortened = <GameStage, Duration>{
-  GameStage.night0: Duration(seconds: 30),
-  GameStage.night0SheriffCheck: Duration(seconds: 10),
+  GameStage.firstNight: Duration(seconds: 30),
+  GameStage.firstNightWakeUps: Duration(seconds: 10),
   GameStage.speaking: Duration(seconds: 30),
   GameStage.excuse: Duration(seconds: 15),
   GameStage.dayLastWords: Duration(seconds: 30),
@@ -655,9 +658,9 @@ const timeLimitsShortened = <GameStage, Duration>{
 };
 
 const validTransitions = <GameStage, Set<GameStage>>{
-  GameStage.prepare: {GameStage.night0},
-  GameStage.night0: {GameStage.night0SheriffCheck, GameStage.finish},
-  GameStage.night0SheriffCheck: {GameStage.speaking, GameStage.finish},
+  GameStage.prepare: {GameStage.firstNight},
+  GameStage.firstNight: {GameStage.firstNightWakeUps, GameStage.finish},
+  GameStage.firstNightWakeUps: {GameStage.speaking, GameStage.finish},
   GameStage.speaking: {
     GameStage.speaking,
     GameStage.preVoting,

@@ -129,19 +129,19 @@ class Game {
     switch (state) {
       case GameStatePrepare():
         return GameStateWithPlayers(
-          stage: GameStage.night0,
+          stage: GameStage.firstNight,
           day: 1,
           players: state.players,
           playerNumbers: players.mafiaTeam.map((player) => player.number).toUnmodifiableList(),
         );
-      case GameStateWithPlayers(stage: GameStage.night0):
+      case GameStateWithPlayers(stage: GameStage.firstNight):
         return GameStateWithPlayer(
-          stage: GameStage.night0SheriffCheck,
+          stage: GameStage.firstNightWakeUps,
           day: 1,
           players: state.players,
           currentPlayerNumber: players.sheriff.number,
         );
-      case GameStateWithPlayer(stage: GameStage.night0SheriffCheck):
+      case GameStateWithPlayer(stage: GameStage.firstNightWakeUps):
         final next = _nextAlivePlayer(fromNumber: 0);
         assert(next.isAlive, "Next player must be alive");
         return GameStateSpeaking(

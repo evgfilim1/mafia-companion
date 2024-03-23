@@ -36,7 +36,7 @@ BaseGameLogItem gameLogFromJson(Map<String, dynamic> json, {required GameLogVers
     return PlayerCheckedGameLogItem(
       day: switch (version) {
         GameLogVersion.v0 => 0,
-        GameLogVersion.v1 => json["day"] as int,
+        GameLogVersion.v1 || GameLogVersion.v2 => json["day"] as int,
       },
       playerNumber: json["playerNumber"] as int,
       checkedByRole: PlayerRole.byName(json["checkedByRole"] as String),
@@ -63,7 +63,15 @@ BaseGameLogItem gameLogFromJson(Map<String, dynamic> json, {required GameLogVers
 BaseGameState gameStateFromJson(Map<String, dynamic> json, {required GameLogVersion version}) {
   var stageString = json["stage"] as String;
   if (version == GameLogVersion.v0 && stageString == "dropTableVoting") {
-    stageString = GameStage.knockoutVoting.name; // compatibility for old logs
+    stageString = GameStage.knockoutVoting.name;
+  }
+  if (version < GameLogVersion.v2) {
+    switch (stageString) {
+      case "night0":
+        stageString = GameStage.firstNight.name;
+      case "night0SheriffCheck":
+        stageString = GameStage.firstNightWakeUps.name;
+    }
   }
   final stage = GameStage.byName(stageString);
   final day = json["day"] as int;
@@ -71,13 +79,13 @@ BaseGameState gameStateFromJson(Map<String, dynamic> json, {required GameLogVers
       (json["players"] as List<dynamic>).parseJsonList((e) => playerFromJson(e, version: version));
   return switch (stage) {
     GameStage.prepare => GameStatePrepare(players: players),
-    GameStage.night0 || GameStage.preVoting || GameStage.preFinalVoting => GameStateWithPlayers(
+    GameStage.firstNight || GameStage.preVoting || GameStage.preFinalVoting => GameStateWithPlayers(
         stage: stage,
         day: day,
         players: players,
         playerNumbers: (json["playerNumbers"] as List<dynamic>).cast<int>(),
       ),
-    GameStage.night0SheriffCheck || GameStage.nightLastWords => GameStateWithPlayer(
+    GameStage.firstNightWakeUps || GameStage.nightLastWords => GameStateWithPlayer(
         stage: stage,
         day: day,
         players: players,
@@ -90,11 +98,11 @@ BaseGameState gameStateFromJson(Map<String, dynamic> json, {required GameLogVers
         accusations: (json["accusations"] as Map<String, dynamic>).parseJsonMap(),
         canOnlyAccuse: switch (version) {
           GameLogVersion.v0 => false,
-          GameLogVersion.v1 => json["canOnlyAccuse"] as bool,
+          GameLogVersion.v1 || GameLogVersion.v2 => json["canOnlyAccuse"] as bool,
         },
         hasHalfTime: switch (version) {
           GameLogVersion.v0 => false,
-          GameLogVersion.v1 => json["hasHalfTime"] as bool,
+          GameLogVersion.v1 || GameLogVersion.v2 => json["hasHalfTime"] as bool,
         },
       ),
     GameStage.voting || GameStage.finalVoting => GameStateVoting(
@@ -118,7 +126,7 @@ BaseGameState gameStateFromJson(Map<String, dynamic> json, {required GameLogVers
         playerNumbers: (json["playerNumbers"] as List<dynamic>).cast<int>(),
         votes: switch (version) {
           GameLogVersion.v0 => json["votesForDropTable"] as int,
-          GameLogVersion.v1 => json["votes"] as int,
+          GameLogVersion.v1 || GameLogVersion.v2 => json["votes"] as int,
         },
       ),
     GameStage.nightKill => GameStateNightKill(
