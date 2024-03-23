@@ -4,12 +4,10 @@ import "package:provider/provider.dart";
 import "../utils/db/adapters.dart";
 import "../utils/db/models.dart" as db_models;
 import "../utils/errors.dart";
-import "../utils/game_log.dart";
-import "../utils/json/from_json.dart";
-import "../utils/json/to_json.dart";
 import "../utils/load_save_file.dart";
 import "../utils/log.dart";
 import "../utils/ui.dart";
+import "../utils/versioned/db_players.dart";
 import "../widgets/confirmation_dialog.dart";
 import "player_info.dart";
 
@@ -137,16 +135,6 @@ class PlayersScreen extends StatelessWidget {
     );
   }
 
-  List<db_models.Player> _loadFromJson(dynamic data) {
-    if (data is! Map<String, dynamic>) {
-      throw ArgumentError("Invalid data type: ${data.runtimeType}");
-    }
-    final players = (data["players"] as List<dynamic>).parseJsonList(
-      (json) => fromJson<db_models.Player>(json, gameLogVersion: GameLogVersion.latest),
-    );
-    return players;
-  }
-
   void _onLoadFromJsonError(BuildContext context, Object error, StackTrace stackTrace) {
     showSnackBar(context, const SnackBar(content: Text("Ошибка загрузки игроков")));
     _log.error("Error loading player list: e=$error\n$stackTrace");
@@ -154,7 +142,7 @@ class PlayersScreen extends StatelessWidget {
 
   Future<void> _onLoadPressed(BuildContext context) async {
     final playersFromFile = await loadJsonFile(
-      fromJson: _loadFromJson,
+      fromJson: VersionedDBPlayers.fromJson,
       onError: (e, st) => _onLoadFromJsonError(context, e, st),
     );
     if (playersFromFile == null) {
@@ -177,12 +165,12 @@ class PlayersScreen extends StatelessWidget {
     switch (strategy) {
       case _LoadStrategy.replace:
         await players.clear();
-        await players.addAll(playersFromFile);
+        await players.addAll(playersFromFile.value);
       case _LoadStrategy.append:
-        await players.addAll(playersFromFile);
+        await players.addAll(playersFromFile.value);
       case _LoadStrategy.merge:
         final allPlayers = players.dataWithIDs;
-        for (final player in playersFromFile) {
+        for (final player in playersFromFile.value) {
           final existing = allPlayers.where((e) => e.$2.nickname == player.nickname).firstOrNull;
           if (existing != null) {
             await players.edit(existing.$1, player);
@@ -200,9 +188,7 @@ class PlayersScreen extends StatelessWidget {
   Future<void> _onSavePressed(BuildContext context) async {
     final players = context.read<PlayerList>();
     final wasSaved = await saveJsonFile(
-      {
-        "players": players.data.map((e) => e.toJson()).toList(),
-      },
+      VersionedDBPlayers(players.data).toJson(),
       filename: "mafia_players",
     );
     if (!context.mounted || !wasSaved) {

@@ -7,9 +7,9 @@ import "package:provider/provider.dart";
 import "../../game/log.dart";
 import "../extensions.dart";
 import "../game_controller.dart";
-import "../game_log.dart";
 import "../json/from_json.dart";
 import "../json/to_json.dart";
+import "../versioned/game_log.dart";
 
 Future<void> reportBug(BuildContext context) async {
   throw UnimplementedError("stub");
@@ -53,7 +53,7 @@ class GameInfo {
         seed: json["seed"] as int,
         // assuming bug reports are checked in the same app version as the game was played
         log: (json["log"] as List<dynamic>).parseJsonList(
-          (e) => fromJson<BaseGameLogItem>(e, gameLogVersion: GameLogVersion.latest),
+          (e) => gameLogFromJson(e, version: GameLogVersion.latest),
         ),
       );
 }

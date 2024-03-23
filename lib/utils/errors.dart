@@ -7,28 +7,27 @@ class ChecksumMismatch extends AssertionError {
       : super('Checksum mismatch: expected "$expected", got "$actual"');
 }
 
-class UnsupportedGameLogVersion extends UnsupportedError {
+class UnsupportedVersion extends UnsupportedError {
   final int version;
 
-  UnsupportedGameLogVersion({
+  UnsupportedVersion({
     required this.version,
     String? message,
-  }) : super(message ?? "Unsupported game log version: $version");
+  }) : super(message ?? "Unsupported version: $version");
 
   @override
   String toString() => message!;
 }
 
-class RemovedGameLogVersion extends UnsupportedGameLogVersion {
+class RemovedVersion extends UnsupportedVersion {
   final String lastSupportedAppVersion;
 
-  RemovedGameLogVersion({
+  RemovedVersion({
     required super.version,
     required this.lastSupportedAppVersion,
     String? message,
   }) : super(
           message: message ??
-              "Unsupported game log version: $version, use app"
-                  " <=v$lastSupportedAppVersion to open it.",
+              "Unsupported version: $version, use app <=v$lastSupportedAppVersion to load this.",
         );
 }

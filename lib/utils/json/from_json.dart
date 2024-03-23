@@ -4,7 +4,8 @@ import "../../game/log.dart";
 import "../../game/player.dart";
 import "../../game/states.dart";
 import "../db/models.dart" as db_models;
-import "../game_log.dart";
+import "../versioned/db_players.dart";
+import "../versioned/game_log.dart";
 
 extension MapParseJson on Map<String, dynamic> {
   LinkedHashMap<int, VT> parseJsonMap<VT>() =>
@@ -16,18 +17,18 @@ extension ListDynamicParseJson on List<dynamic> {
       cast<Map<String, dynamic>>().map(fromJson).toList();
 }
 
-BaseGameLogItem _gameLogFromJson(Map<String, dynamic> json, {required GameLogVersion version}) {
+BaseGameLogItem gameLogFromJson(Map<String, dynamic> json, {required GameLogVersion version}) {
   if (json.containsKey("newState")) {
     return StateChangeGameLogItem(
       oldState: json["oldState"] != null
-          ? fromJson<BaseGameState>(
-        json["oldState"] as Map<String, dynamic>,
-        gameLogVersion: version,
-      )
+          ? gameStateFromJson(
+              json["oldState"] as Map<String, dynamic>,
+              version: version,
+            )
           : null,
-      newState: fromJson(
+      newState: gameStateFromJson(
         json["newState"] as Map<String, dynamic>,
-        gameLogVersion: version,
+        version: version,
       ),
     );
   }
@@ -59,111 +60,103 @@ BaseGameLogItem _gameLogFromJson(Map<String, dynamic> json, {required GameLogVer
   throw ArgumentError.value(json, "json", "Unknown game log item");
 }
 
-BaseGameState _gameStateFromJson(Map<String, dynamic> json, {required GameLogVersion version}) {
+BaseGameState gameStateFromJson(Map<String, dynamic> json, {required GameLogVersion version}) {
   var stageString = json["stage"] as String;
   if (version == GameLogVersion.v0 && stageString == "dropTableVoting") {
     stageString = GameStage.knockoutVoting.name; // compatibility for old logs
   }
   final stage = GameStage.byName(stageString);
   final day = json["day"] as int;
-  final players = (json["players"] as List<dynamic>)
-      .parseJsonList((e) => fromJson<Player>(e, gameLogVersion: version));
+  final players =
+      (json["players"] as List<dynamic>).parseJsonList((e) => playerFromJson(e, version: version));
   return switch (stage) {
     GameStage.prepare => GameStatePrepare(players: players),
     GameStage.night0 || GameStage.preVoting || GameStage.preFinalVoting => GameStateWithPlayers(
-      stage: stage,
-      day: day,
-      players: players,
-      playerNumbers: (json["playerNumbers"] as List<dynamic>).cast<int>(),
-    ),
+        stage: stage,
+        day: day,
+        players: players,
+        playerNumbers: (json["playerNumbers"] as List<dynamic>).cast<int>(),
+      ),
     GameStage.night0SheriffCheck || GameStage.nightLastWords => GameStateWithPlayer(
-      stage: stage,
-      day: day,
-      players: players,
-      currentPlayerNumber: json["currentPlayerNumber"] as int,
-    ),
+        stage: stage,
+        day: day,
+        players: players,
+        currentPlayerNumber: json["currentPlayerNumber"] as int,
+      ),
     GameStage.speaking => GameStateSpeaking(
-      day: day,
-      players: players,
-      currentPlayerNumber: json["currentPlayerNumber"] as int,
-      accusations: (json["accusations"] as Map<String, dynamic>).parseJsonMap(),
-      canOnlyAccuse: switch (version) {
-        GameLogVersion.v0 => false,
-        GameLogVersion.v1 => json["canOnlyAccuse"] as bool,
-      },
-      hasHalfTime: switch (version) {
-        GameLogVersion.v0 => false,
-        GameLogVersion.v1 => json["hasHalfTime"] as bool,
-      },
-    ),
+        day: day,
+        players: players,
+        currentPlayerNumber: json["currentPlayerNumber"] as int,
+        accusations: (json["accusations"] as Map<String, dynamic>).parseJsonMap(),
+        canOnlyAccuse: switch (version) {
+          GameLogVersion.v0 => false,
+          GameLogVersion.v1 => json["canOnlyAccuse"] as bool,
+        },
+        hasHalfTime: switch (version) {
+          GameLogVersion.v0 => false,
+          GameLogVersion.v1 => json["hasHalfTime"] as bool,
+        },
+      ),
     GameStage.voting || GameStage.finalVoting => GameStateVoting(
-      stage: stage,
-      day: day,
-      players: players,
-      votes: (json["votes"] as Map<String, dynamic>).parseJsonMap(),
-      currentPlayerNumber: json["currentPlayerNumber"] as int,
-      currentPlayerVotes: json["currentPlayerVotes"] as int?,
-    ),
+        stage: stage,
+        day: day,
+        players: players,
+        votes: (json["votes"] as Map<String, dynamic>).parseJsonMap(),
+        currentPlayerNumber: json["currentPlayerNumber"] as int,
+        currentPlayerVotes: json["currentPlayerVotes"] as int?,
+      ),
     GameStage.excuse || GameStage.dayLastWords => GameStateWithIterablePlayers(
-      stage: stage,
-      day: day,
-      players: players,
-      playerNumbers: (json["playerNumbers"] as List<dynamic>).cast<int>(),
-      currentPlayerIndex: json["currentPlayerIndex"] as int,
-    ),
+        stage: stage,
+        day: day,
+        players: players,
+        playerNumbers: (json["playerNumbers"] as List<dynamic>).cast<int>(),
+        currentPlayerIndex: json["currentPlayerIndex"] as int,
+      ),
     GameStage.knockoutVoting => GameStateKnockoutVoting(
-      day: day,
-      players: players,
-      playerNumbers: (json["playerNumbers"] as List<dynamic>).cast<int>(),
-      votes: switch (version) {
-        GameLogVersion.v0 => json["votesForDropTable"] as int,
-        GameLogVersion.v1 => json["votes"] as int,
-      },
-    ),
+        day: day,
+        players: players,
+        playerNumbers: (json["playerNumbers"] as List<dynamic>).cast<int>(),
+        votes: switch (version) {
+          GameLogVersion.v0 => json["votesForDropTable"] as int,
+          GameLogVersion.v1 => json["votes"] as int,
+        },
+      ),
     GameStage.nightKill => GameStateNightKill(
-      day: day,
-      players: players,
-      thisNightKilledPlayerNumber: json["thisNightKilledPlayerNumber"] as int?,
-    ),
+        day: day,
+        players: players,
+        thisNightKilledPlayerNumber: json["thisNightKilledPlayerNumber"] as int?,
+      ),
     GameStage.nightCheck => GameStateNightCheck(
-      day: day,
-      players: players,
-      activePlayerNumber: json["activePlayerNumber"] as int,
-    ),
+        day: day,
+        players: players,
+        activePlayerNumber: json["activePlayerNumber"] as int,
+      ),
     GameStage.bestTurn => GameStateBestTurn(
-      day: day,
-      players: players,
-      currentPlayerNumber: json["currentPlayerNumber"] as int,
-      playerNumbers: (json["playerNumbers"] as List<dynamic>).cast<int>(),
-    ),
+        day: day,
+        players: players,
+        currentPlayerNumber: json["currentPlayerNumber"] as int,
+        playerNumbers: (json["playerNumbers"] as List<dynamic>).cast<int>(),
+      ),
     GameStage.finish => GameStateFinish(
-      day: day,
-      players: players,
-      winner: json["winner"] != null ? RoleTeam.byName(json["winner"]! as String) : null,
-    ),
+        day: day,
+        players: players,
+        winner: json["winner"] != null ? RoleTeam.byName(json["winner"]! as String) : null,
+      ),
   };
 }
 
-Player _playerFromJson(Map<String, dynamic> json, {required GameLogVersion version}) => Player(
-  role: PlayerRole.byName(json["role"] as String),
-  number: json["number"] as int,
-  nickname: json["nickname"] as String?,
-  isAlive: json["isAlive"] as bool,
-  warns: json["warns"] as int,
-);
+Player playerFromJson(Map<String, dynamic> json, {required GameLogVersion version}) => Player(
+      role: PlayerRole.byName(json["role"] as String),
+      number: json["number"] as int,
+      nickname: json["nickname"] as String?,
+      isAlive: json["isAlive"] as bool,
+      warns: json["warns"] as int,
+    );
 
-db_models.Player _dbPlayerFromJson(
+db_models.Player dbPlayerFromJson(
   Map<String, dynamic> json, {
-  required GameLogVersion version,
+  required DBPlayerVersion version,
 }) =>
     db_models.Player(
       nickname: json["nickname"] as String,
     );
-
-T fromJson<T>(Map<String, dynamic> json, {required GameLogVersion gameLogVersion}) => switch (T) {
-  const (BaseGameLogItem) => _gameLogFromJson(json, version: gameLogVersion) as T,
-  const (BaseGameState) => _gameStateFromJson(json, version: gameLogVersion) as T,
-  const (Player) => _playerFromJson(json, version: gameLogVersion) as T,
-  const (db_models.Player) => _dbPlayerFromJson(json, version: gameLogVersion) as T,
-  _ => throw UnimplementedError("fromJson for $T"),
-};

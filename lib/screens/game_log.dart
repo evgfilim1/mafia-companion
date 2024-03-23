@@ -9,11 +9,11 @@ import "../game/states.dart";
 import "../utils/bug_report/stub.dart";
 import "../utils/errors.dart";
 import "../utils/game_controller.dart";
-import "../utils/game_log.dart";
 import "../utils/json/to_json.dart";
 import "../utils/load_save_file.dart";
 import "../utils/log.dart";
 import "../utils/ui.dart";
+import "../utils/versioned/game_log.dart";
 
 final _fileNameDateFormat = DateFormat("yyyy-MM-dd_HH-mm-ss");
 
@@ -101,9 +101,9 @@ class GameLogScreen extends StatelessWidget {
   }
 
   void _onLoadLogFromJsonError(BuildContext context, Object error, StackTrace stackTrace) {
-    if (error is UnsupportedGameLogVersion) {
+    if (error is UnsupportedVersion) {
       var content = "Версия этого журнала игры не поддерживается.";
-      if (error is RemovedGameLogVersion) {
+      if (error is RemovedVersion) {
         content += " Попробуйте использовать приложение версии <=v${error.lastSupportedAppVersion}";
       }
       showSimpleDialog(
@@ -146,7 +146,7 @@ class GameLogScreen extends StatelessWidget {
     await Navigator.push(
       context,
       MaterialPageRoute<void>(
-        builder: (_) => GameLogScreen(log: logFromFile.log),
+        builder: (_) => GameLogScreen(log: logFromFile.value),
       ),
     );
   }
