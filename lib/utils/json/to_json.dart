@@ -111,8 +111,24 @@ extension PlayerJson on Player {
       };
 }
 
+extension MapRoleJson on Map<PlayerRole, int> {
+  Map<String, int> toJson() => map((k, v) => MapEntry(k.name, v));
+}
+
+extension PlayerStatsJson on db_models.PlayerStats {
+  Map<String, dynamic> toJson() => {
+        "gamesByRole": gamesByRole.toJson(),
+        "winsByRole": winsByRole.toJson(),
+        "totalWarns": totalWarns,
+        "totalKicks": totalKicks,
+        "totalGuessedMafia": totalGuessedMafia,
+      };
+}
+
 extension DbPlayerJson on db_models.Player {
   Map<String, dynamic> toJson() => {
         "nickname": nickname,
+        "realName": realName,
+        "stats": stats.toJson(),
       };
 }

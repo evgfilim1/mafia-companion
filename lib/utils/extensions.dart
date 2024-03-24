@@ -45,3 +45,13 @@ extension RaiseForStatus on http.Response {
 extension CountWhere<T> on Iterable<T> {
   int countWhere(bool Function(T) test) => where(test).length;
 }
+
+extension Zip<T> on Iterable<T> {
+  Iterable<(T, T0)> zip<T0>(Iterable<T0> other) sync* {
+    final it1 = iterator;
+    final it2 = other.iterator;
+    while (it1.moveNext() && it2.moveNext()) {
+      yield (it1.current, it2.current);
+    }
+  }
+}

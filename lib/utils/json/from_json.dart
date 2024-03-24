@@ -168,4 +168,28 @@ db_models.Player dbPlayerFromJson(
     db_models.Player(
       nickname: json["nickname"] as String,
       realName: json["realName"] as String? ?? "",
+      stats: json["stats"] != null
+          ? dbPlayerStatsFromJson(
+              json["stats"] as Map<String, dynamic>,
+              version: version,
+            )
+          : const db_models.PlayerStats.defaults(),
+    );
+
+db_models.PlayerStats dbPlayerStatsFromJson(
+  Map<String, dynamic> json, {
+  required DBPlayerVersion version,
+}) =>
+    db_models.PlayerStats(
+      gamesByRole: {
+        for (final entry in (json["gamesByRole"] as Map<String, dynamic>).entries)
+          PlayerRole.byName(entry.key): entry.value as int,
+      },
+      winsByRole: {
+        for (final entry in (json["winsByRole"] as Map<String, dynamic>).entries)
+          PlayerRole.byName(entry.key): entry.value as int,
+      },
+      totalWarns: json["totalWarns"] as int,
+      totalKicks: json["totalKicks"] as int,
+      totalGuessedMafia: json["totalGuessedMafia"] as int,
     );

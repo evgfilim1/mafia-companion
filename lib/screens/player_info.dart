@@ -2,11 +2,13 @@ import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 
-import "../utils/db/adapters.dart";
 import "../utils/db/models.dart" as db_models;
+import "../utils/db/repo.dart";
+import "../utils/extensions.dart";
 import "../utils/log.dart";
 import "../widgets/confirmation_dialog.dart";
 import "../widgets/list_tiles/text_field.dart";
+import "player_stats.dart";
 
 class PlayerInfoScreen extends StatelessWidget {
   static final _log = Logger("PlayerInfoScreen");
@@ -87,6 +89,19 @@ class PlayerInfoScreen extends StatelessWidget {
                 initialText: player.realName,
                 textCapitalization: TextCapitalization.words,
                 onSubmit: (value) => players.edit(playerKey, player.copyWith(realName: value)),
+              ),
+              ListTile(
+                leading: const Icon(Icons.bar_chart),
+                title: const Text("Статистика"),
+                subtitle: Text("Сыграно игр: ${player.stats.gamesByRole.values.sum}"),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute<void>(
+                      builder: (context) => PlayerStatsScreen(playerKey: playerKey),
+                    ),
+                  );
+                },
               ),
               ListTile(
                 leading: const Icon(Icons.delete, color: Colors.red),

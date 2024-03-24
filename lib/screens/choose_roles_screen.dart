@@ -5,7 +5,7 @@ import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 
 import "../game/player.dart";
-import "../utils/db/adapters.dart";
+import "../utils/db/repo.dart";
 import "../utils/errors.dart";
 import "../utils/extensions.dart";
 import "../utils/find_seed.dart";

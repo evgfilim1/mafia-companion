@@ -1,8 +1,8 @@
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 
-import "../utils/db/adapters.dart";
 import "../utils/db/models.dart" as db_models;
+import "../utils/db/repo.dart";
 import "../utils/errors.dart";
 import "../utils/load_save_file.dart";
 import "../utils/log.dart";
@@ -13,7 +13,6 @@ import "player_info.dart";
 
 enum _LoadStrategy {
   replace,
-  append,
   merge,
 }
 
@@ -28,6 +27,7 @@ class _AddPlayerDialogState extends State<_AddPlayerDialog> {
   final _formKey = GlobalKey<FormState>();
   final _nicknameController = TextEditingController();
   final _realNameController = TextEditingController();
+  var _isNicknameAvailable = true;
 
   @override
   void dispose() {
@@ -36,11 +36,22 @@ class _AddPlayerDialogState extends State<_AddPlayerDialog> {
     super.dispose();
   }
 
-  void _onSubmit() {
-    if (_formKey.currentState!.validate()) {
+  Future<void> _onSubmit(BuildContext context) async {
+    final nickname = _nicknameController.text.trim();
+    final existingPlayer = await context.read<PlayerList>().getByNickname(nickname);
+    setState(() {
+      _isNicknameAvailable = existingPlayer == null;
+    });
+    if (_formKey.currentState?.validate() ?? false) {
+      if (!context.mounted) {
+        return;
+      }
       Navigator.pop(
         context,
-        db_models.Player(nickname: _nicknameController.text, realName: _realNameController.text),
+        db_models.Player(
+          nickname: nickname,
+          realName: _realNameController.text.trim(),
+        ),
       );
     }
   }
@@ -65,10 +76,13 @@ class _AddPlayerDialogState extends State<_AddPlayerDialog> {
                   if ((value ?? "").isEmpty) {
                     return "Введите никнейм";
                   }
+                  if (!_isNicknameAvailable) {
+                    return "Никнейм занят";
+                  }
                   return null;
                 },
-                onFieldSubmitted: (_) => _onSubmit(),
               ),
+              const SizedBox(height: 8),
               TextFormField(
                 controller: _realNameController,
                 decoration: const InputDecoration(
@@ -77,7 +91,6 @@ class _AddPlayerDialogState extends State<_AddPlayerDialog> {
                 ),
                 autofocus: false,
                 textCapitalization: TextCapitalization.words,
-                onFieldSubmitted: (_) => _onSubmit(),
               ),
             ],
           ),
@@ -88,7 +101,7 @@ class _AddPlayerDialogState extends State<_AddPlayerDialog> {
             child: const Text("Отмена"),
           ),
           TextButton(
-            onPressed: _onSubmit,
+            onPressed: () => _onSubmit(context),
             child: const Text("Добавить"),
           ),
         ],
@@ -109,15 +122,9 @@ class _LoadStrategyDialog extends StatelessWidget {
             onTap: () => Navigator.pop(context, _LoadStrategy.replace),
           ),
           ListTile(
-            leading: const Icon(Icons.add),
-            title: const Text("Добавить"),
-            subtitle: const Text("Добавить новых игроков из файла к текущему списку"),
-            onTap: () => Navigator.pop(context, _LoadStrategy.append),
-          ),
-          ListTile(
             leading: const Icon(Icons.merge),
-            title: const Text("Объединить"),
-            subtitle: const Text("Объединить игроков из файла с текущим списком по никнейму"),
+            title: const Text("Объединить по никнейму"),
+            subtitle: const Text("Существующие игроки заменяются из файла, новые добавляются"),
             onTap: () => Navigator.pop(context, _LoadStrategy.merge),
           ),
           ListTile(
@@ -134,17 +141,19 @@ class _PlayerTile extends StatelessWidget {
   final db_models.Player player;
   final VoidCallback onTap;
 
-  const _PlayerTile({required this.player, required this.onTap,});
+  const _PlayerTile({
+    required this.player,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) => ListTile(
-      leading: const Icon(Icons.person),
-      title: Text(player.nickname),
-      subtitle: player.realName.isNotEmpty ? Text(player.realName) : null,
-      onTap: onTap,
-    );
+        leading: const Icon(Icons.person),
+        title: Text(player.nickname),
+        subtitle: player.realName.isNotEmpty ? Text(player.realName) : null,
+        onTap: onTap,
+      );
 }
-
 
 class PlayersScreen extends StatelessWidget {
   static final _log = Logger("PlayersScreen");
@@ -208,18 +217,23 @@ class PlayersScreen extends StatelessWidget {
       case _LoadStrategy.replace:
         await players.clear();
         await players.addAll(playersFromFile.value);
-      case _LoadStrategy.append:
-        await players.addAll(playersFromFile.value);
       case _LoadStrategy.merge:
-        final allPlayers = players.dataWithIDs;
+        final nicknameToID = <String, int>{};
+        for (final (key, player) in players.dataWithIDs) {
+          nicknameToID[player.nickname] = key;
+        }
+        final edits = <int, db_models.Player>{};
+        final adds = <db_models.Player>[];
         for (final player in playersFromFile.value) {
-          final existing = allPlayers.where((e) => e.$2.nickname == player.nickname).firstOrNull;
-          if (existing != null) {
-            await players.edit(existing.$1, player);
+          final key = nicknameToID[player.nickname];
+          if (key != null) {
+            edits[key] = player;
           } else {
-            await players.add(player);
+            adds.add(player);
           }
         }
+        await players.editAll(edits);
+        await players.addAll(adds);
     }
     if (!context.mounted) {
       throw ContextNotMountedError();
@@ -322,11 +336,11 @@ class PlayersScreen extends StatelessWidget {
 }
 
 class _PlayerSearchDelegate extends SearchDelegate<int> {
-  final List<(int, db_models.Player)> data;
+  final List<PlayerWithID> data;
 
   _PlayerSearchDelegate(this.data) : super(searchFieldLabel: "Никнейм");
 
-  List<(int, db_models.Player)> get filteredData => data.where((e) {
+  List<PlayerWithID> get filteredData => data.where((e) {
         final p = e.$2;
         final q = query.toLowerCase();
         return p.nickname.toLowerCase().contains(q) || p.realName.toLowerCase().contains(q);

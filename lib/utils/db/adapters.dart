@@ -1,49 +1,36 @@
-import "package:flutter/foundation.dart";
 import "package:hive_flutter/hive_flutter.dart";
 
-import "../extensions.dart";
-import "models.dart";
+import "../../game/player.dart";
 
-class PlayerList with ChangeNotifier {
-  var _data = <int, Player>{};
-  final _box = Hive.box<Player>("players");
+class PlayerRoleAdapter extends TypeAdapter<PlayerRole> {
+  @override
+  final int typeId = 0;
 
-  List<Player> get data {
-    _data = _box.toMap().cast();
-    return _data.values.toUnmodifiableList();
+  @override
+  PlayerRole read(BinaryReader reader) {
+    switch (reader.readByte()) {
+      case 0:
+        return PlayerRole.citizen;
+      case 1:
+        return PlayerRole.sheriff;
+      case 2:
+        return PlayerRole.mafia;
+      case 3:
+        return PlayerRole.don;
+      default:
+        throw const FormatException("Unknown PlayerRole");
+    }
   }
 
-  List<(int, Player)> get dataWithIDs {
-    _data = _box.toMap().cast();
-    return _data.entries.map((e) => (e.key, e.value)).toUnmodifiableList();
-  }
-
-  Future<void> add(Player player) async {
-    await _box.add(player);
-    notifyListeners();
-  }
-
-  Future<void> addAll(Iterable<Player> players) async {
-    await _box.addAll(players);
-    notifyListeners();
-  }
-
-  Future<Player?> get(int key, {Player? defaultValue}) async =>
-      _box.get(key, defaultValue: defaultValue);
-
-  Future<void> edit(int key, Player newPlayer) async {
-    await _box.put(key, newPlayer);
-    notifyListeners();
-  }
-
-  Future<void> delete(int key) async {
-    await _box.delete(key);
-    notifyListeners();
-  }
-
-  Future<void> clear() async {
-    await _box.clear();
-    _data.clear();
-    notifyListeners();
+  @override
+  void write(BinaryWriter writer, PlayerRole obj) {
+    writer.writeByte(
+      switch (obj) {
+        PlayerRole.citizen => 0,
+        PlayerRole.sheriff => 1,
+        PlayerRole.mafia => 2,
+        PlayerRole.don => 3,
+      },
+    );
   }
 }

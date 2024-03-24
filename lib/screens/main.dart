@@ -6,7 +6,13 @@ import "package:flutter/services.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import "package:provider/provider.dart";
 
+import "../game/log.dart";
+import "../game/player.dart";
+import "../game/states.dart";
+import "../utils/db/models.dart";
+import "../utils/db/repo.dart";
 import "../utils/errors.dart";
+import "../utils/extensions.dart";
 import "../utils/game_controller.dart";
 import "../utils/settings.dart";
 import "../utils/ui.dart";
@@ -215,6 +221,66 @@ class _RotatableMainScreenBody extends OrientationDependentWidget {
 class _MainScreenMainBodyContent extends StatelessWidget {
   const _MainScreenMainBodyContent();
 
+  Future<void> _onTapNext(BuildContext context, GameController controller) async {
+    final nextStateAssumption = controller.nextStateAssumption;
+    if (nextStateAssumption == null) {
+      return;
+    }
+    controller.setNextState();
+    if (nextStateAssumption case GameStateFinish(:final players, :final winner)) {
+      final playersContainer = context.read<PlayerList>();
+      final saveStats = await showDialog<bool>(
+        context: context,
+        builder: (context) => const ConfirmationDialog(
+          title: Text("Сохранить результаты игры?"),
+          content: Text(
+            "Результат этой игры будет учтён у каждого зарегистрированного игрока в статистике.",
+          ),
+        ),
+      );
+      if (!(saveStats ?? false)) {
+        return;
+      }
+      final bestTurn = controller.gameLog
+          .whereType<StateChangeGameLogItem>()
+          .map((e) => e.oldState)
+          .nonNulls
+          .whereType<GameStateBestTurn>()
+          .last;
+      final guessedMafiaCount =
+          bestTurn.playerNumbers.where((e) => players[e - 1].role.team == RoleTeam.mafia).length;
+      final dbPlayers =
+          await playersContainer.getManyByNicknames(players.map((e) => e.nickname).toList());
+      final newStats = <PlayerStats>[];
+      for (final (dbPlayer, player) in dbPlayers.zip(players)) {
+        if (dbPlayer == null) {
+          continue;
+        }
+        newStats.add(
+          dbPlayer.$2.stats.copyWithUpdated(
+            playedAs: player.role,
+            won: winner == player.role.team,
+            warnCount: player.warns,
+            wasKicked: player.warns >= 4,
+            guessedMafiaCount:
+                bestTurn.currentPlayerNumber == player.number ? guessedMafiaCount : 0,
+          ),
+        );
+      }
+      await playersContainer.editAll(
+        Map.fromEntries(
+          dbPlayers.nonNulls
+              .zip(newStats)
+              .map((e) => MapEntry(e.$1.$1, e.$1.$2.copyWith(stats: e.$2))),
+        ),
+      );
+      if (!context.mounted) {
+        return;
+      }
+      showSnackBar(context, const SnackBar(content: Text("Результаты игры сохранены")));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<GameController>();
@@ -228,7 +294,7 @@ class _MainScreenMainBodyContent extends StatelessWidget {
         BottomControlBar(
           backLabel: previousState?.prettyName ?? "(недоступно)",
           onTapBack: previousState != null ? controller.setPreviousState : null,
-          onTapNext: nextStateAssumption != null ? controller.setNextState : null,
+          onTapNext: nextStateAssumption != null ? () => _onTapNext(context, controller) : null,
           nextLabel: nextStateAssumption?.prettyName ?? "(недоступно)",
         ),
       ],
