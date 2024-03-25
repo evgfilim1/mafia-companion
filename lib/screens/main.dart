@@ -246,9 +246,9 @@ class _MainScreenMainBodyContent extends StatelessWidget {
           .map((e) => e.oldState)
           .nonNulls
           .whereType<GameStateBestTurn>()
-          .last;
+          .lastOrNull;
       final guessedMafiaCount =
-          bestTurn.playerNumbers.where((e) => players[e - 1].role.team == RoleTeam.mafia).length;
+          bestTurn?.playerNumbers.where((e) => players[e - 1].role.team == RoleTeam.mafia).length;
       final dbPlayers =
           await playersContainer.getManyByNicknames(players.map((e) => e.nickname).toList());
       final newStats = <PlayerStats>[];
@@ -263,7 +263,7 @@ class _MainScreenMainBodyContent extends StatelessWidget {
             warnCount: player.warns,
             wasKicked: player.warns >= 4,
             guessedMafiaCount:
-                bestTurn.currentPlayerNumber == player.number ? guessedMafiaCount : 0,
+                bestTurn?.currentPlayerNumber == player.number ? (guessedMafiaCount ?? 0) : 0,
           ),
         );
       }
