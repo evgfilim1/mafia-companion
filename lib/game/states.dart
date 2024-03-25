@@ -1,6 +1,6 @@
 import "dart:collection";
 
-import "package:flutter/foundation.dart";
+import "package:meta/meta.dart";
 
 import "player.dart";
 
@@ -99,6 +99,7 @@ class GameStatePrepare extends BaseGameState {
   @override
   int get hashCode => Object.hash(stage, day, players);
 
+  @useResult
   GameStatePrepare copyWith({
     List<Player>? players,
   }) =>
@@ -126,6 +127,7 @@ class GameStateNightRest extends BaseGameState {
   @override
   int get hashCode => Object.hash(stage, day, players);
 
+  @useResult
   GameStateNightRest copyWith({
     List<Player>? players,
   }) =>
@@ -169,6 +171,7 @@ class GameStateWithPlayer extends BaseGameState {
       oldState is GameStateWithPlayer && currentPlayerNumber != oldState.currentPlayerNumber ||
       super.hasStateChanged(oldState);
 
+  @useResult
   GameStateWithPlayer copyWith({
     GameStage? stage,
     int? day,
@@ -230,6 +233,7 @@ class GameStateSpeaking extends BaseGameState {
       oldState is GameStateSpeaking && currentPlayerNumber != oldState.currentPlayerNumber ||
       super.hasStateChanged(oldState);
 
+  @useResult
   GameStateSpeaking copyWith({
     int? day,
     List<Player>? players,
@@ -291,6 +295,7 @@ class GameStateVoting extends BaseGameState {
       oldState is GameStateVoting && currentPlayerNumber != oldState.currentPlayerNumber ||
       super.hasStateChanged(oldState);
 
+  @useResult
   GameStateVoting copyWith({
     GameStage? stage,
     int? day,
@@ -338,6 +343,7 @@ class GameStateKnockoutVoting extends BaseGameState {
   @override
   int get hashCode => Object.hash(stage, day, players, playerNumbers, votes);
 
+  @useResult
   GameStateKnockoutVoting copyWith({
     int? day,
     List<Player>? players,
@@ -389,6 +395,7 @@ class GameStateWithPlayers extends BaseGameState {
       oldState is GameStateWithPlayers && playerNumbers != oldState.playerNumbers ||
       super.hasStateChanged(oldState);
 
+  @useResult
   GameStateWithPlayers copyWith({
     GameStage? stage,
     int? day,
@@ -429,6 +436,7 @@ class GameStateNightKill extends BaseGameState {
   @override
   int get hashCode => Object.hash(stage, day, players, thisNightKilledPlayerNumber);
 
+  @useResult
   GameStateNightKill copyWith({
     int? day,
     List<Player>? players,
@@ -478,6 +486,7 @@ class GameStateNightCheck extends BaseGameState {
       oldState is GameStateNightCheck && activePlayerNumber != oldState.activePlayerNumber ||
       super.hasStateChanged(oldState);
 
+  @useResult
   GameStateNightCheck copyWith({
     int? day,
     List<Player>? players,
@@ -525,6 +534,7 @@ class GameStateBestTurn extends BaseGameState {
       oldState is GameStateBestTurn && currentPlayerNumber != oldState.currentPlayerNumber ||
       super.hasStateChanged(oldState);
 
+  @useResult
   GameStateBestTurn copyWith({
     int? day,
     List<Player>? players,
@@ -585,6 +595,7 @@ class GameStateWithIterablePlayers extends BaseGameState {
 
   int get currentPlayerNumber => playerNumbers[currentPlayerIndex];
 
+  @useResult
   GameStateWithIterablePlayers copyWith({
     GameStage? stage,
     int? day,
@@ -632,6 +643,7 @@ class GameStateFinish extends BaseGameState {
   bool hasStateChanged(BaseGameState oldState) =>
       oldState is GameStateFinish && winner != oldState.winner || super.hasStateChanged(oldState);
 
+  @useResult
   GameStateFinish copyWith({
     int? day,
     List<Player>? players,

@@ -1,6 +1,6 @@
 import "dart:math";
 
-import "package:flutter/foundation.dart";
+import "package:meta/meta.dart";
 
 import "../utils/extensions.dart";
 
@@ -55,6 +55,7 @@ class Player {
     this.isKicked = false,
   });
 
+  @useResult
   Player copyWith({
     bool? isAlive,
     int? warns,
