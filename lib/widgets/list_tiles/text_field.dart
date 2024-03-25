@@ -21,7 +21,7 @@ class _EditorDialog extends StatefulWidget {
     this.labelText,
     this.validator,
     this.onSubmit,
-});
+  });
 
   @override
   State<_EditorDialog> createState() => _EditorDialogState();
@@ -68,38 +68,35 @@ class _EditorDialogState extends State<_EditorDialog> {
 
   @override
   Widget build(BuildContext context) => AlertDialog(
-    title: widget.title,
-    content: Form(
-      key: _formKey,
-      child: TextFormField(
-        controller: _controller,
-        keyboardType: widget.keyboardType,
-        textCapitalization: widget.textCapitalization ?? TextCapitalization.none,
-        autofocus: true,
-        decoration: InputDecoration(
-          border: const OutlineInputBorder(),
-          labelText: widget.labelText,
-          suffix: _validationInProgress
-              ? const CircularProgressIndicator()
-              : null,
+        title: widget.title,
+        content: Form(
+          key: _formKey,
+          child: TextFormField(
+            controller: _controller,
+            keyboardType: widget.keyboardType,
+            textCapitalization: widget.textCapitalization ?? TextCapitalization.none,
+            autofocus: true,
+            decoration: InputDecoration(
+              border: const OutlineInputBorder(),
+              labelText: widget.labelText,
+              suffix: _validationInProgress ? const CircularProgressIndicator() : null,
+            ),
+            validator: _validator,
+            onFieldSubmitted: (_) async => _onSaved(context),
+          ),
         ),
-        validator: _validator,
-        onFieldSubmitted: (_) async => _onSaved(context),
-      ),
-    ),
-    actions: [
-      TextButton(
-        onPressed: () => Navigator.pop(context),
-        child: const Text("Отмена"),
-      ),
-      TextButton(
-        onPressed: () => _onSaved(context),
-        child: const Text("Применить"),
-      ),
-    ],
-  );
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Отмена"),
+          ),
+          TextButton(
+            onPressed: () => _onSaved(context),
+            child: const Text("Применить"),
+          ),
+        ],
+      );
 }
-
 
 class TextFieldListTile extends StatelessWidget {
   final Widget? leading;
