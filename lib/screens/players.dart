@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:intl/intl.dart";
 import "package:provider/provider.dart";
 
 import "../utils/db/models.dart" as db_models;
@@ -10,6 +11,8 @@ import "../utils/ui.dart";
 import "../utils/versioned/db_players.dart";
 import "../widgets/confirmation_dialog.dart";
 import "player_info.dart";
+
+final _fileNameDateFormat = DateFormat("yyyy-MM-dd_HH-mm-ss");
 
 enum _LoadStrategy {
   replace,
@@ -245,7 +248,7 @@ class PlayersScreen extends StatelessWidget {
     final players = context.read<PlayerList>();
     final wasSaved = await saveJsonFile(
       VersionedDBPlayers(players.data).toJson(),
-      filename: "mafia_players",
+      filename: "mafia_players_${_fileNameDateFormat.format(DateTime.now())}",
     );
     if (!context.mounted || !wasSaved) {
       return;
