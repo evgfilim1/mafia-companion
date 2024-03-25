@@ -74,9 +74,13 @@ class PlayerInfoScreen extends StatelessWidget {
                 subtitle: Text(player.nickname),
                 initialText: player.nickname,
                 textCapitalization: TextCapitalization.words,
-                validator: (value) {
-                  if ((value ?? "").isEmpty) {
+                validator: (value) async {
+                  if (value == null || value.isEmpty) {
                     return "Введите никнейм";
+                  }
+                  final existingPlayer = await context.read<PlayerList>().getByNickname(value);
+                  if (existingPlayer != null && existingPlayer.$1 != playerKey) {
+                    return "Никнейм занят";
                   }
                   return null;
                 },
