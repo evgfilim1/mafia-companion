@@ -64,7 +64,7 @@ class PlayerStatsScreen extends StatelessWidget {
                 subtitle: Text(stats.totalWarns.toString()),
               ),
               ListTile(
-                title: const Text("Всего дисквалификаций"),
+                title: const Text("Всего дисквалификаций (удалений)"),
                 subtitle: Text(stats.totalKicks.toString()),
               ),
               ListTile(

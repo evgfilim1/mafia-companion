@@ -110,13 +110,13 @@ class PlayerButton extends StatelessWidget {
     this.onTap,
   });
 
-  void _onLongPress(BuildContext context, GameController controller, Player player) {
-    final isAliveText = player.isAlive ? "Жив" : "Мёртв";
+  void _onLongPress(BuildContext context, GameController controller) {
     showDialog<void>(
       context: context,
       builder: (context) {
         final controller = context.watch<GameController>();
         final player = controller.getPlayerByNumber(playerNumber);
+        final isAliveText = player.isAlive ? "Жив" : player.isKicked ? "Удалён" : "Мёртв";
         return AlertDialog(
           title: Text(player.nicknameOrNumber),
           content: Text(
@@ -198,7 +198,7 @@ class PlayerButton extends StatelessWidget {
           isAlive: player.isAlive,
           expanded: expanded,
           onTap: onTap,
-          onLongPress: () => _onLongPress(context, controller, player),
+          onLongPress: () => _onLongPress(context, controller),
           buttonTextBuilder: (text) {
             final nickname = player.nickname ?? "";
             final roleSuffix = _getRoleSuffix(player, full: expanded);
