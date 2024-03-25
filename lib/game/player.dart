@@ -43,6 +43,7 @@ class Player {
   final int number;
   final bool isAlive;
   final int warns;
+  final bool isKicked;
   final String? nickname;
 
   const Player({
@@ -51,11 +52,13 @@ class Player {
     required this.nickname,
     this.isAlive = true,
     this.warns = 0,
+    this.isKicked = false,
   });
 
   Player copyWith({
     bool? isAlive,
     int? warns,
+    bool? isKicked,
   }) =>
       Player(
         isAlive: isAlive ?? this.isAlive,
@@ -63,6 +66,7 @@ class Player {
         number: number,
         nickname: nickname,
         warns: warns ?? this.warns,
+        isKicked: isKicked ?? this.isKicked,
       );
 
   @override
@@ -72,10 +76,13 @@ class Player {
           runtimeType == other.runtimeType &&
           role == other.role &&
           number == other.number &&
-          isAlive == other.isAlive;
+          nickname == other.nickname &&
+          isAlive == other.isAlive &&
+          warns == other.warns &&
+          isKicked == other.isKicked;
 
   @override
-  int get hashCode => Object.hash(role, number, isAlive);
+  int get hashCode => Object.hash(role, number, nickname, isAlive, warns, isKicked);
 }
 
 List<Player> generatePlayers({
@@ -91,6 +98,7 @@ List<Player> generatePlayers({
         nickname: nicknames?.elementAt(i),
         isAlive: true,
         warns: 0,
+        isKicked: false,
       ),
   ].toUnmodifiableList();
 }

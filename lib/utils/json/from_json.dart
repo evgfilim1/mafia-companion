@@ -160,6 +160,10 @@ Player playerFromJson(Map<String, dynamic> json, {required GameLogVersion versio
       nickname: json["nickname"] as String?,
       isAlive: json["isAlive"] as bool,
       warns: json["warns"] as int,
+      isKicked: switch (version) {
+        GameLogVersion.v0 || GameLogVersion.v1 => json["warns"] as int >= 4,
+        GameLogVersion.v2 => json["isKicked"] as bool,
+      },
     );
 
 db_models.Player dbPlayerFromJson(

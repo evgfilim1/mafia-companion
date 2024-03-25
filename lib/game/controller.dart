@@ -589,7 +589,8 @@ class Game {
     final newWarnCount = (newPlayers[i].warns + 1).clamp(1, 4);
     newPlayers[i] = newPlayers[i].copyWith(
       warns: newWarnCount,
-      isAlive: newPlayers[i].isAlive && warnCount < 3,
+      isAlive: newPlayers[i].isAlive && newWarnCount < 4,
+      isKicked: newWarnCount == 4,
     );
     _log.add(
       PlayerWarnsChangedGameLogItem(
@@ -629,7 +630,7 @@ class Game {
     }
     final newPlayers = List.of(state.players);
     final i = number - 1;
-    newPlayers[i] = newPlayers[i].copyWith(warns: 4, isAlive: false);
+    newPlayers[i] = newPlayers[i].copyWith(isAlive: false, isKicked: true);
     _log.add(PlayerKickedGameLogItem(day: state.day, playerNumber: number));
     _editPlayers(newPlayers);
   }
@@ -641,7 +642,7 @@ class Game {
     final newPlayers = List.of(state.players);
     final targetPlayer = players.getByNumber(number);
     for (final player in newPlayers.where((p) => targetPlayer.role.team == p.role.team)) {
-      newPlayers[player.number - 1] = player.copyWith(warns: 4, isAlive: false);
+      newPlayers[player.number - 1] = player.copyWith(isAlive: false, isKicked: true);
     }
     _log.add(PlayerKickedGameLogItem(day: state.day, playerNumber: number, isOtherTeamWin: true));
     _editPlayers(newPlayers);

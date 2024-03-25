@@ -261,7 +261,7 @@ class _MainScreenMainBodyContent extends StatelessWidget {
           playedAs: player.role,
           won: nextState.winner == player.role.team,
           warnCount: player.warns,
-          wasKicked: player.warns >= 4,
+          wasKicked: player.isKicked,
           guessedMafiaCount:
               bestTurn?.currentPlayerNumber == player.number ? (guessedMafiaCount ?? 0) : 0,
           foundMafiaCount: player.role == PlayerRole.sheriff ? foundMafia.length : 0,

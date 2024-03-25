@@ -212,7 +212,7 @@ class PlayerButton extends StatelessWidget {
           top: 6,
           right: 6,
           child: Text(
-            player.warns < 4 ? "!" * player.warns : "x",
+            player.isKicked ? "x" : "!" * player.warns,
             style: const TextStyle(color: Colors.red),
           ),
         ),

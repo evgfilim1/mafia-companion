@@ -108,6 +108,7 @@ extension PlayerJson on Player {
         "nickname": nickname,
         "isAlive": isAlive,
         "warns": warns,
+        "isKicked": isKicked,
       };
 }
 
