@@ -52,6 +52,14 @@ class PlayerStatsScreen extends StatelessWidget {
                   subtitle: Text("${stats.winsByRole[role]}/${stats.gamesByRole[role]}"),
                 ),
               ListTile(
+                title: const Text("Всего найдено Мафий за роль Шерифа"),
+                subtitle: Text(stats.totalFoundMafia.toString()),
+              ),
+              ListTile(
+                title: const Text("Всего найдено Шерифов за роль Дона"),
+                subtitle: Text(stats.totalFoundSheriff.toString()),
+              ),
+              ListTile(
                 title: const Text("Всего предупреждений"),
                 subtitle: Text(stats.totalWarns.toString()),
               ),

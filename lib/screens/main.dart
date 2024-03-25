@@ -221,13 +221,74 @@ class _RotatableMainScreenBody extends OrientationDependentWidget {
 class _MainScreenMainBodyContent extends StatelessWidget {
   const _MainScreenMainBodyContent();
 
+  Future<void> _saveStats(
+    BuildContext context,
+    GameController controller,
+    PlayerList playersContainer,
+    GameStateFinish nextState,
+  ) async {
+    final bestTurn = controller.gameLog
+        .whereType<StateChangeGameLogItem>()
+        .map((e) => e.oldState)
+        .nonNulls
+        .whereType<GameStateBestTurn>()
+        .lastOrNull;
+    final guessedMafiaCount = bestTurn?.playerNumbers
+        .where((e) => nextState.players[e - 1].role.team == RoleTeam.mafia)
+        .length;
+    final dbPlayers = await playersContainer
+        .getManyByNicknames(nextState.players.map((e) => e.nickname).toList());
+    final foundMafia = <int>{};
+    var foundSheriff = false;
+    for (final item in controller.gameLog.whereType<PlayerCheckedGameLogItem>()) {
+      if (item.checkedByRole == PlayerRole.sheriff &&
+          nextState.players[item.playerNumber - 1].role.team == RoleTeam.mafia) {
+        foundMafia.add(item.playerNumber);
+      }
+      if (item.checkedByRole == PlayerRole.don &&
+          nextState.players[item.playerNumber - 1].role == PlayerRole.sheriff) {
+        foundSheriff = true;
+      }
+    }
+
+    final newStats = <PlayerStats>[];
+    for (final (dbPlayer, player) in dbPlayers.zip(nextState.players)) {
+      if (dbPlayer == null) {
+        continue;
+      }
+      newStats.add(
+        dbPlayer.$2.stats.copyWithUpdated(
+          playedAs: player.role,
+          won: nextState.winner == player.role.team,
+          warnCount: player.warns,
+          wasKicked: player.warns >= 4,
+          guessedMafiaCount:
+              bestTurn?.currentPlayerNumber == player.number ? (guessedMafiaCount ?? 0) : 0,
+          foundMafiaCount: player.role == PlayerRole.sheriff ? foundMafia.length : 0,
+          foundSheriff: player.role == PlayerRole.don && foundSheriff,
+        ),
+      );
+    }
+    await playersContainer.editAll(
+      Map.fromEntries(
+        dbPlayers.nonNulls
+            .zip(newStats)
+            .map((e) => MapEntry(e.$1.$1, e.$1.$2.copyWith(stats: e.$2))),
+      ),
+    );
+    if (!context.mounted) {
+      return;
+    }
+    showSnackBar(context, const SnackBar(content: Text("Результаты игры сохранены")));
+  }
+
   Future<void> _onTapNext(BuildContext context, GameController controller) async {
     final nextStateAssumption = controller.nextStateAssumption;
     if (nextStateAssumption == null) {
       return;
     }
     controller.setNextState();
-    if (nextStateAssumption case GameStateFinish(:final players, :final winner)) {
+    if (nextStateAssumption is GameStateFinish) {
       final playersContainer = context.read<PlayerList>();
       final saveStats = await showDialog<bool>(
         context: context,
@@ -238,46 +299,10 @@ class _MainScreenMainBodyContent extends StatelessWidget {
           ),
         ),
       );
-      if (!(saveStats ?? false)) {
+      if (!(saveStats ?? false) || !context.mounted) {
         return;
       }
-      final bestTurn = controller.gameLog
-          .whereType<StateChangeGameLogItem>()
-          .map((e) => e.oldState)
-          .nonNulls
-          .whereType<GameStateBestTurn>()
-          .lastOrNull;
-      final guessedMafiaCount =
-          bestTurn?.playerNumbers.where((e) => players[e - 1].role.team == RoleTeam.mafia).length;
-      final dbPlayers =
-          await playersContainer.getManyByNicknames(players.map((e) => e.nickname).toList());
-      final newStats = <PlayerStats>[];
-      for (final (dbPlayer, player) in dbPlayers.zip(players)) {
-        if (dbPlayer == null) {
-          continue;
-        }
-        newStats.add(
-          dbPlayer.$2.stats.copyWithUpdated(
-            playedAs: player.role,
-            won: winner == player.role.team,
-            warnCount: player.warns,
-            wasKicked: player.warns >= 4,
-            guessedMafiaCount:
-                bestTurn?.currentPlayerNumber == player.number ? (guessedMafiaCount ?? 0) : 0,
-          ),
-        );
-      }
-      await playersContainer.editAll(
-        Map.fromEntries(
-          dbPlayers.nonNulls
-              .zip(newStats)
-              .map((e) => MapEntry(e.$1.$1, e.$1.$2.copyWith(stats: e.$2))),
-        ),
-      );
-      if (!context.mounted) {
-        return;
-      }
-      showSnackBar(context, const SnackBar(content: Text("Результаты игры сохранены")));
+      await _saveStats(context, controller, playersContainer, nextStateAssumption);
     }
   }
 

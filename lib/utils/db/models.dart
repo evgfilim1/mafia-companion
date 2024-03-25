@@ -39,20 +39,49 @@ class Player {
 @HiveType(typeId: 2)
 @immutable
 class PlayerStats {
-  @HiveField(0)
+  /// The number of games played by role.
+  @HiveField(
+    0,
+    defaultValue: {
+      PlayerRole.citizen: 0,
+      PlayerRole.sheriff: 0,
+      PlayerRole.mafia: 0,
+      PlayerRole.don: 0,
+    },
+  )
   final Map<PlayerRole, int> gamesByRole;
 
-  @HiveField(1)
+  /// The number of games won by role.
+  @HiveField(
+    1,
+    defaultValue: {
+      PlayerRole.citizen: 0,
+      PlayerRole.sheriff: 0,
+      PlayerRole.mafia: 0,
+      PlayerRole.don: 0,
+    },
+  )
   final Map<PlayerRole, int> winsByRole;
 
-  @HiveField(2)
+  /// The total number of warns/fouls received.
+  @HiveField(2, defaultValue: 0)
   final int totalWarns;
 
-  @HiveField(3)
+  /// The total number of times kicked from the game.
+  @HiveField(3, defaultValue: 0)
   final int totalKicks;
 
-  @HiveField(4)
+  /// The total number of times guessed mafia correctly on "best turn".
+  @HiveField(4, defaultValue: 0)
   final int totalGuessedMafia;
+
+  /// The total number of times the player playing as a sheriff guessed mafia.
+  @HiveField(5, defaultValue: 0)
+  final int totalFoundMafia;
+
+  /// The total number of times the player playing as a don guessed sheriff.
+  @HiveField(6, defaultValue: 0)
+  final int totalFoundSheriff;
 
   const PlayerStats({
     required this.gamesByRole,
@@ -60,6 +89,8 @@ class PlayerStats {
     required this.totalWarns,
     required this.totalKicks,
     required this.totalGuessedMafia,
+    required this.totalFoundMafia,
+    required this.totalFoundSheriff,
   });
 
   const PlayerStats.defaults()
@@ -79,6 +110,8 @@ class PlayerStats {
           totalWarns: 0,
           totalKicks: 0,
           totalGuessedMafia: 0,
+          totalFoundMafia: 0,
+          totalFoundSheriff: 0,
         );
 
   @useResult
@@ -88,7 +121,19 @@ class PlayerStats {
     required int warnCount,
     required bool wasKicked,
     required int guessedMafiaCount,
+    required int foundMafiaCount,
+    required bool foundSheriff,
   }) {
+    if (playedAs != PlayerRole.sheriff && foundMafiaCount != 0) {
+      throw ArgumentError.value(
+        foundMafiaCount,
+        "foundMafiaCount",
+        "Must be 0 for non-sheriff roles",
+      );
+    }
+    if (playedAs != PlayerRole.don && foundSheriff) {
+      throw ArgumentError.value(foundSheriff, "foundSheriff", "Must be false for non-don roles");
+    }
     final newGamesByRole = Map.of(gamesByRole)..update(playedAs, (value) => value + 1);
     final newWinsByRole = Map.of(winsByRole);
     if (won) {
@@ -100,6 +145,8 @@ class PlayerStats {
       totalWarns: totalWarns + warnCount,
       totalKicks: totalKicks + (wasKicked ? 1 : 0),
       totalGuessedMafia: totalGuessedMafia + guessedMafiaCount,
+      totalFoundMafia: totalFoundMafia + foundMafiaCount,
+      totalFoundSheriff: totalFoundSheriff + (foundSheriff ? 1 : 0),
     );
   }
 }

@@ -193,4 +193,6 @@ db_models.PlayerStats dbPlayerStatsFromJson(
       totalWarns: json["totalWarns"] as int,
       totalKicks: json["totalKicks"] as int,
       totalGuessedMafia: json["totalGuessedMafia"] as int,
+      totalFoundMafia: json["totalFoundMafia"] as int,
+      totalFoundSheriff: json["totalFoundSheriff"] as int,
     );
