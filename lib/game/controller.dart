@@ -142,6 +142,8 @@ class Game {
           currentPlayerNumber: players.sheriff.number,
         );
       case GameStateWithPlayer(stage: GameStage.firstNightWakeUps):
+        return GameStateNightRest(players: state.players);
+      case GameStateNightRest():
         final next = _nextAlivePlayer(fromNumber: 0);
         assert(next.isAlive, "Next player must be alive");
         return GameStateSpeaking(
@@ -680,6 +682,7 @@ class Game {
     // final newState = (currentState as dynamic).copyWith(players: newPlayers);
     final newState = switch (currentState) {
       GameStatePrepare() => currentState.copyWith(players: newPlayers),
+      GameStateNightRest() => currentState.copyWith(players: newPlayers),
       GameStateWithPlayer() => currentState.copyWith(players: newPlayers),
       GameStateSpeaking() => currentState.copyWith(players: newPlayers),
       GameStateVoting() => currentState.copyWith(players: newPlayers),

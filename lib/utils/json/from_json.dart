@@ -91,6 +91,7 @@ BaseGameState gameStateFromJson(Map<String, dynamic> json, {required GameLogVers
         players: players,
         currentPlayerNumber: json["currentPlayerNumber"] as int,
       ),
+    GameStage.firstNightRest => GameStateNightRest(players: players),
     GameStage.speaking => GameStateSpeaking(
         day: day,
         players: players,

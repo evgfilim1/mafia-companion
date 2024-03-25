@@ -17,7 +17,7 @@ extension ListBaseGameLogItemJson on List<BaseGameLogItem> {
 
 extension BaseGameStateJson on BaseGameState {
   Map<String, dynamic> toJson() => switch (this) {
-        GameStatePrepare() => {},
+        GameStatePrepare() || GameStateNightRest() => {},
         GameStateWithPlayer(:final currentPlayerNumber) => {
             "currentPlayerNumber": currentPlayerNumber,
           },

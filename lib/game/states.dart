@@ -15,7 +15,7 @@ enum GameStage {
   firstNightWakeUps,
 
   /// First night rest, nothing happens
-  // firstNightRest,
+  firstNightRest,
 
   /// Players speak during day and make accusations
   speaking,
@@ -103,6 +103,33 @@ class GameStatePrepare extends BaseGameState {
     List<Player>? players,
   }) =>
       GameStatePrepare(
+        players: players ?? this.players,
+      );
+}
+
+///
+@immutable
+class GameStateNightRest extends BaseGameState {
+  const GameStateNightRest({
+    required super.players,
+  }) : super(stage: GameStage.firstNightRest, day: 1);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is GameStateNightRest &&
+          runtimeType == other.runtimeType &&
+          stage == other.stage &&
+          day == other.day &&
+          players == other.players;
+
+  @override
+  int get hashCode => Object.hash(stage, day, players);
+
+  GameStateNightRest copyWith({
+    List<Player>? players,
+  }) =>
+      GameStateNightRest(
         players: players ?? this.players,
       );
 }
@@ -621,6 +648,7 @@ const timeLimits = <GameStage, Duration>{
   // GameStage.prepare: null,
   GameStage.firstNight: Duration(minutes: 1),
   GameStage.firstNightWakeUps: Duration(seconds: 20),
+  GameStage.firstNightRest: Duration(seconds: 30),
   GameStage.speaking: Duration(minutes: 1),
   // GameStage.preVoting: null,
   // GameStage.voting: null,
@@ -649,6 +677,7 @@ const timeLimitsExtended = <GameStage, Duration>{
 const timeLimitsShortened = <GameStage, Duration>{
   GameStage.firstNight: Duration(seconds: 30),
   GameStage.firstNightWakeUps: Duration(seconds: 10),
+  GameStage.firstNightRest: Duration(seconds: 15),
   GameStage.speaking: Duration(seconds: 30),
   GameStage.excuse: Duration(seconds: 15),
   GameStage.dayLastWords: Duration(seconds: 30),
@@ -660,7 +689,8 @@ const timeLimitsShortened = <GameStage, Duration>{
 const validTransitions = <GameStage, Set<GameStage>>{
   GameStage.prepare: {GameStage.firstNight},
   GameStage.firstNight: {GameStage.firstNightWakeUps, GameStage.finish},
-  GameStage.firstNightWakeUps: {GameStage.speaking, GameStage.finish},
+  GameStage.firstNightWakeUps: {GameStage.speaking, GameStage.firstNightRest, GameStage.finish},
+  GameStage.firstNightRest: {GameStage.speaking, GameStage.finish},
   GameStage.speaking: {
     GameStage.speaking,
     GameStage.preVoting,

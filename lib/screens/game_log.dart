@@ -27,6 +27,7 @@ extension _DescribeLogItem on BaseGameLogItem {
         }
         switch (oldState) {
           case GameStatePrepare() ||
+                GameStateNightRest() ||
                 GameStateWithPlayer() ||
                 GameStateWithPlayers() ||
                 GameStateNightKill() ||

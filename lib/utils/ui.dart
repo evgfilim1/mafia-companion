@@ -40,6 +40,8 @@ extension GameStatePrettyString on BaseGameState {
         return "Первая ночь";
       case GameStateWithPlayer(stage: GameStage.firstNightWakeUps):
         return "Шериф осматривает стол";
+      case GameStateNightRest():
+        return "Свободная посадка";
       case GameStateSpeaking(
           stage: GameStage.speaking,
           :final currentPlayerNumber,
