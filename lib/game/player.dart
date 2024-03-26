@@ -1,5 +1,3 @@
-import "dart:math";
-
 import "package:meta/meta.dart";
 
 import "../utils/extensions.dart";
@@ -88,9 +86,9 @@ class Player {
 
 List<Player> generatePlayers({
   List<String?>? nicknames,
-  Random? random,
+  List<PlayerRole>? roles,
 }) {
-  final playerRoles = List.of(rolesList)..shuffle(random);
+  final playerRoles = roles ?? (List.of(rolesList)..shuffle());
   return [
     for (var i = 0; i < playerRoles.length; i++)
       Player(

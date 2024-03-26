@@ -1,6 +1,5 @@
 import "dart:async";
 
-import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 
@@ -8,7 +7,6 @@ import "../game/player.dart";
 import "../utils/db/repo.dart";
 import "../utils/errors.dart";
 import "../utils/extensions.dart";
-import "../utils/find_seed.dart";
 import "../utils/game_controller.dart";
 import "../utils/ui.dart";
 import "../widgets/confirmation_dialog.dart";
@@ -32,7 +30,6 @@ class _ChooseRolesScreenState extends State<ChooseRolesScreen> {
     (_) => PlayerRole.values.toSet(),
     growable: false,
   );
-  var _isInProgress = false;
   final _errorsByRole = <PlayerRole, _ValidationErrorType>{};
   final _errorsByIndex = <int>{};
   final _chosenNicknames = List<String?>.generate(rolesList.length, (index) => null);
@@ -110,6 +107,74 @@ class _ChooseRolesScreenState extends State<ChooseRolesScreen> {
       ..addAll(byIndex);
   }
 
+  List<PlayerRole>? _randomizeRoles() {
+    final results = <List<PlayerRole>>[];
+    final count = rolesList.length;
+    for (var iDon = 0; iDon < count; iDon++) {
+      if (!_roles[iDon].contains(PlayerRole.don)) {
+        continue;
+      }
+      for (var iSheriff = 0; iSheriff < count; iSheriff++) {
+        if (!_roles[iSheriff].contains(PlayerRole.sheriff) || iSheriff == iDon) {
+          continue;
+        }
+        for (var iMafia = 0; iMafia < count; iMafia++) {
+          if (!_roles[iMafia].contains(PlayerRole.mafia) || iMafia == iDon || iMafia == iSheriff) {
+            continue;
+          }
+          for (var jMafia = iMafia + 1; jMafia < count; jMafia++) {
+            if (!_roles[jMafia].contains(PlayerRole.mafia) ||
+                jMafia == iDon ||
+                jMafia == iSheriff) {
+              continue;
+            }
+            var valid = true;
+            for (var iCitizen = 0; iCitizen < count; iCitizen++) {
+              if (iCitizen == iDon ||
+                  iCitizen == iSheriff ||
+                  iCitizen == iMafia ||
+                  iCitizen == jMafia) {
+                continue;
+              }
+              if (!_roles[iCitizen].contains(PlayerRole.citizen)) {
+                valid = false;
+                break;
+              }
+            }
+            if (valid) {
+              results.add([
+                for (var i = 0; i < count; i++)
+                  i == iDon
+                      ? PlayerRole.don
+                      : i == iSheriff
+                          ? PlayerRole.sheriff
+                          : i == iMafia || i == jMafia
+                              ? PlayerRole.mafia
+                              : PlayerRole.citizen,
+              ]);
+            }
+          }
+        }
+      }
+    }
+    if (results.isEmpty) {
+      return null;
+    }
+    final result = results.randomElement;
+    assert(
+      () {
+        for (var i = 0; i < rolesList.length; i++) {
+          if (!_roles[i].contains(result[i])) {
+            return false;
+          }
+        }
+        return true;
+      }(),
+      "Roles are invalid",
+    );
+    return result;
+  }
+
   Future<void> _onFabPressed(BuildContext context) async {
     setState(_validate);
     if (_errorsByIndex.isNotEmpty || _errorsByRole.isNotEmpty) {
@@ -117,14 +182,8 @@ class _ChooseRolesScreenState extends State<ChooseRolesScreen> {
       return;
     }
     final controller = context.read<GameController>();
-    final initialSeed = controller.rolesSeed ?? getNewSeed();
-    setState(() => _isInProgress = true);
-    final newSeed = await compute(findSeedIsolateWrapper, (initialSeed, _roles));
-    setState(() => _isInProgress = false);
-    if (!context.mounted) {
-      throw ContextNotMountedError();
-    }
-    if (newSeed == null) {
+    final newRoles = _randomizeRoles();
+    if (newRoles == null) {
       showSnackBar(
         context,
         const SnackBar(content: Text("Невозможно применить выбранные роли")),
@@ -132,8 +191,9 @@ class _ChooseRolesScreenState extends State<ChooseRolesScreen> {
       return;
     }
     controller
-      ..rolesSeed = newSeed
-      ..nicknames = _chosenNicknames;
+      ..roles = newRoles
+      ..nicknames = _chosenNicknames
+      ..startNewGame();
     final showRoles = await showDialog<bool>(
       context: context,
       builder: (context) => const ConfirmationDialog(
@@ -273,9 +333,7 @@ class _ChooseRolesScreenState extends State<ChooseRolesScreen> {
       floatingActionButton: FloatingActionButton(
         tooltip: "Применить",
         onPressed: () => _onFabPressed(context),
-        child: _isInProgress
-            ? const SizedBox.square(dimension: 24, child: CircularProgressIndicator())
-            : const Icon(Icons.check),
+        child: const Icon(Icons.check),
       ),
     );
   }

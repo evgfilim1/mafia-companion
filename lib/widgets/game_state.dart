@@ -61,10 +61,6 @@ class BottomGameStateWidget extends StatelessWidget {
       throw ContextNotMountedError();
     }
     await Navigator.pushNamed(context, "/chooseRoles");
-    if (controller.rolesSeed != null) {
-      // roles were initialized, so we can start the game
-      controller.startNewGame();
-    }
   }
 
   @override

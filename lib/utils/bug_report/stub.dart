@@ -36,21 +36,17 @@ class BugReportInfo {
 }
 
 class GameInfo {
-  final int seed;
   final List<BaseGameLogItem> log;
 
   const GameInfo({
-    required this.seed,
     required this.log,
   });
 
   Map<String, dynamic> toJson() => {
-        "seed": seed,
         "log": log.map((e) => e.toJson()).toList(),
       };
 
   factory GameInfo.fromJson(Map<String, dynamic> json) => GameInfo(
-        seed: json["seed"] as int,
         // assuming bug reports are checked in the same app version as the game was played
         log: (json["log"] as List<dynamic>).parseJsonList(
           (e) => gameLogFromJson(e, version: GameLogVersion.latest),
@@ -70,7 +66,6 @@ Future<String> reportBugCommonImpl(BuildContext context) async {
     BugReportInfo(
       packageInfo: packageInfo.data,
       game: GameInfo(
-        seed: controller.rolesSeed!,
         log: controller.gameLog.toUnmodifiableList(),
       ),
     ).toJson(),

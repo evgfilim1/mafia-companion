@@ -20,8 +20,9 @@ extension IsAnyOf<T> on T {
   bool isAnyOf(Iterable<T> values) => values.contains(this);
 }
 
-extension RandomElement<T> on List<T> {
-  T get randomElement => this[Random().nextInt(length)];
+extension RandomElement<T> on Iterable<T> {
+  T get randomElement =>
+      length != 0 ? elementAt(Random().nextInt(length)) : (throw StateError("no element"));
 }
 
 extension RemovePrefix on String {

@@ -118,9 +118,8 @@ class SettingsScreen extends StatelessWidget {
               showSimpleDialog(
                 context: context,
                 title: const Text("Сообщить о проблеме"),
-                content: Text(
-                  "Для сообщения о проблеме нужно поделиться файлом мне в ЛС в Telegram.\n\n"
-                  "Зерно генерации ролей: ${controller.rolesSeed}",
+                content: const Text(
+                  "Для сообщения о проблеме нужно поделиться файлом мне в ЛС в Telegram.",
                 ),
                 extraActions: [
                   TextButton(

@@ -1,5 +1,3 @@
-import "dart:math";
-
 import "package:flutter/material.dart";
 
 import "../game/controller.dart";
@@ -20,8 +18,23 @@ class GameController with ChangeNotifier {
 
   Game? _game;
 
-  int? rolesSeed;
-  List<String?>? nicknames;
+  List<String?>? _nicknames;
+
+  List<String?>? get nicknames => _nicknames;
+
+  set nicknames(List<String?>? value) {
+    assert(value == null || value.length == 10, "Nicknames list must have 10 elements");
+    _nicknames = value;
+  }
+
+  List<PlayerRole>? _roles;
+
+  List<PlayerRole>? get roles => _roles;
+
+  set roles(List<PlayerRole>? value) {
+    assert(value == null || value.length == 10, "Roles list must have 10 elements");
+    _roles = value;
+  }
 
   GameController();
 
@@ -48,19 +61,14 @@ class GameController with ChangeNotifier {
   List<Player> get players => _game?.players.toUnmodifiableList() ?? const [];
 
   void startNewGame() {
-    if (rolesSeed == null) {
-      rolesSeed = getNewSeed();
-      _log.warning("Roles seed is not set, generating new one: $rolesSeed");
-    }
-    _game = Game.withPlayers(generatePlayers(nicknames: nicknames, random: Random(rolesSeed)));
-    _log.debug("Game started with seed $rolesSeed");
+    _game = Game.withPlayers(generatePlayers(nicknames: _nicknames, roles: _roles));
     notifyListeners();
   }
 
   void stopGame() {
     _game = null;
-    rolesSeed = null;
-    nicknames = null;
+    _roles = null;
+    _nicknames = null;
     _log.debug("Game stopped");
     notifyListeners();
   }
