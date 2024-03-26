@@ -116,7 +116,11 @@ class PlayerButton extends StatelessWidget {
       builder: (context) {
         final controller = context.watch<GameController>();
         final player = controller.getPlayerByNumber(playerNumber);
-        final isAliveText = player.isAlive ? "Жив" : player.isKicked ? "Удалён" : "Мёртв";
+        final isAliveText = player.isAlive
+            ? "Жив"
+            : player.isKicked
+                ? "Удалён"
+                : "Мёртв";
         return AlertDialog(
           title: Text(player.nicknameOrNumber),
           content: Text(
