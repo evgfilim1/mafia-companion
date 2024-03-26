@@ -139,6 +139,7 @@ class _ChooseRolesScreenState extends State<ChooseRolesScreen> {
       builder: (context) => const ConfirmationDialog(
         title: Text("Показать роли?"),
         content: Text("После применения ролей можно провести их раздачу игрокам"),
+        rememberKey: "showRoles",
       ),
     );
     if (!context.mounted) {

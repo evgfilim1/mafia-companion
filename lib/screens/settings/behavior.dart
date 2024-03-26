@@ -3,7 +3,9 @@ import "package:provider/provider.dart";
 import "package:vibration/vibration.dart";
 
 import "../../utils/settings.dart";
+import "../../utils/ui.dart";
 import "../../widgets/list_tiles/choice.dart";
+import "../../widgets/list_tiles/confirm.dart";
 
 class BehaviorSettingsScreen extends StatefulWidget {
   const BehaviorSettingsScreen({super.key});
@@ -65,6 +67,18 @@ class _BehaviorSettingsScreenState extends State<BehaviorSettingsScreen> {
             },
             index: settings.checkUpdatesType.index,
             onChanged: settings.setCheckUpdatesType,
+          ),
+          ConfirmationListTile(
+            leading: const Icon(Icons.visibility),
+            title: const Text("Показать скрытые диалоги"),
+            confirmationContent: const Text(
+              "Это действие сбросит все сохранённые выборы и покажет все диалоги, которые были"
+              " скрыты. Продолжить?",
+            ),
+            onConfirm: () {
+              settings.forgetRememberedChoices();
+              showSnackBar(context, const SnackBar(content: Text("Скрытые диалоги восстановлены")));
+            },
           ),
         ],
       ),

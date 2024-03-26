@@ -1,6 +1,8 @@
 import "package:flutter/material.dart";
 import "package:shared_preferences/shared_preferences.dart";
 
+import "extensions.dart";
+
 enum TimerType {
   shortened,
   strict,
@@ -40,6 +42,7 @@ final defaults = SettingsModel(
   checkUpdatesType: CheckUpdatesType.onLaunch,
   seedColor: Colors.purple,
   vibrationDuration: VibrationDuration.medium,
+  rememberedChoices: {},
 );
 
 enum _SettingsKeys {
@@ -50,6 +53,8 @@ enum _SettingsKeys {
   seedColor,
   vibrationDuration,
 }
+
+const _rememberedChoicesKeyPrefix = "remembered.";
 
 Future<SettingsModel> getSettings() async {
   final prefs = await SharedPreferences.getInstance();
@@ -141,6 +146,17 @@ Future<SettingsModel> getSettings() async {
       break;
   }
 
+  final rememberedChoices = <String, bool>{};
+  for (final key in prefs.getKeys()) {
+    if (!key.startsWith(_rememberedChoicesKeyPrefix)) {
+      continue;
+    }
+    final value = prefs.getBool(key);
+    if (value != null) {
+      rememberedChoices[key.removePrefix(_rememberedChoicesKeyPrefix)] = value;
+    }
+  }
+
   return SettingsModel(
     timerType: timerType,
     themeMode: themeMode,
@@ -148,6 +164,7 @@ Future<SettingsModel> getSettings() async {
     checkUpdatesType: checkUpdatesType,
     seedColor: seedColor,
     vibrationDuration: vibrationDuration,
+    rememberedChoices: rememberedChoices,
   );
 }
 
@@ -166,6 +183,15 @@ Future<void> saveSettings(SettingsModel settings) async {
   await prefs.setString(_SettingsKeys.checkUpdatesType.name, checkUpdatesTypeString);
   await prefs.setInt(_SettingsKeys.seedColor.name, seedColorInt);
   await prefs.setString(_SettingsKeys.vibrationDuration.name, vibrationDurationString);
+
+  for (final key in settings._rememberedChoices.keys) {
+    final value = settings._rememberedChoices[key];
+    if (value != null) {
+      await prefs.setBool("$_rememberedChoicesKeyPrefix$key", value);
+    } else {
+      await prefs.remove("$_rememberedChoicesKeyPrefix$key");
+    }
+  }
 }
 
 class SettingsModel with ChangeNotifier {
@@ -176,6 +202,8 @@ class SettingsModel with ChangeNotifier {
   Color _seedColor;
   VibrationDuration _vibrationDuration;
 
+  final Map<String, bool?> _rememberedChoices;
+
   SettingsModel({
     required TimerType timerType,
     required ThemeMode themeMode,
@@ -183,12 +211,14 @@ class SettingsModel with ChangeNotifier {
     required CheckUpdatesType checkUpdatesType,
     required Color seedColor,
     required VibrationDuration vibrationDuration,
+    required Map<String, bool?> rememberedChoices,
   })  : _timerType = timerType,
         _themeMode = themeMode,
         _colorSchemeType = colorSchemeType,
         _checkUpdatesType = checkUpdatesType,
         _seedColor = seedColor,
-        _vibrationDuration = vibrationDuration;
+        _vibrationDuration = vibrationDuration,
+        _rememberedChoices = Map.of(rememberedChoices);
 
   TimerType get timerType => _timerType;
 
@@ -201,6 +231,8 @@ class SettingsModel with ChangeNotifier {
   Color get seedColor => _seedColor;
 
   VibrationDuration get vibrationDuration => _vibrationDuration;
+
+  bool? getRememberedChoice(String key) => _rememberedChoices[key];
 
   void setTimerType(TimerType value, {bool save = true}) {
     _timerType = value;
@@ -248,5 +280,22 @@ class SettingsModel with ChangeNotifier {
       saveSettings(this);
     }
     notifyListeners();
+  }
+
+  // ignore: avoid_positional_boolean_parameters
+  void setRememberedChoice(String key, bool value, {bool save = true}) {
+    _rememberedChoices[key] = value;
+    if (save) {
+      saveSettings(this);
+    }
+  }
+
+  void forgetRememberedChoices({bool save = true}) {
+    for (final key in _rememberedChoices.keys) {
+      _rememberedChoices[key] = null;
+    }
+    if (save) {
+      saveSettings(this);
+    }
   }
 }

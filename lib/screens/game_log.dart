@@ -14,6 +14,7 @@ import "../utils/load_save_file.dart";
 import "../utils/log.dart";
 import "../utils/ui.dart";
 import "../utils/versioned/game_log.dart";
+import "../widgets/information_dialog.dart";
 
 final _fileNameDateFormat = DateFormat("yyyy-MM-dd_HH-mm-ss");
 
@@ -133,11 +134,14 @@ class GameLogScreen extends StatelessWidget {
       throw ContextNotMountedError();
     }
     if (logFromFile.version.isDeprecated) {
-      await showSimpleDialog(
+      await showDialog<void>(
         context: context,
-        title: const Text("Предупреждение"),
-        content: const Text(
-          "Загрузка журналов игр старого формата устарела и скоро будет невозможна",
+        builder: (context) => InformationDialog(
+          title: const Text("Предупреждение"),
+          content: const Text(
+            "Загрузка журналов игр старого формата устарела и скоро будет невозможна",
+          ),
+          rememberKey: "noDeprecations${logFromFile.version.name}",
         ),
       );
       if (!context.mounted) {

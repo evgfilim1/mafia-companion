@@ -47,8 +47,8 @@ class BottomGameStateWidget extends StatelessWidget {
       context: context,
       builder: (context) => const ConfirmationDialog(
         title: Text("Провести случайную рассадку?"),
-        // todo: remember choice
         content: Text("Перед началом игры можно провести случайную рассадку"),
+        rememberKey: "randomizeSeats",
       ),
     );
     if (randomizeSeats ?? false) {
