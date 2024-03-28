@@ -1,20 +1,16 @@
 import "dart:async";
 
 import "package:flutter/material.dart";
+import "package:provider/provider.dart";
+import "package:vibration/vibration.dart";
 
-import "../utils/countdown.dart";
+import "../utils/extensions.dart";
+import "../utils/settings.dart";
+import "../utils/timer.dart";
 
 class PlayerTimer extends StatefulWidget {
-  /// The duration of the timer.
-  final Duration duration;
-
-  /// Called when the timer ticks.
-  final ValueChanged<Duration>? onTimerTick;
-
   const PlayerTimer({
     super.key,
-    required this.duration,
-    this.onTimerTick,
   });
 
   @override
@@ -22,95 +18,117 @@ class PlayerTimer extends StatefulWidget {
 }
 
 class _PlayerTimerState extends State<PlayerTimer> {
-  CountdownTimer? _timer;
-  Duration? _timeLeft;
   var _textVisible = true;
   Timer? _blinkTimer;
+  late TimerService _timerService;
 
   @override
   void initState() {
     super.initState();
-    _initTimer();
-  }
-
-  void _initTimer([Duration? value]) {
-    if (_timer?.isPaused != true || _timer?.isFinished != true) {
-      _timer?.cancel();
-    }
-    _blinkTimer?.cancel();
-    _blinkTimer = null;
-    _timer = CountdownTimer(
-      value ?? widget.duration,
-      (timeLeft) => setState(() {
-        _timeLeft = timeLeft;
-        widget.onTimerTick?.call(timeLeft);
-      }),
-    );
-    _textVisible = true;
+    _timerService = context.read<TimerService>()..addListener(_onTimerChange);
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
+    _blinkTimer?.cancel();
+    _timerService.removeListener(_onTimerChange);
     super.dispose();
+  }
+
+  void _onTimerChange() {
+    if (!mounted) {
+      return;
+    }
+    final timer = context.read<TimerService>();
+    _maybeVibrate(timer);
+  }
+
+  void _maybeVibrate(TimerService timer) {
+    final settings = context.read<SettingsModel>();
+    final remaining = timer.remainingTime;
+    if (settings.vibrationDuration == VibrationDuration.disabled || remaining == null) {
+      return;
+    }
+    if (remaining == Duration.zero) {
+      _vibrateOnZeroTimeLeft();
+    } else if (remaining <= const Duration(seconds: 5)) {
+      Vibration.vibrate(duration: settings.vibrationDuration.milliseconds);
+    }
+  }
+
+  void _onBlinkTick(Timer blinkTimer, TimerService timer) {
+    if (!mounted) {
+      blinkTimer.cancel();
+      return;
+    }
+    setState(() {
+      if (timer.isPaused || timer.isFinished) {
+        blinkTimer.cancel();
+        _textVisible = true;
+      } else {
+        _textVisible = !_textVisible;
+      }
+    });
+  }
+
+  Future<void> _vibrateOnZeroTimeLeft() async {
+    const vibrateMs = 100;
+    const pauseMs = 200;
+    await Vibration.vibrate(duration: vibrateMs);
+    await Future<void>.delayed(const Duration(milliseconds: vibrateMs + pauseMs));
+    await Vibration.vibrate(duration: vibrateMs);
   }
 
   @override
   Widget build(BuildContext context) {
-    final timeLeft = _timeLeft;
-    if (timeLeft == null) {
+    final timer = context.watch<TimerService>();
+    final remaining = timer.remainingTime;
+    if (remaining == null) {
       return const SizedBox.shrink();
     }
+    const animationDuration = Duration(milliseconds: 500);
     final Color? textColor;
-    if (timeLeft <= const Duration(seconds: 5)) {
-      _blinkTimer ??= Timer.periodic(const Duration(milliseconds: 500), (timer) {
-        if (!mounted) {
-          timer.cancel();
-          return;
-        }
-        final bool newVisibility;
-        if ((_timer?.isPaused ?? true) || (_timer?.isFinished ?? true)) {
-          timer.cancel();
-          newVisibility = true;
-        } else {
-          newVisibility = !_textVisible;
-        }
-        setState(() => _textVisible = newVisibility);
-      });
+    if (remaining == Duration.zero) {
       textColor = Colors.red;
-    } else if (timeLeft <= const Duration(seconds: 10)) {
+      _textVisible = true;
+      _blinkTimer = null;
+    } else if (remaining <= const Duration(seconds: 5)) {
+      _blinkTimer ??= Timer.periodic(animationDuration, (t) => _onBlinkTick(t, timer));
+      textColor = Colors.red;
+    } else if (remaining <= const Duration(seconds: 10)) {
       textColor = Colors.yellow;
     } else {
       textColor = null;
     }
     final VoidCallback? buttonCallback;
-    if (timeLeft == Duration.zero) {
+    if (remaining == Duration.zero) {
       buttonCallback = null;
-    } else if (_timer?.isPaused ?? false) {
-      buttonCallback = () => setState(() => _timer?.resume());
+    } else if (timer.isPaused) {
+      buttonCallback = timer.resume;
     } else {
-      buttonCallback = () => setState(() => _timer?.pause());
+      buttonCallback = timer.pause;
     }
-    final text = "${timeLeft.inMinutes.toString().padLeft(2, "0")}:"
-        "${(timeLeft.inSeconds % 60).toString().padLeft(2, "0")}";
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         AnimatedOpacity(
           curve: Curves.easeInOut,
           opacity: _textVisible ? 1 : 0.2,
-          duration: const Duration(milliseconds: 500),
-          child: Text(text, style: TextStyle(fontSize: 20, color: textColor)),
+          duration: animationDuration,
+          child: Text(
+            remaining.toMinSecString(),
+            style: TextStyle(fontSize: 20, color: textColor),
+          ),
         ),
         Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
               onPressed: buttonCallback,
-              icon: Icon((_timer?.isPaused ?? false) ? Icons.play_arrow : Icons.pause),
+              icon: Icon(timer.isPaused ? Icons.play_arrow : Icons.pause),
             ),
             IconButton(
-              onPressed: _initTimer,
+              onPressed: timer.restart,
               icon: const Icon(Icons.restart_alt),
             ),
           ],

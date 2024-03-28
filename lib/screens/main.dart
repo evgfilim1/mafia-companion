@@ -314,7 +314,6 @@ class _MainScreenMainBodyContent extends StatelessWidget {
 
     return Column(
       children: [
-        // FIXME: timer resets when the screen is rotated
         const Expanded(child: Center(child: GameStateInfo())),
         BottomControlBar(
           backLabel: previousState?.prettyName ?? "(недоступно)",

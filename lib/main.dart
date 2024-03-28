@@ -18,6 +18,7 @@ import "utils/db/methods.dart" as db;
 import "utils/db/repo.dart";
 import "utils/game_controller.dart";
 import "utils/settings.dart";
+import "utils/timer.dart";
 import "utils/updates_checker.dart";
 import "widgets/color_scheme_wrapper.dart";
 
@@ -36,6 +37,9 @@ void main() async {
         ChangeNotifierProvider<UpdatesChecker>(create: (context) => UpdatesChecker()),
         Provider<BrightnessAwareColorScheme>.value(value: appColorScheme),
         ChangeNotifierProvider<PlayerList>(create: (_) => PlayerList()),
+        ChangeNotifierProvider<TimerService>(
+          create: (context) => TimerService(controller: context.read(), settings: context.read()),
+        ),
       ],
       child: const MyApp(),
     ),

@@ -2,13 +2,15 @@ import "dart:async";
 
 typedef CountdownTimerCallback = void Function(Duration timeLeft);
 
-/// A simple countdown timer that calls callback every second until the duration is reached.
+/// A simple countdown timer that calls callback every [period] until the duration is reached.
 class CountdownTimer {
+  static const period = Duration(seconds: 1);
+
   Timer? _impl;
   Duration _timeLeft;
   final CountdownTimerCallback _callback;
 
-  /// Creates a new [CountdownTimer] that will call [callback] every second until [duration]
+  /// Creates a new [CountdownTimer] that will call [callback] every [period] until [duration]
   /// is reached.
   CountdownTimer(Duration duration, CountdownTimerCallback callback)
       : _timeLeft = duration,
@@ -45,8 +47,8 @@ class CountdownTimer {
       _impl?.cancel();
     }
     _callback(_timeLeft);
-    _impl = Timer.periodic(const Duration(seconds: 1), (timer) {
-      _timeLeft -= const Duration(seconds: 1);
+    _impl = Timer.periodic(period, (timer) {
+      _timeLeft -= period;
       _callback(_timeLeft);
       if (_timeLeft == Duration.zero) {
         _impl?.cancel();
