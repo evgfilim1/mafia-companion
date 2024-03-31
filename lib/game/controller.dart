@@ -128,7 +128,8 @@ class Game {
         players: state.players,
       );
     }
-    if (!state.stage.isAnyOf([GameStage.nightLastWords, GameStage.dayLastWords]) && winTeamAssumption != null) {
+    if (!state.stage.isAnyOf([GameStage.nightLastWords, GameStage.dayLastWords]) &&
+        winTeamAssumption != null) {
       if (state.stage == GameStage.finish) {
         return null;
       }

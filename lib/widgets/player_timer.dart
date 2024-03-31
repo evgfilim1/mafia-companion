@@ -61,7 +61,6 @@ class _PlayerTimerState extends State<PlayerTimer> {
     }
   }
 
-
   void _maybeVibrate(TimerService timer) {
     final settings = context.read<SettingsModel>();
     final remaining = timer.remainingTime;

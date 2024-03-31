@@ -20,9 +20,9 @@ enum RoleTeam {
   factory RoleTeam.byName(String name) => RoleTeam.values.byName(name);
 
   RoleTeam get other => switch (this) {
-    RoleTeam.mafia => RoleTeam.citizen,
-    RoleTeam.citizen => RoleTeam.mafia,
-  };
+        RoleTeam.mafia => RoleTeam.citizen,
+        RoleTeam.citizen => RoleTeam.mafia,
+      };
 }
 
 enum PlayerRole {
