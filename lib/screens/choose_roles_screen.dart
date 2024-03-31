@@ -242,9 +242,9 @@ class _ChooseRolesScreenState extends State<ChooseRolesScreen> {
       const DropdownMenuEntry(
         value: null,
         label: "",
-        labelWidget: Text("(*без никнейма*)"),
+        labelWidget: Text("(*без никнейма*)", style: TextStyle(fontStyle: FontStyle.italic)),
       ),
-      for (final nickname in players.data.map((p) => p.nickname))
+      for (final nickname in players.data.map((p) => p.nickname).toList(growable: false)..sort())
         DropdownMenuEntry(
           value: nickname,
           label: nickname,

@@ -46,6 +46,7 @@ class _ConfirmationDialogState extends State<ConfirmationDialog> {
         title: widget.title,
         content: Column(
           mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             widget.content,
             if (widget.rememberKey != null)

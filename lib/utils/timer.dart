@@ -66,7 +66,7 @@ class TimerService with ChangeNotifier {
   }
 
   void _onGameControllerChange() {
-    if (!_controller.state.hasStateChanged(_prevState)) {
+    if (!_controller.isGameInitialized || !_controller.state.hasStateChanged(_prevState)) {
       // No need to update the timer if the state hasn't changed
       return;
     }

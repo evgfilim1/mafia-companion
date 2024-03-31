@@ -18,6 +18,9 @@ class PlayerTimer extends StatefulWidget {
 }
 
 class _PlayerTimerState extends State<PlayerTimer> {
+  static const _blinkAfter = Duration(seconds: 5);
+  static const _blinkDuration = Duration(milliseconds: 500);
+
   var _textVisible = true;
   Timer? _blinkTimer;
   late TimerService _timerService;
@@ -40,8 +43,24 @@ class _PlayerTimerState extends State<PlayerTimer> {
       return;
     }
     final timer = context.read<TimerService>();
+    _maybeStartBlinking(timer);
     _maybeVibrate(timer);
   }
+
+  void _maybeStartBlinking(TimerService timer) {
+    final remaining = timer.remainingTime;
+    if (remaining == null || remaining > _blinkAfter || remaining == Duration.zero) {
+      _blinkTimer?.cancel();
+      if (!_textVisible) {
+        setState(() => _textVisible = true);
+      }
+      return;
+    }
+    if (_blinkTimer == null || !(_blinkTimer?.isActive ?? false)) {
+      _blinkTimer = Timer.periodic(_blinkDuration, (t) => _onBlinkTick(t, timer));
+    }
+  }
+
 
   void _maybeVibrate(TimerService timer) {
     final settings = context.read<SettingsModel>();
@@ -51,7 +70,7 @@ class _PlayerTimerState extends State<PlayerTimer> {
     }
     if (remaining == Duration.zero) {
       _vibrateOnZeroTimeLeft();
-    } else if (remaining <= const Duration(seconds: 5)) {
+    } else if (remaining <= _blinkAfter) {
       Vibration.vibrate(duration: settings.vibrationDuration.milliseconds);
     }
   }
@@ -62,7 +81,10 @@ class _PlayerTimerState extends State<PlayerTimer> {
       return;
     }
     setState(() {
-      if (timer.isPaused || timer.isFinished) {
+      if (timer.isFinished ||
+          timer.remainingTime == null ||
+          timer.remainingTime! > _blinkAfter + const Duration(seconds: 1) ||
+          timer.remainingTime! == Duration.zero) {
         blinkTimer.cancel();
         _textVisible = true;
       } else {
@@ -86,14 +108,8 @@ class _PlayerTimerState extends State<PlayerTimer> {
     if (remaining == null) {
       return const SizedBox.shrink();
     }
-    const animationDuration = Duration(milliseconds: 500);
     final Color? textColor;
-    if (remaining == Duration.zero) {
-      textColor = Colors.red;
-      _textVisible = true;
-      _blinkTimer = null;
-    } else if (remaining <= const Duration(seconds: 5)) {
-      _blinkTimer ??= Timer.periodic(animationDuration, (t) => _onBlinkTick(t, timer));
+    if (remaining <= _blinkAfter) {
       textColor = Colors.red;
     } else if (remaining <= const Duration(seconds: 10)) {
       textColor = Colors.yellow;
@@ -114,7 +130,7 @@ class _PlayerTimerState extends State<PlayerTimer> {
         AnimatedOpacity(
           curve: Curves.easeInOut,
           opacity: _textVisible ? 1 : 0.2,
-          duration: animationDuration,
+          duration: _blinkDuration,
           child: Text(
             remaining.toMinSecString(),
             style: TextStyle(fontSize: 20, color: textColor),
@@ -126,10 +142,12 @@ class _PlayerTimerState extends State<PlayerTimer> {
             IconButton(
               onPressed: buttonCallback,
               icon: Icon(timer.isPaused ? Icons.play_arrow : Icons.pause),
+              tooltip: timer.isPaused ? "Продолжить" : "Пауза",
             ),
             IconButton(
               onPressed: timer.restart,
               icon: const Icon(Icons.restart_alt),
+              tooltip: "Перезапустить",
             ),
           ],
         ),
