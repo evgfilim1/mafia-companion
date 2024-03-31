@@ -83,6 +83,10 @@ class PlayerStats {
   @HiveField(6, defaultValue: 0)
   final int totalFoundSheriff;
 
+  /// The total number of times the player was killed on the first night.
+  @HiveField(7, defaultValue: 0)
+  final int totalWasKilledFirstNight;
+
   const PlayerStats({
     required this.gamesByRole,
     required this.winsByRole,
@@ -91,6 +95,7 @@ class PlayerStats {
     required this.totalGuessedMafia,
     required this.totalFoundMafia,
     required this.totalFoundSheriff,
+    required this.totalWasKilledFirstNight,
   });
 
   const PlayerStats.defaults()
@@ -112,6 +117,7 @@ class PlayerStats {
           totalGuessedMafia: 0,
           totalFoundMafia: 0,
           totalFoundSheriff: 0,
+          totalWasKilledFirstNight: 0,
         );
 
   @useResult
@@ -123,6 +129,7 @@ class PlayerStats {
     required int guessedMafiaCount,
     required int foundMafiaCount,
     required bool foundSheriff,
+    required bool wasKilledFirstNight,
   }) {
     if (playedAs != PlayerRole.sheriff && foundMafiaCount != 0) {
       throw ArgumentError.value(
@@ -133,6 +140,13 @@ class PlayerStats {
     }
     if (playedAs != PlayerRole.don && foundSheriff) {
       throw ArgumentError.value(foundSheriff, "foundSheriff", "Must be false for non-don roles");
+    }
+    if (!wasKilledFirstNight && guessedMafiaCount != 0) {
+      throw ArgumentError.value(
+        guessedMafiaCount,
+        "guessedMafiaCount",
+        "Must be 0 for players who weren't killed first night",
+      );
     }
     final newGamesByRole = Map.of(gamesByRole)..update(playedAs, (value) => value + 1);
     final newWinsByRole = Map.of(winsByRole);
@@ -147,6 +161,7 @@ class PlayerStats {
       totalGuessedMafia: totalGuessedMafia + guessedMafiaCount,
       totalFoundMafia: totalFoundMafia + foundMafiaCount,
       totalFoundSheriff: totalFoundSheriff + (foundSheriff ? 1 : 0),
+      totalWasKilledFirstNight: totalWasKilledFirstNight + (wasKilledFirstNight ? 1 : 0),
     );
   }
 }

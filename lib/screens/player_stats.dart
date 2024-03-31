@@ -68,6 +68,10 @@ class PlayerStatsScreen extends StatelessWidget {
                 subtitle: Text(stats.totalKicks.toString()),
               ),
               ListTile(
+                title: const Text("Всего убит в первую ночь"),
+                subtitle: Text(stats.totalWasKilledFirstNight.toString()),
+              ),
+              ListTile(
                 title: const Text("Всего угаданных мафий в ЛХ"),
                 subtitle: Text(stats.totalGuessedMafia.toString()),
               ),

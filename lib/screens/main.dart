@@ -266,6 +266,7 @@ class _MainScreenMainBodyContent extends StatelessWidget {
               bestTurn?.currentPlayerNumber == player.number ? (guessedMafiaCount ?? 0) : 0,
           foundMafiaCount: player.role == PlayerRole.sheriff ? foundMafia.length : 0,
           foundSheriff: player.role == PlayerRole.don && foundSheriff,
+          wasKilledFirstNight: bestTurn?.currentPlayerNumber == player.number,
         ),
       );
     }

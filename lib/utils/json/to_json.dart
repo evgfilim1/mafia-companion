@@ -125,6 +125,7 @@ extension PlayerStatsJson on db_models.PlayerStats {
         "totalGuessedMafia": totalGuessedMafia,
         "totalFoundMafia": totalFoundMafia,
         "totalFoundSheriff": totalFoundSheriff,
+        "totalWasKilledFirstNight": totalWasKilledFirstNight,
       };
 }
 
