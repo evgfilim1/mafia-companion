@@ -122,6 +122,7 @@ extension PlayerStatsJson on db_models.PlayerStats {
         "winsByRole": winsByRole.toJson(),
         "totalWarns": totalWarns,
         "totalKicks": totalKicks,
+        "totalOtherTeamWins": totalOtherTeamWins,
         "totalGuessedMafia": totalGuessedMafia,
         "totalFoundMafia": totalFoundMafia,
         "totalFoundSheriff": totalFoundSheriff,

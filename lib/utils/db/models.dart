@@ -87,11 +87,15 @@ class PlayerStats {
   @HiveField(7, defaultValue: 0)
   final int totalWasKilledFirstNight;
 
+  @HiveField(8, defaultValue: 0)
+  final int totalOtherTeamWins;
+
   const PlayerStats({
     required this.gamesByRole,
     required this.winsByRole,
     required this.totalWarns,
     required this.totalKicks,
+    required this.totalOtherTeamWins,
     required this.totalGuessedMafia,
     required this.totalFoundMafia,
     required this.totalFoundSheriff,
@@ -114,6 +118,7 @@ class PlayerStats {
           },
           totalWarns: 0,
           totalKicks: 0,
+          totalOtherTeamWins: 0,
           totalGuessedMafia: 0,
           totalFoundMafia: 0,
           totalFoundSheriff: 0,
@@ -126,6 +131,7 @@ class PlayerStats {
     required bool won,
     required int warnCount,
     required bool wasKicked,
+    required bool hasOtherTeamWon,
     required int guessedMafiaCount,
     required int foundMafiaCount,
     required bool foundSheriff,
@@ -148,6 +154,13 @@ class PlayerStats {
         "Must be 0 for players who weren't killed first night",
       );
     }
+    if (hasOtherTeamWon && won) {
+      throw ArgumentError.value(
+        hasOtherTeamWon,
+        "hasOtherTeamWon",
+        "Can't be true if the player's team won",
+      );
+    }
     final newGamesByRole = Map.of(gamesByRole)..update(playedAs, (value) => value + 1);
     final newWinsByRole = Map.of(winsByRole);
     if (won) {
@@ -158,6 +171,7 @@ class PlayerStats {
       winsByRole: newWinsByRole,
       totalWarns: totalWarns + warnCount,
       totalKicks: totalKicks + (wasKicked ? 1 : 0),
+      totalOtherTeamWins: totalOtherTeamWins + (hasOtherTeamWon ? 1 : 0),
       totalGuessedMafia: totalGuessedMafia + guessedMafiaCount,
       totalFoundMafia: totalFoundMafia + foundMafiaCount,
       totalFoundSheriff: totalFoundSheriff + (foundSheriff ? 1 : 0),

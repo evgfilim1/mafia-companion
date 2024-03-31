@@ -120,6 +120,14 @@ class Game {
   /// Assumes next game state according to game internal state, and returns it.
   /// Doesn't change internal state. May throw exceptions if game internal state is inconsistent.
   BaseGameState? get nextStateAssumption {
+    final otherTeamWin = _log.whereType<PlayerKickedGameLogItem>().where((e) => e.isOtherTeamWin);
+    if (otherTeamWin.isNotEmpty) {
+      return GameStateFinish(
+        day: state.day,
+        winner: players.getByNumber(otherTeamWin.last.playerNumber).role.team.other,
+        players: state.players,
+      );
+    }
     if (!state.stage.isAnyOf([GameStage.nightLastWords, GameStage.dayLastWords]) && isGameOver) {
       if (state.stage == GameStage.finish) {
         return null;
@@ -640,10 +648,8 @@ class Game {
       throw StateError("Can't kick player's team in state ${state.stage}");
     }
     final newPlayers = List.of(state.players);
-    final targetPlayer = players.getByNumber(number);
-    for (final player in newPlayers.where((p) => targetPlayer.role.team == p.role.team)) {
-      newPlayers[player.number - 1] = player.copyWith(isAlive: false, isKicked: true);
-    }
+    final i = number - 1;
+    newPlayers[i] = newPlayers[i].copyWith(isAlive: false, isKicked: true);
     _log.add(PlayerKickedGameLogItem(day: state.day, playerNumber: number, isOtherTeamWin: true));
     _editPlayers(newPlayers);
   }

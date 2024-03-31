@@ -236,6 +236,8 @@ class _MainScreenMainBodyContent extends StatelessWidget {
     final guessedMafiaCount = bestTurn?.playerNumbers
         .where((e) => nextState.players[e - 1].role.team == RoleTeam.mafia)
         .length;
+    final otherTeamWin =
+        controller.gameLog.whereType<PlayerKickedGameLogItem>().where((e) => e.isOtherTeamWin);
     final dbPlayers = await playersContainer
         .getManyByNicknames(nextState.players.map((e) => e.nickname).toList());
     final foundMafia = <int>{};
@@ -262,6 +264,8 @@ class _MainScreenMainBodyContent extends StatelessWidget {
           won: nextState.winner == player.role.team,
           warnCount: player.warns,
           wasKicked: player.isKicked,
+          hasOtherTeamWon:
+              otherTeamWin.isNotEmpty && otherTeamWin.last.playerNumber == player.number,
           guessedMafiaCount:
               bestTurn?.currentPlayerNumber == player.number ? (guessedMafiaCount ?? 0) : 0,
           foundMafiaCount: player.role == PlayerRole.sheriff ? foundMafia.length : 0,
