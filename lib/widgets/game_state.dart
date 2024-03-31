@@ -79,9 +79,18 @@ class BottomGameStateWidget extends StatelessWidget {
 
     final gameState = controller.state;
     if (gameState is GameStatePrepare) {
-      return TextButton(
-        onPressed: () => Navigator.pushNamed(context, "/roles"),
-        child: const Text("Раздача ролей", style: TextStyle(fontSize: 20)),
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextButton(
+            onPressed: () => Navigator.pushNamed(context, "/roles"),
+            child: const Text("Раздача ролей", style: TextStyle(fontSize: 20)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pushNamed(context, "/chooseRoles"),
+            child: const Text("Редактирование игроков", style: TextStyle(fontSize: 20)),
+          ),
+        ],
       );
     }
 

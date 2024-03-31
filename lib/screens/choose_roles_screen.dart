@@ -26,7 +26,7 @@ class ChooseRolesScreen extends StatefulWidget {
 
 class _ChooseRolesScreenState extends State<ChooseRolesScreen> {
   final _roles = List<Set<PlayerRole>>.generate(
-    10,
+    rolesList.length,
     (_) => PlayerRole.values.toSet(),
     growable: false,
   );
@@ -39,9 +39,9 @@ class _ChooseRolesScreenState extends State<ChooseRolesScreen> {
   void initState() {
     super.initState();
     final controller = context.read<GameController>();
-    final roles = controller.players.map((p) => p.role).toUnmodifiableList();
-    for (final (i, role) in roles.indexed) {
-      _roles[i] = {role};
+    for (final (i, player) in controller.players.indexed) {
+      _roles[i] = {player.role};
+      _chosenNicknames[i] = player.nickname;
     }
   }
 
@@ -185,10 +185,6 @@ class _ChooseRolesScreenState extends State<ChooseRolesScreen> {
   }
 
   Future<void> _onFabPressed(BuildContext context) async {
-    if (!_isModified) {
-      Navigator.pop(context);
-      return;
-    }
     setState(_validate);
     if (_errorsByIndex.isNotEmpty || _errorsByRole.isNotEmpty) {
       showSnackBar(context, const SnackBar(content: Text("Для продолжения исправьте ошибки")));
