@@ -33,6 +33,7 @@ class _ChooseRolesScreenState extends State<ChooseRolesScreen> {
   final _errorsByRole = <PlayerRole, _ValidationErrorType>{};
   final _errorsByIndex = <int>{};
   final _chosenNicknames = List<String?>.generate(rolesList.length, (index) => null);
+  var _isModified = false;
 
   @override
   void initState() {
@@ -52,6 +53,14 @@ class _ChooseRolesScreenState extends State<ChooseRolesScreen> {
         _roles[index].remove(role);
       }
       _validate();
+      _isModified = true;
+    });
+  }
+
+  void _onNicknameSelected(int index, String? value) {
+    setState(() {
+      _isModified = true;
+      _chosenNicknames[index] = value;
     });
   }
 
@@ -176,6 +185,10 @@ class _ChooseRolesScreenState extends State<ChooseRolesScreen> {
   }
 
   Future<void> _onFabPressed(BuildContext context) async {
+    if (!_isModified) {
+      Navigator.pop(context);
+      return;
+    }
     setState(_validate);
     if (_errorsByIndex.isNotEmpty || _errorsByRole.isNotEmpty) {
       showSnackBar(context, const SnackBar(content: Text("Для продолжения исправьте ошибки")));
@@ -217,6 +230,7 @@ class _ChooseRolesScreenState extends State<ChooseRolesScreen> {
   void _toggleAll() {
     final anyChecked = _roles.any((rs) => rs.isNotEmpty);
     setState(() {
+      _isModified = true;
       for (var i = 0; i < 10; i++) {
         if (anyChecked) {
           _roles[i].clear();
@@ -251,89 +265,108 @@ class _ChooseRolesScreenState extends State<ChooseRolesScreen> {
           enabled: !_chosenNicknames.contains(nickname),
         ),
     ];
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Выбор ролей"),
-        actions: [
-          IconButton(
-            tooltip: "Сбросить",
-            onPressed: _toggleAll,
-            icon: const Icon(Icons.restart_alt),
+    return PopScope(
+      canPop: !_isModified,
+      onPopInvoked: (didPop) async {
+        if (didPop) return;
+        final res = await showDialog<bool>(
+          context: context,
+          builder: (context) => const ConfirmationDialog(
+            title: Text("Отменить изменения"),
+            content: Text("Вы уверены, что хотите отменить изменения?"),
           ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Table(
-          defaultVerticalAlignment: TableCellVerticalAlignment.middle,
-          columnWidths: const {
-            0: FlexColumnWidth(7),
-            1: FlexColumnWidth(2),
-            2: FlexColumnWidth(2),
-            3: FlexColumnWidth(2),
-            4: FlexColumnWidth(2),
-          },
-          children: [
-            TableRow(
-              children: [
-                const Center(child: Text("Никнейм")),
-                ...PlayerRole.values.map(
-                  (role) {
-                    final errorText = _getErrorText(role);
-                    return Tooltip(
-                      message: errorText ?? "",
-                      child: Center(
-                        child: Text(
-                          role.prettyName,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: errorText != null ? Colors.red : null,
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ],
+        );
+        if (res ?? false) {
+          if (!context.mounted) {
+            return;
+          }
+          Navigator.pop(context);
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text("Выбор ролей"),
+          actions: [
+            IconButton(
+              tooltip: "Сбросить",
+              onPressed: _toggleAll,
+              icon: const Icon(Icons.restart_alt),
             ),
-            for (var i = 0; i < 10; i++)
-              TableRow(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-                    child: DropdownMenu(
-                      expandedInsets: EdgeInsets.zero,
-                      enableFilter: true,
-                      enableSearch: true,
-                      label: Text("Игрок ${i + 1}"),
-                      menuHeight: 256,
-                      inputDecorationTheme: const InputDecorationTheme(
-                        isDense: true,
-                        border: OutlineInputBorder(),
-                      ),
-                      errorText: _errorsByIndex.contains(i) ? "Роль не выбрана" : null,
-                      requestFocusOnTap: true,
-                      initialSelection: _chosenNicknames[i],
-                      dropdownMenuEntries: nicknameEntries,
-                      onSelected: (value) => setState(() => _chosenNicknames[i] = value),
-                    ),
-                  ),
-                  for (final role in PlayerRole.values)
-                    Checkbox(
-                      value: _roles[i].contains(role),
-                      onChanged: (value) => _changeValue(i, role, value!),
-                      isError: _errorsByRole.containsKey(role) || _errorsByIndex.contains(i),
-                    ),
-                ],
-              ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        tooltip: "Применить",
-        onPressed: () => _onFabPressed(context),
-        child: const Icon(Icons.check),
+        body: SingleChildScrollView(
+          child: Table(
+            defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+            columnWidths: const {
+              0: FlexColumnWidth(7),
+              1: FlexColumnWidth(2),
+              2: FlexColumnWidth(2),
+              3: FlexColumnWidth(2),
+              4: FlexColumnWidth(2),
+            },
+            children: [
+              TableRow(
+                children: [
+                  const Center(child: Text("Никнейм")),
+                  ...PlayerRole.values.map(
+                    (role) {
+                      final errorText = _getErrorText(role);
+                      return Tooltip(
+                        message: errorText ?? "",
+                        child: Center(
+                          child: Text(
+                            role.prettyName,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: errorText != null ? Colors.red : null,
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+              for (var i = 0; i < 10; i++)
+                TableRow(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                      child: DropdownMenu(
+                        expandedInsets: EdgeInsets.zero,
+                        enableFilter: true,
+                        enableSearch: true,
+                        label: Text("Игрок ${i + 1}"),
+                        menuHeight: 256,
+                        inputDecorationTheme: const InputDecorationTheme(
+                          isDense: true,
+                          border: OutlineInputBorder(),
+                        ),
+                        errorText: _errorsByIndex.contains(i) ? "Роль не выбрана" : null,
+                        requestFocusOnTap: true,
+                        initialSelection: _chosenNicknames[i],
+                        dropdownMenuEntries: nicknameEntries,
+                        onSelected: (value) => _onNicknameSelected(i, value),
+                      ),
+                    ),
+                    for (final role in PlayerRole.values)
+                      Checkbox(
+                        value: _roles[i].contains(role),
+                        onChanged: (value) => _changeValue(i, role, value!),
+                        isError: _errorsByRole.containsKey(role) || _errorsByIndex.contains(i),
+                      ),
+                  ],
+                ),
+            ],
+          ),
+        ),
+        floatingActionButton: FloatingActionButton(
+          tooltip: "Применить",
+          onPressed: () => _onFabPressed(context),
+          child: const Icon(Icons.check),
+        ),
       ),
     );
   }
