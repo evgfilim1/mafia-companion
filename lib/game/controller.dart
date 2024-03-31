@@ -105,7 +105,7 @@ class Game {
   }
 
   /// Checks if the game is over.
-  bool get isGameOver => state.stage == GameStage.finish || winTeamAssumption != null;
+  bool get isGameOver => state.stage == GameStage.finish;
 
   /// Checks if the game is running.
   bool get isActive => !state.stage.isAnyOf([GameStage.prepare, GameStage.finish]);
@@ -128,7 +128,7 @@ class Game {
         players: state.players,
       );
     }
-    if (!state.stage.isAnyOf([GameStage.nightLastWords, GameStage.dayLastWords]) && isGameOver) {
+    if (!state.stage.isAnyOf([GameStage.nightLastWords, GameStage.dayLastWords]) && winTeamAssumption != null) {
       if (state.stage == GameStage.finish) {
         return null;
       }
@@ -364,10 +364,11 @@ class Game {
         final newPlayers = List.of(state.players);
         newPlayers[pns[i] - 1] = newPlayers[pns[i] - 1].copyWith(isAlive: false);
         if (i == pns.length - 1) {
-          if (isGameOver) {
+          final wta = winTeamAssumption;
+          if (wta != null) {
             return GameStateFinish(
               day: state.day,
-              winner: winTeamAssumption,
+              winner: wta,
               players: newPlayers,
             );
           }
@@ -445,10 +446,11 @@ class Game {
       case GameStateWithPlayer(stage: GameStage.nightLastWords, currentPlayerNumber: final pn):
         final newPlayers = List.of(state.players);
         newPlayers[pn - 1] = newPlayers[pn - 1].copyWith(isAlive: false);
-        if (isGameOver) {
+        final wta = winTeamAssumption;
+        if (wta != null) {
           return GameStateFinish(
             day: state.day,
-            winner: winTeamAssumption,
+            winner: wta,
             players: newPlayers.toUnmodifiableList(),
           );
         }
