@@ -69,6 +69,8 @@ android {
     compileSdkVersion flutter.compileSdkVersion
     ndkVersion flutter.ndkVersion
 
+    flavorDimensions "env"
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -89,7 +91,6 @@ android {
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName + gitSuffix
-        //println("Version name: $versionName")
     }
 
     signingConfigs {
@@ -104,14 +105,23 @@ android {
     }
 
     buildTypes {
-        debug {
-            applicationIdSuffix ".debug"
-        }
+        debug {}
         release {
             if (!keystoreAvailable) {
                 println '$KEYSTORE_PASSWORD and/or $KEY_PASSWORD are not set, will use debug keys to sign release app variant'
             }
             signingConfig keystoreAvailable ? signingConfigs.release : signingConfigs.debug
+        }
+    }
+
+    productFlavors {
+        dev {
+            getIsDefault().set(true)
+            dimension "env"
+            applicationIdSuffix ".dev"
+        }
+        prod {
+            dimension "env"
         }
     }
 }

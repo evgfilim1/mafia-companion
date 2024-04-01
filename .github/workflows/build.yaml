@@ -101,7 +101,12 @@ jobs:
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: flutter build apk --release --split-per-abi
+        run: |
+          BUILD_FLAVOR="dev"
+          if [[ "${GITHUB_REF}" == "refs/tags/v"* ]]; then
+            BUILD_FLAVOR="prod"
+          fi
+          flutter build apk --release --split-per-abi --flavor "${BUILD_FLAVOR?}"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v3

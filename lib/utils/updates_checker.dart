@@ -19,6 +19,7 @@ import "extensions.dart";
 import "github.dart";
 import "json/from_json.dart";
 import "log.dart";
+import "misc.dart";
 import "updates_checker/stub.dart"
     if (dart.library.ffi) "updates_checker/native.dart"
     if (dart.library.html) "updates_checker/web.dart" show getReleaseDownloadUrl;
@@ -108,7 +109,7 @@ Future<NewVersionInfo?> _checkForUpdates() async {
     return null;
   }
   if (currentVersion > latestVersion) {
-    if (!kDebugMode) {
+    if (!isDev) {
       throw StateError("Current version is greater than latest version and not in debug mode");
     }
     return null;
@@ -225,7 +226,7 @@ class UpdatesChecker with ChangeNotifier {
     if (kIsWeb) {
       throw UnsupportedError("Web platform is not supported");
     }
-    if (kDebugMode) {
+    if (isDev) {
       _log.w("Checking updates in debug mode");
     }
     NewVersionInfo? info;

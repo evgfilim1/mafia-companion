@@ -1,4 +1,3 @@
-import "package:flutter/foundation.dart";
 import "package:flutter/material.dart";
 import "package:provider/provider.dart";
 
@@ -6,6 +5,7 @@ import "../utils/db/models.dart" as db_models;
 import "../utils/db/repo.dart";
 import "../utils/extensions.dart";
 import "../utils/log.dart";
+import "../utils/misc.dart";
 import "../widgets/confirmation_dialog.dart";
 import "../widgets/list_tiles/text_field.dart";
 import "player_stats.dart";
@@ -61,7 +61,7 @@ class PlayerInfoScreen extends StatelessWidget {
           final player = snapshot.requireData!;
           return ListView(
             children: [
-              if (kDebugMode)
+              if (isDev)
                 ListTile(
                   enabled: false,
                   leading: const Icon(Icons.onetwothree),

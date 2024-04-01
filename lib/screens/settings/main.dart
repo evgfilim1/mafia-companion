@@ -10,6 +10,7 @@ import "../../utils/bug_report/stub.dart"
     if (dart.library.html) "../../utils/bug_report/web.dart";
 import "../../utils/errors.dart";
 import "../../utils/game_controller.dart";
+import "../../utils/misc.dart";
 import "../../utils/ui.dart";
 import "../../utils/updates_checker.dart";
 import "../../widgets/notification_dot.dart";
@@ -53,8 +54,8 @@ class SettingsScreen extends StatelessWidget {
     final controller = context.watch<GameController>();
     const updaterUnavailableReason = kIsWeb
         ? "в браузере"
-        : kDebugMode
-            ? "в debug-режиме"
+        : isDev
+            ? "при разработке"
             : null;
 
     return Scaffold(
@@ -84,7 +85,7 @@ class SettingsScreen extends StatelessWidget {
               ),
             ),
           ),
-          if (kDebugMode)
+          if (isDev)
             ListTile(
               leading: const Icon(Icons.bug_report),
               title: const Text("Меню отладки"),

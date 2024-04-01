@@ -14,6 +14,7 @@ import "../utils/db/repo.dart";
 import "../utils/errors.dart";
 import "../utils/extensions.dart";
 import "../utils/game_controller.dart";
+import "../utils/misc.dart";
 import "../utils/settings.dart";
 import "../utils/ui.dart";
 import "../utils/updates_checker.dart";
@@ -50,7 +51,7 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Future<void> _checkForUpdates() async {
-    if (kIsWeb || kDebugMode) {
+    if (kIsWeb || isDev) {
       return;
     }
     final checker = context.read<UpdatesChecker>();
