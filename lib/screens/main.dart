@@ -6,13 +6,6 @@ import "package:flutter/services.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import "package:provider/provider.dart";
 
-import "../game/log.dart";
-import "../game/player.dart";
-import "../game/states.dart";
-import "../utils/db/models.dart";
-import "../utils/db/repo.dart";
-import "../utils/errors.dart";
-import "../utils/extensions.dart";
 import "../utils/game_controller.dart";
 import "../utils/misc.dart";
 import "../utils/settings.dart";
@@ -20,12 +13,14 @@ import "../utils/ui.dart";
 import "../utils/updates_checker.dart";
 import "../widgets/app_drawer.dart";
 import "../widgets/bottom_controls.dart";
+import "../widgets/confirm_pop_scope.dart";
 import "../widgets/confirmation_dialog.dart";
 import "../widgets/game_state.dart";
+import "../widgets/notes_menu_item_button.dart";
 import "../widgets/notification_dot.dart";
 import "../widgets/orientation_dependent.dart";
 import "../widgets/player_buttons.dart";
-import "../widgets/restart_dialog.dart";
+import "../widgets/restart_game_icon_button.dart";
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -36,18 +31,11 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   var _showRoles = false;
-  final _notesController = TextEditingController();
 
   @override
   void initState() {
     unawaited(_checkForUpdates());
     super.initState();
-  }
-
-  @override
-  void dispose() {
-    _notesController.dispose();
-    super.dispose();
   }
 
   Future<void> _checkForUpdates() async {
@@ -78,59 +66,19 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-  Future<void> _askRestartGame(BuildContext context) async {
-    final restartGame = await showDialog<bool>(
-      context: context,
-      builder: (context) => const RestartGameDialog(),
-    );
-    if (!context.mounted) {
-      throw ContextNotMountedError();
-    }
-    if (restartGame ?? false) {
-      context.read<GameController>().stopGame();
-      showSnackBar(context, const SnackBar(content: Text("Игра перезапущена")));
-    }
-  }
-
-  void _showNotes(BuildContext context) {
-    showSimpleDialog(
-      context: context,
-      title: const Text("Заметки"),
-      content: TextField(
-        controller: _notesController,
-        maxLines: null,
-      ),
-      extraActions: [
-        TextButton(
-          onPressed: _notesController.clear,
-          child: const Text("Очистить"),
-        ),
-      ],
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<GameController>();
     final packageInfo = context.watch<PackageInfo>();
     final checker = context.watch<UpdatesChecker>();
 
-    return PopScope(
+    return ConfirmPopScope(
       canPop: !controller.isGameActive,
-      onPopInvoked: (didPop) async {
-        if (didPop) return;
-        final res = await showDialog<bool>(
-          context: context,
-          builder: (context) => const ConfirmationDialog(
-            title: Text("Выход из игры"),
-            content: Text("Вы уверены, что хотите выйти из игры? Все данные будут потеряны."),
-          ),
-        );
-        if (res ?? false) {
-          // exit flutter app
-          await SystemNavigator.pop();
-        }
-      },
+      dialog: const ConfirmationDialog(
+        title: Text("Выход из игры"),
+        content: Text("Вы уверены, что хотите выйти из игры? Все данные будут потеряны."),
+      ),
+      onPopConfirmed: SystemNavigator.pop,
       child: Scaffold(
         appBar: AppBar(
           title: controller.isGameActive
@@ -150,11 +98,7 @@ class _MainScreenState extends State<MainScreen> {
             ),
           ),
           actions: [
-            IconButton(
-              onPressed: () => _askRestartGame(context),
-              tooltip: "Перезапустить игру",
-              icon: const Icon(Icons.restart_alt),
-            ),
+            const RestartGameIconButton(),
             MenuAnchor(
               builder: (context, controller, child) => IconButton(
                 onPressed: () {
@@ -173,11 +117,7 @@ class _MainScreenState extends State<MainScreen> {
                   onPressed: () => Navigator.pushNamed(context, "/log"),
                   child: const Text("Журнал игры"),
                 ),
-                MenuItemButton(
-                  leadingIcon: const Icon(Icons.sticky_note_2, size: Checkbox.width),
-                  onPressed: () => _showNotes(context),
-                  child: const Text("Заметки"),
-                ),
+                const NotesMenuItemButton(),
                 CheckboxMenuButton(
                   value: _showRoles,
                   onChanged: (value) => setState(() => _showRoles = value ?? false),
@@ -222,111 +162,14 @@ class _RotatableMainScreenBody extends OrientationDependentWidget {
 class _MainScreenMainBodyContent extends StatelessWidget {
   const _MainScreenMainBodyContent();
 
-  Future<void> _saveStats(
-    BuildContext context,
-    GameController controller,
-    PlayerList playersContainer,
-    GameStateFinish nextState,
-  ) async {
-    final bestTurn = controller.gameLog
-        .whereType<StateChangeGameLogItem>()
-        .map((e) => e.oldState)
-        .nonNulls
-        .whereType<GameStateBestTurn>()
-        .lastOrNull;
-    final guessedMafiaCount = bestTurn?.playerNumbers
-        .where((e) => nextState.players[e - 1].role.team == RoleTeam.mafia)
-        .length;
-    final otherTeamWin =
-        controller.gameLog.whereType<PlayerKickedGameLogItem>().where((e) => e.isOtherTeamWin);
-    final dbPlayers = await playersContainer
-        .getManyByNicknames(nextState.players.map((e) => e.nickname).toList());
-    final foundMafia = <int>{};
-    var foundSheriff = false;
-    for (final item in controller.gameLog.whereType<PlayerCheckedGameLogItem>()) {
-      if (item.checkedByRole == PlayerRole.sheriff &&
-          nextState.players[item.playerNumber - 1].role.team == RoleTeam.mafia) {
-        foundMafia.add(item.playerNumber);
-      }
-      if (item.checkedByRole == PlayerRole.don &&
-          nextState.players[item.playerNumber - 1].role == PlayerRole.sheriff) {
-        foundSheriff = true;
-      }
-    }
-
-    final newStats = <PlayerStats>[];
-    for (final (dbPlayer, player) in dbPlayers.zip(nextState.players)) {
-      if (dbPlayer == null) {
-        continue;
-      }
-      newStats.add(
-        dbPlayer.$2.stats.copyWithUpdated(
-          playedAs: player.role,
-          won: nextState.winner == player.role.team,
-          warnCount: player.warns,
-          wasKicked: player.isKicked,
-          hasOtherTeamWon:
-              otherTeamWin.isNotEmpty && otherTeamWin.last.playerNumber == player.number,
-          guessedMafiaCount:
-              bestTurn?.currentPlayerNumber == player.number ? (guessedMafiaCount ?? 0) : 0,
-          foundMafiaCount: player.role == PlayerRole.sheriff ? foundMafia.length : 0,
-          foundSheriff: player.role == PlayerRole.don && foundSheriff,
-          wasKilledFirstNight: bestTurn?.currentPlayerNumber == player.number,
-        ),
-      );
-    }
-    await playersContainer.editAll(
-      Map.fromEntries(
-        dbPlayers.nonNulls
-            .zip(newStats)
-            .map((e) => MapEntry(e.$1.$1, e.$1.$2.copyWith(stats: e.$2))),
-      ),
-    );
-    if (!context.mounted) {
-      return;
-    }
-    showSnackBar(context, const SnackBar(content: Text("Результаты игры сохранены")));
-  }
-
-  Future<void> _onTapNext(BuildContext context, GameController controller) async {
-    final nextStateAssumption = controller.nextStateAssumption;
-    if (nextStateAssumption == null) {
-      return;
-    }
-    controller.setNextState();
-    if (nextStateAssumption is GameStateFinish) {
-      final playersContainer = context.read<PlayerList>();
-      final saveStats = await showDialog<bool>(
-        context: context,
-        builder: (context) => const ConfirmationDialog(
-          title: Text("Сохранить результаты игры?"),
-          content: Text(
-            "Результат этой игры будет учтён у каждого зарегистрированного игрока в статистике.",
-          ),
-        ),
-      );
-      if (!(saveStats ?? false) || !context.mounted) {
-        return;
-      }
-      await _saveStats(context, controller, playersContainer, nextStateAssumption);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<GameController>();
-    final previousState = controller.previousState;
-    final nextStateAssumption = controller.nextStateAssumption;
 
     return Column(
       children: [
         const Expanded(child: Center(child: GameStateInfo())),
-        BottomControlBar(
-          backLabel: previousState?.prettyName ?? "(недоступно)",
-          onTapBack: previousState != null ? controller.setPreviousState : null,
-          onTapNext: nextStateAssumption != null ? () => _onTapNext(context, controller) : null,
-          nextLabel: nextStateAssumption?.prettyName ?? "(недоступно)",
-        ),
+        if (controller.isGameInitialized) const GameBottomControlBar(),
       ],
     );
   }

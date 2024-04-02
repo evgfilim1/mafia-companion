@@ -9,6 +9,7 @@ import "../utils/errors.dart";
 import "../utils/extensions.dart";
 import "../utils/game_controller.dart";
 import "../utils/ui.dart";
+import "../widgets/confirm_pop_scope.dart";
 import "../widgets/confirmation_dialog.dart";
 
 enum _ValidationErrorType {
@@ -261,24 +262,12 @@ class _ChooseRolesScreenState extends State<ChooseRolesScreen> {
           enabled: !_chosenNicknames.contains(nickname),
         ),
     ];
-    return PopScope(
+    return ConfirmPopScope(
       canPop: !_isModified,
-      onPopInvoked: (didPop) async {
-        if (didPop) return;
-        final res = await showDialog<bool>(
-          context: context,
-          builder: (context) => const ConfirmationDialog(
-            title: Text("Отменить изменения"),
-            content: Text("Вы уверены, что хотите отменить изменения?"),
-          ),
-        );
-        if (res ?? false) {
-          if (!context.mounted) {
-            return;
-          }
-          Navigator.pop(context);
-        }
-      },
+      dialog: const ConfirmationDialog(
+        title: Text("Отменить изменения"),
+        content: Text("Вы уверены, что хотите отменить изменения?"),
+      ),
       child: Scaffold(
         appBar: AppBar(
           title: const Text("Выбор ролей"),
