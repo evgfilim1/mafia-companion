@@ -49,7 +49,10 @@ class BottomGameStateWidget extends StatelessWidget {
         rememberKey: "randomizeSeats",
       ),
     );
-    if (randomizeSeats ?? false) {
+    if (randomizeSeats == null) {
+      return;
+    }
+    if (randomizeSeats) {
       if (!context.mounted) {
         throw ContextNotMountedError();
       }

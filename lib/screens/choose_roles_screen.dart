@@ -215,7 +215,10 @@ class _ChooseRolesScreenState extends State<ChooseRolesScreen> {
     if (!context.mounted) {
       throw ContextNotMountedError();
     }
-    if (showRoles ?? false) {
+    if (showRoles == null) {
+      return;
+    }
+    if (showRoles) {
       await Navigator.pushNamed(context, "/roles");
       if (!context.mounted) {
         throw ContextNotMountedError();
