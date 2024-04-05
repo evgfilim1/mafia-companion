@@ -20,12 +20,6 @@ extension ListDynamicParseJson on List<dynamic> {
 BaseGameLogItem gameLogFromJson(Map<String, dynamic> json, {required GameLogVersion version}) {
   if (json.containsKey("newState")) {
     return StateChangeGameLogItem(
-      oldState: json["oldState"] != null
-          ? gameStateFromJson(
-              json["oldState"] as Map<String, dynamic>,
-              version: version,
-            )
-          : null,
       newState: gameStateFromJson(
         json["newState"] as Map<String, dynamic>,
         version: version,

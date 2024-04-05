@@ -22,19 +22,15 @@ extension _DescribeLogItem on BaseGameLogItem {
   List<String> get description {
     final result = <String>[];
     switch (this) {
-      case StateChangeGameLogItem(oldState: final oldState, newState: final newState):
-        if (oldState != null && !newState.hasStateChanged(oldState)) {
-          break;
-        }
-        switch (oldState) {
+      case StateChangeGameLogItem(:final newState):
+        switch (newState) {
           case GameStatePrepare() ||
                 GameStateNightRest() ||
                 GameStateWithPlayer() ||
                 GameStateWithPlayers() ||
                 GameStateNightKill() ||
                 GameStateNightCheck() ||
-                GameStateWithIterablePlayers() ||
-                null:
+                GameStateWithIterablePlayers():
             // skip
             break;
           case GameStateSpeaking(currentPlayerNumber: final pn, accusations: final accusations):
@@ -172,6 +168,18 @@ class GameLogScreen extends StatelessWidget {
     final controller = context.read<GameController>();
     final title = this.log != null ? "Загруженный журнал игры" : "Журнал игры";
     final log = this.log ?? controller.gameLog;
+    final logDescriptions = <String>[];
+    StateChangeGameLogItem? prev;
+    for (final curr in log) {
+      if (curr is StateChangeGameLogItem) {
+        final oldState = prev?.newState;
+        prev = curr;
+        if (oldState != null && !curr.newState.hasStateChanged(oldState)) {
+          continue;
+        }
+      }
+      logDescriptions.addAll(curr.description);
+    }
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
@@ -191,12 +199,11 @@ class GameLogScreen extends StatelessWidget {
       body: log.isNotEmpty
           ? ListView(
               children: <ListTile>[
-                for (final item in log)
-                  for (final desc in item.description)
-                    ListTile(
-                      title: Text(desc),
-                      dense: true,
-                    ),
+                for (final desc in logDescriptions)
+                  ListTile(
+                    title: Text(desc),
+                    dense: true,
+                  ),
               ],
             )
           : Center(

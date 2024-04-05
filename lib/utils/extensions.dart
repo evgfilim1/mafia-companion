@@ -64,3 +64,13 @@ extension PrettyDuration on Duration {
     return "$minutes:$seconds";
   }
 }
+
+extension IterateWithPrevious<T> on Iterable<T> {
+  Iterable<(T?, T)> get withPreviousElement sync* {
+    T? previous;
+    for (final item in this) {
+      yield (previous, item);
+      previous = item;
+    }
+  }
+}

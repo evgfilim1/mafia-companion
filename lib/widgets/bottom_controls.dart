@@ -8,6 +8,7 @@ import "../utils/db/models.dart";
 import "../utils/db/repo.dart";
 import "../utils/extensions.dart";
 import "../utils/game_controller.dart";
+import "../utils/state_change_utils.dart";
 import "../utils/ui.dart";
 import "confirmation_dialog.dart";
 
@@ -22,10 +23,7 @@ class GameBottomControlBar extends StatelessWidget {
   ) async {
     final bestTurn = controller.gameLog
         .whereType<StateChangeGameLogItem>()
-        .map((e) => e.oldState)
-        .nonNulls
-        .whereType<GameStateBestTurn>()
-        .lastOrNull;
+        .getBestTurn();
     final guessedMafiaCount = bestTurn?.playerNumbers
         .where((e) => nextState.players[e - 1].role.team == RoleTeam.mafia)
         .length;

@@ -8,21 +8,25 @@ import "states.dart";
 @immutable
 sealed class BaseGameLogItem {
   const BaseGameLogItem();
+
+  int get day;
 }
 
 @immutable
 class StateChangeGameLogItem extends BaseGameLogItem {
-  final BaseGameState? oldState;
   final BaseGameState newState;
 
   const StateChangeGameLogItem({
-    required this.oldState,
     required this.newState,
   });
+
+  @override
+  int get day => newState.day;
 }
 
 @immutable
 class PlayerCheckedGameLogItem extends BaseGameLogItem {
+  @override
   final int day;
   final int playerNumber;
   final PlayerRole checkedByRole;
@@ -36,6 +40,7 @@ class PlayerCheckedGameLogItem extends BaseGameLogItem {
 
 @immutable
 class PlayerKickedGameLogItem extends BaseGameLogItem {
+  @override
   final int day;
   final int playerNumber;
   final bool isOtherTeamWin;
@@ -49,6 +54,7 @@ class PlayerKickedGameLogItem extends BaseGameLogItem {
 
 @immutable
 class PlayerWarnsChangedGameLogItem extends BaseGameLogItem {
+  @override
   final int day;
   final int playerNumber;
   final int oldWarns;

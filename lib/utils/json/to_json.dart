@@ -72,8 +72,7 @@ extension BaseGameStateJson on BaseGameState {
 
 extension BaseGameLogItemJson on BaseGameLogItem {
   Map<String, dynamic> toJson() => switch (this) {
-        StateChangeGameLogItem(:final oldState, :final newState) => {
-            "oldState": oldState?.toJson(),
+        StateChangeGameLogItem(:final newState) => {
             "newState": newState.toJson(),
           },
         PlayerCheckedGameLogItem(:final day, :final playerNumber, :final checkedByRole) => {

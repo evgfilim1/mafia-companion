@@ -2,6 +2,7 @@ import "dart:collection";
 
 import "../utils/extensions.dart";
 import "../utils/log.dart";
+import "../utils/state_change_utils.dart";
 import "log.dart";
 import "player.dart";
 import "players_view.dart";
@@ -32,7 +33,6 @@ class Game {
     final log = GameLog()
       ..add(
         StateChangeGameLogItem(
-          oldState: null,
           newState: GameStatePrepare(players: sortedPlayers.toUnmodifiableList()),
         ),
       );
@@ -166,12 +166,7 @@ class Game {
       case GameStateSpeaking(accusations: final accusations, currentPlayerNumber: final pn):
         final alreadySpoke = _log
             .whereType<StateChangeGameLogItem>()
-            .where((e) => e.oldState != null && e.newState.hasStateChanged(e.oldState!))
-            .map((e) => e.newState)
-            .where((e) => e is GameStateSpeaking && e.day == state.day)
-            .cast<GameStateSpeaking>()
-            .map((e) => e.currentPlayerNumber)
-            .toSet();
+            .getAlreadySpokePlayers(currentDay: state.day);
         final shouldSpeakCount = players.aliveCount +
             _log
                 .whereType<PlayerKickedGameLogItem>()
@@ -400,11 +395,9 @@ class Game {
             activePlayerNumber: players.sheriff.number,
           );
         }
-        final killedPlayerNumber = (_log
-                .whereType<StateChangeGameLogItem>()
-                .lastWhere((e) => e.oldState is GameStateNightKill)
-                .oldState! as GameStateNightKill)
-            .thisNightKilledPlayerNumber;
+        final killedPlayerNumber = _log
+            .whereType<StateChangeGameLogItem>()
+            .getLastDayKilledPlayerNumber();
         if (killedPlayerNumber != null) {
           if (state.day == 2 && players.aliveCount >= players.count - 1) {
             return GameStateBestTurn(
@@ -491,8 +484,7 @@ class Game {
       state.players.runtimeType == List<Player>.unmodifiable([]).runtimeType,
       "Players must be unmodifiable",
     );
-    final oldState = state;
-    _log.add(StateChangeGameLogItem(oldState: oldState, newState: nextState));
+    _log.add(StateChangeGameLogItem(newState: nextState));
   }
 
   /// Gets previous game state according to game internal state, and returns it.
@@ -500,8 +492,7 @@ class Game {
   /// Returns `null` if there is no previous state.
   BaseGameState? get previousState => _log
       .whereType<StateChangeGameLogItem>()
-      .map((e) => e.oldState)
-      .lastWhere((e) => e != null && state.hasStateChanged(e), orElse: () => null);
+      .getPreviousState();
 
   void setPreviousState() {
     final prevState = previousState;
@@ -531,7 +522,6 @@ class Game {
       }
       _log.add(
         StateChangeGameLogItem(
-          oldState: currentState,
           newState: currentState.copyWith(accusations: newAccusations),
         ),
       );
@@ -540,7 +530,6 @@ class Game {
     if (currentState case GameStateNightKill(thisNightKilledPlayerNumber: final kn)) {
       _log.add(
         StateChangeGameLogItem(
-          oldState: currentState,
           newState: currentState.copyWith(
             thisNightKilledPlayerNumber: kn == playerNumber ? null : playerNumber,
           ),
@@ -557,7 +546,6 @@ class Game {
       }
       _log.add(
         StateChangeGameLogItem(
-          oldState: currentState,
           newState: currentState.copyWith(playerNumbers: playerNumbers.toUnmodifiableList()),
         ),
       );
@@ -572,7 +560,6 @@ class Game {
     if (currentState is GameStateKnockoutVoting) {
       _log.add(
         StateChangeGameLogItem(
-          oldState: currentState,
           newState: currentState.copyWith(votes: count),
         ),
       );
@@ -581,7 +568,6 @@ class Game {
     if (currentState is GameStateVoting) {
       _log.add(
         StateChangeGameLogItem(
-          oldState: currentState,
           newState: currentState.copyWith(currentPlayerVotes: count),
         ),
       );
@@ -704,7 +690,7 @@ class Game {
       GameStateWithIterablePlayers() => currentState.copyWith(players: newPlayers),
       GameStateFinish() => currentState.copyWith(players: newPlayers),
     };
-    _log.add(StateChangeGameLogItem(oldState: currentState, newState: newState));
+    _log.add(StateChangeGameLogItem(newState: newState));
   }
 
   Player _nextAlivePlayer({required int fromNumber}) {
@@ -764,11 +750,7 @@ class Game {
   int get _firstSpeakingPlayerNumber {
     final previousFirstSpeakingPlayer = _log
         .whereType<StateChangeGameLogItem>()
-        .map((e) => e.oldState)
-        .where((e) => e is GameStateSpeaking && e.day == state.day - 1)
-        .cast<GameStateSpeaking>()
-        .firstOrNull
-        ?.currentPlayerNumber;
+        .getPreviousFirstSpeakingPlayerNumber(currentDay: state.day);
     if (state is GameStateSpeaking) {
       throw AssertionError("_firstSpeakingPlayerNumber called in GameStateSpeaking");
     }
@@ -788,15 +770,7 @@ class Game {
   int get _consequentDaysWithoutDeaths {
     final lastDeathDay = _log
         .whereType<StateChangeGameLogItem>()
-        .where(
-          (e) =>
-              e.oldState != null &&
-              e.oldState!.players.countWhere((e) => e.isAlive) !=
-                  e.newState.players.countWhere((e) => e.isAlive),
-        )
-        .lastOrNull
-        ?.newState
-        .day;
+        .getLastDayPlayerLeft();
     return state.day - (lastDeathDay ?? 1);
   }
 
