@@ -59,8 +59,10 @@ extension StateChangeUtils on Iterable<StateChangeGameLogItem> {
 
   BaseGameState? getPreviousState() {
     BaseGameState? result;
-    for (final (previous, _) in _iterWithPrevious()) {
-      result = previous;
+    for (final (previous, current) in _iterWithPrevious()) {
+      if (previous == null || current.hasStateChanged(previous)) {
+        result = previous;
+      }
     }
     return result;
   }

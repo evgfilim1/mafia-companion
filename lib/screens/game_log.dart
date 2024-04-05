@@ -30,7 +30,8 @@ extension _DescribeLogItem on BaseGameLogItem {
                 GameStateWithPlayers() ||
                 GameStateNightKill() ||
                 GameStateNightCheck() ||
-                GameStateWithIterablePlayers():
+                GameStateWithIterablePlayers() ||
+                GameStateFinish():
             // skip
             break;
           case GameStateSpeaking(currentPlayerNumber: final pn, accusations: final accusations):
@@ -47,8 +48,6 @@ extension _DescribeLogItem on BaseGameLogItem {
                 'Игрок #$pn сделал "Лучший ход": игрок(и) ${pns.map((n) => "#$n").join(", ")}',
               );
             }
-          case GameStateFinish():
-            throw AssertionError();
         }
         result.add('Этап игры изменён на "${newState.prettyName}"');
       case PlayerCheckedGameLogItem(
@@ -171,14 +170,14 @@ class GameLogScreen extends StatelessWidget {
     final logDescriptions = <String>[];
     StateChangeGameLogItem? prev;
     for (final curr in log) {
-      if (curr is StateChangeGameLogItem) {
-        final oldState = prev?.newState;
-        prev = curr;
-        if (oldState != null && !curr.newState.hasStateChanged(oldState)) {
-          continue;
-        }
+      if (curr is! StateChangeGameLogItem) {
+        logDescriptions.addAll(curr.description);
+        continue;
       }
-      logDescriptions.addAll(curr.description);
+      if (prev != null && curr.newState.hasStateChanged(prev.newState)) {
+        logDescriptions.addAll(prev.description);
+      }
+      prev = curr;
     }
     return Scaffold(
       appBar: AppBar(
