@@ -164,9 +164,8 @@ class Game {
           hasHalfTime: _hasHalfTime(next),
         );
       case GameStateSpeaking(accusations: final accusations, currentPlayerNumber: final pn):
-        final alreadySpoke = _log
-            .whereType<StateChangeGameLogItem>()
-            .getAlreadySpokePlayers(currentDay: state.day);
+        final alreadySpoke =
+            _log.whereType<StateChangeGameLogItem>().getAlreadySpokePlayers(currentDay: state.day);
         final shouldSpeakCount = players.aliveCount +
             _log
                 .whereType<PlayerKickedGameLogItem>()
@@ -395,9 +394,8 @@ class Game {
             activePlayerNumber: players.sheriff.number,
           );
         }
-        final killedPlayerNumber = _log
-            .whereType<StateChangeGameLogItem>()
-            .getLastDayKilledPlayerNumber();
+        final killedPlayerNumber =
+            _log.whereType<StateChangeGameLogItem>().getLastDayKilledPlayerNumber();
         if (killedPlayerNumber != null) {
           if (state.day == 2 && players.aliveCount >= players.count - 1) {
             return GameStateBestTurn(
@@ -490,9 +488,7 @@ class Game {
   /// Gets previous game state according to game internal state, and returns it.
   /// Doesn't change internal state. May throw exceptions if game internal state is inconsistent.
   /// Returns `null` if there is no previous state.
-  BaseGameState? get previousState => _log
-      .whereType<StateChangeGameLogItem>()
-      .getPreviousState();
+  BaseGameState? get previousState => _log.whereType<StateChangeGameLogItem>().getPreviousState();
 
   void setPreviousState() {
     final prevState = previousState;
@@ -768,9 +764,7 @@ class Game {
   }
 
   int get _consequentDaysWithoutDeaths {
-    final lastDeathDay = _log
-        .whereType<StateChangeGameLogItem>()
-        .getLastDayPlayerLeft();
+    final lastDeathDay = _log.whereType<StateChangeGameLogItem>().getLastDayPlayerLeft();
     return state.day - (lastDeathDay ?? 1);
   }
 

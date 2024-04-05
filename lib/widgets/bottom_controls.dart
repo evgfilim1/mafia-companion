@@ -21,9 +21,7 @@ class GameBottomControlBar extends StatelessWidget {
     PlayerList playersContainer,
     GameStateFinish nextState,
   ) async {
-    final bestTurn = controller.gameLog
-        .whereType<StateChangeGameLogItem>()
-        .getBestTurn();
+    final bestTurn = controller.gameLog.whereType<StateChangeGameLogItem>().getBestTurn();
     final guessedMafiaCount = bestTurn?.playerNumbers
         .where((e) => nextState.players[e - 1].role.team == RoleTeam.mafia)
         .length;

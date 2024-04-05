@@ -39,7 +39,9 @@ extension StateChangeUtils on Iterable<StateChangeGameLogItem> {
   Set<int> getAlreadySpokePlayers({required int currentDay}) {
     final result = <int>{};
     for (final (previous, item) in _iterWithPrevious()) {
-      if (previous != null && item.hasStateChanged(previous) && item is GameStateSpeaking &&
+      if (previous != null &&
+          item.hasStateChanged(previous) &&
+          item is GameStateSpeaking &&
           item.day == currentDay) {
         result.add(item.currentPlayerNumber);
       }
