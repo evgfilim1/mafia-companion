@@ -62,7 +62,7 @@ class _PlayerButtonsState extends OrientationDependentState<PlayerButtons> {
   Widget _buildPlayerButton(BuildContext context, int playerNumber, BaseGameState gameState) {
     final controller = context.watch<GameController>();
     final isActive = switch (gameState) {
-      GameStatePrepare() || GameStateNightRest() || GameStateFinish() => false,
+      GameStatePrepare() || GameStateNightRest() => false,
       GameStateWithPlayer(currentPlayerNumber: final p) ||
       GameStateSpeaking(currentPlayerNumber: final p) ||
       GameStateWithIterablePlayers(currentPlayerNumber: final p) ||
@@ -75,6 +75,8 @@ class _PlayerButtonsState extends OrientationDependentState<PlayerButtons> {
         ps.contains(playerNumber),
       GameStateNightKill() =>
         controller.getPlayerByNumber(playerNumber).role.team == RoleTeam.mafia,
+      GameStateFinish(:final winner) =>
+        controller.getPlayerByNumber(playerNumber).role.team == winner,
     };
     final isSelected = switch (gameState) {
       GameStateSpeaking(accusations: final accusations) => accusations.containsValue(playerNumber),
