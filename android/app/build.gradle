@@ -86,8 +86,7 @@ android {
 
     defaultConfig {
         applicationId "me.evgfilim1.mafia_companion"
-        // 19 is required minimum for `package_info_plus`
-        minSdkVersion ([flutter.minSdkVersion, 19].max())
+        minSdkVersion flutter.minSdkVersion
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName + gitSuffix

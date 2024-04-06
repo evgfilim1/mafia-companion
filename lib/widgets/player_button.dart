@@ -67,21 +67,21 @@ class BasicPlayerButton extends StatelessWidget {
     }
     return ElevatedButton(
       style: ButtonStyle(
-        shape: MaterialStateProperty.all(
+        shape: WidgetStateProperty.all(
           RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
         ),
         side: borderColor != null
-            ? MaterialStateProperty.all(
+            ? WidgetStateProperty.all(
                 BorderSide(
                   color: borderColor,
                   width: 1,
                 ),
               )
             : null,
-        backgroundColor: MaterialStateProperty.all(_getBackgroundColor()),
-        foregroundColor: MaterialStateProperty.all(_getForegroundColor()),
+        backgroundColor: WidgetStateProperty.all(_getBackgroundColor()),
+        foregroundColor: WidgetStateProperty.all(_getForegroundColor()),
       ),
       onPressed: onTap,
       onLongPress: onLongPress,
