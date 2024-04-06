@@ -23,6 +23,7 @@ extension _DescribeLogItem on BaseGameLogItem {
     final result = <String>[];
     switch (this) {
       case StateChangeGameLogItem(:final newState):
+        result.add('Этап игры изменён на "${newState.prettyName}"');
         switch (newState) {
           case GameStatePrepare() ||
                 GameStateNightRest() ||
@@ -49,7 +50,6 @@ extension _DescribeLogItem on BaseGameLogItem {
               );
             }
         }
-        result.add('Этап игры изменён на "${newState.prettyName}"');
       case PlayerCheckedGameLogItem(
           playerNumber: final playerNumber,
           checkedByRole: final checkedByRole,
@@ -178,6 +178,10 @@ class GameLogScreen extends StatelessWidget {
         logDescriptions.addAll(prev.description);
       }
       prev = curr;
+    }
+    final logLast = log.lastOrNull;
+    if (prev != null && logLast is StateChangeGameLogItem) {
+      logDescriptions.addAll(logLast.description);
     }
     return Scaffold(
       appBar: AppBar(
