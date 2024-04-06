@@ -118,7 +118,7 @@ jobs:
             build/app/outputs/flutter-apk/app-*.apk.sha1
 
       - name: Send dev APK to testers Telegram group
-        if: !startsWith(github.ref, 'refs/tags/v')
+        if: "!startsWith(github.ref, 'refs/tags/v')"
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
