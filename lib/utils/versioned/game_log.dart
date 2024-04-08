@@ -27,7 +27,6 @@ enum _LegacyGameLogVersion {
 
 enum GameLogVersion implements Comparable<GameLogVersion> {
   v0(0, isDeprecated: true),
-  v1(1),
   v2(2),
   ;
 
@@ -154,7 +153,6 @@ class VersionedGameLog extends Versioned<GameLogVersion, GameLogWithPlayers> {
         versionFromJson: _versionFromJson,
         valueFromJson: (json, version) => switch (version) {
           GameLogVersion.v0 => throw AssertionError("already handled"),
-          GameLogVersion.v1 ||
           GameLogVersion.v2 =>
             GameLogWithPlayers.fromJson(json, version: version),
         },
