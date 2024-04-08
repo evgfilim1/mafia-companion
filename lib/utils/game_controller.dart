@@ -3,8 +3,8 @@ import "package:flutter/material.dart";
 import "../game/controller.dart";
 import "../game/log.dart";
 import "../game/player.dart";
+import "../game/players_view.dart";
 import "../game/states.dart";
-import "extensions.dart";
 import "log.dart";
 
 extension _EnsureInitialized on Game? {
@@ -50,15 +50,11 @@ class GameController with ChangeNotifier {
 
   BaseGameState? get previousState => _game?.previousState;
 
-  int get totalPlayersCount => _game?.players.count ?? 0;
-
-  int get alivePlayersCount => _game?.players.aliveCount ?? 0;
-
   int get totalVotes => _game?.totalVotes ?? 0;
 
   RoleTeam? get winTeamAssumption => _game?.winTeamAssumption;
 
-  List<Player> get players => _game?.players.toUnmodifiableList() ?? const [];
+  PlayersView get players => _game.ensureInitialized.players;
 
   void startNewGame() {
     _game = Game.withPlayers(generatePlayers(nicknames: _nicknames, roles: _roles));
@@ -72,8 +68,6 @@ class GameController with ChangeNotifier {
     _log.debug("Game stopped");
     notifyListeners();
   }
-
-  Player getPlayerByNumber(int number) => _game.ensureInitialized.players.getByNumber(number);
 
   void vote(int count) {
     _game.ensureInitialized.vote(count);

@@ -69,26 +69,38 @@ BaseGameState gameStateFromJson(Map<String, dynamic> json, {required GameLogVers
   }
   final stage = GameStage.byName(stageString);
   final day = json["day"] as int;
-  final players =
-      (json["players"] as List<dynamic>).parseJsonList((e) => playerFromJson(e, version: version));
+  final playerStatesKey = switch (version) {
+    GameLogVersion.v0 || GameLogVersion.v1 => "players",
+    GameLogVersion.v2 => "playerStates",
+  };
+  final playerStates = (json[playerStatesKey] as List<dynamic>)
+      .parseJsonList((e) => playerStateFromJson(e, version: version));
+  final playerRoles = <int, PlayerRole>{};
+  if (playerStatesKey == "players") {
+    playerRoles.addAll(
+      (json["players"] as List<dynamic>)
+          .parseJsonList((e) => playerFromJson(e, version: version).role)
+          .asMap(),
+    );
+  }
   return switch (stage) {
-    GameStage.prepare => GameStatePrepare(players: players),
+    GameStage.prepare => GameStatePrepare(playerStates: playerStates),
     GameStage.firstNight || GameStage.preVoting || GameStage.preFinalVoting => GameStateWithPlayers(
         stage: stage,
         day: day,
-        players: players,
+        playerStates: playerStates,
         playerNumbers: (json["playerNumbers"] as List<dynamic>).cast<int>(),
       ),
     GameStage.firstNightWakeUps || GameStage.nightLastWords => GameStateWithPlayer(
         stage: stage,
         day: day,
-        players: players,
+        playerStates: playerStates,
         currentPlayerNumber: json["currentPlayerNumber"] as int,
       ),
-    GameStage.firstNightRest => GameStateNightRest(players: players),
+    GameStage.firstNightRest => GameStateNightRest(playerStates: playerStates),
     GameStage.speaking => GameStateSpeaking(
         day: day,
-        players: players,
+        playerStates: playerStates,
         currentPlayerNumber: json["currentPlayerNumber"] as int,
         accusations: (json["accusations"] as Map<String, dynamic>).parseJsonMap(),
         canOnlyAccuse: switch (version) {
@@ -103,7 +115,7 @@ BaseGameState gameStateFromJson(Map<String, dynamic> json, {required GameLogVers
     GameStage.voting || GameStage.finalVoting => GameStateVoting(
         stage: stage,
         day: day,
-        players: players,
+        playerStates: playerStates,
         votes: (json["votes"] as Map<String, dynamic>).parseJsonMap(),
         currentPlayerNumber: json["currentPlayerNumber"] as int,
         currentPlayerVotes: json["currentPlayerVotes"] as int?,
@@ -111,13 +123,13 @@ BaseGameState gameStateFromJson(Map<String, dynamic> json, {required GameLogVers
     GameStage.excuse || GameStage.dayLastWords => GameStateWithIterablePlayers(
         stage: stage,
         day: day,
-        players: players,
+        playerStates: playerStates,
         playerNumbers: (json["playerNumbers"] as List<dynamic>).cast<int>(),
         currentPlayerIndex: json["currentPlayerIndex"] as int,
       ),
     GameStage.knockoutVoting => GameStateKnockoutVoting(
         day: day,
-        players: players,
+        playerStates: playerStates,
         playerNumbers: (json["playerNumbers"] as List<dynamic>).cast<int>(),
         votes: switch (version) {
           GameLogVersion.v0 => json["votesForDropTable"] as int,
@@ -126,23 +138,29 @@ BaseGameState gameStateFromJson(Map<String, dynamic> json, {required GameLogVers
       ),
     GameStage.nightKill => GameStateNightKill(
         day: day,
-        players: players,
+        playerStates: playerStates,
         thisNightKilledPlayerNumber: json["thisNightKilledPlayerNumber"] as int?,
       ),
     GameStage.nightCheck => GameStateNightCheck(
         day: day,
-        players: players,
+        playerStates: playerStates,
         activePlayerNumber: json["activePlayerNumber"] as int,
+        activePlayerTeam: switch (version) {
+          GameLogVersion.v0 ||
+          GameLogVersion.v1 =>
+            playerRoles[json["activePlayerNumber"] as int]!.team,
+          GameLogVersion.v2 => RoleTeam.byName(json["activePlayerTeam"] as String)
+        },
       ),
     GameStage.bestTurn => GameStateBestTurn(
         day: day,
-        players: players,
+        playerStates: playerStates,
         currentPlayerNumber: json["currentPlayerNumber"] as int,
         playerNumbers: (json["playerNumbers"] as List<dynamic>).cast<int>(),
       ),
     GameStage.finish => GameStateFinish(
         day: day,
-        players: players,
+        playerStates: playerStates,
         winner: json["winner"] != null ? RoleTeam.byName(json["winner"]! as String) : null,
       ),
   };
@@ -152,6 +170,10 @@ Player playerFromJson(Map<String, dynamic> json, {required GameLogVersion versio
       role: PlayerRole.byName(json["role"] as String),
       number: json["number"] as int,
       nickname: json["nickname"] as String?,
+    );
+
+PlayerState playerStateFromJson(Map<String, dynamic> json, {required GameLogVersion version}) =>
+    PlayerState(
       isAlive: json["isAlive"] as bool,
       warns: json["warns"] as int,
       isKicked: switch (version) {

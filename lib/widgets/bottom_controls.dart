@@ -23,27 +23,27 @@ class GameBottomControlBar extends StatelessWidget {
   ) async {
     final bestTurn = controller.gameLog.whereType<StateChangeGameLogItem>().getBestTurn();
     final guessedMafiaCount = bestTurn?.playerNumbers
-        .where((e) => nextState.players[e - 1].role.team == RoleTeam.mafia)
+        .where((e) => controller.players.getByNumber(e).role.team == RoleTeam.mafia)
         .length;
     final otherTeamWin =
         controller.gameLog.whereType<PlayerKickedGameLogItem>().where((e) => e.isOtherTeamWin);
     final dbPlayers = await playersContainer
-        .getManyByNicknames(nextState.players.map((e) => e.nickname).toList());
+        .getManyByNicknames(controller.players.map((e) => e.nickname).toList());
     final foundMafia = <int>{};
     var foundSheriff = false;
     for (final item in controller.gameLog.whereType<PlayerCheckedGameLogItem>()) {
       if (item.checkedByRole == PlayerRole.sheriff &&
-          nextState.players[item.playerNumber - 1].role.team == RoleTeam.mafia) {
+          controller.players.getByNumber(item.playerNumber).role.team == RoleTeam.mafia) {
         foundMafia.add(item.playerNumber);
       }
       if (item.checkedByRole == PlayerRole.don &&
-          nextState.players[item.playerNumber - 1].role == PlayerRole.sheriff) {
+          controller.players.getByNumber(item.playerNumber).role == PlayerRole.sheriff) {
         foundSheriff = true;
       }
     }
 
     final newStats = <PlayerStats>[];
-    for (final (dbPlayer, player) in dbPlayers.zip(nextState.players)) {
+    for (final (dbPlayer, player) in dbPlayers.zip(controller.players)) {
       if (dbPlayer == null) {
         continue;
       }
@@ -51,8 +51,8 @@ class GameBottomControlBar extends StatelessWidget {
         dbPlayer.$2.stats.copyWithUpdated(
           playedAs: player.role,
           won: nextState.winner == player.role.team,
-          warnCount: player.warns,
-          wasKicked: player.isKicked,
+          warnCount: player.state.warns,
+          wasKicked: player.state.isKicked,
           hasOtherTeamWon:
               otherTeamWin.isNotEmpty && otherTeamWin.last.playerNumber == player.number,
           guessedMafiaCount:

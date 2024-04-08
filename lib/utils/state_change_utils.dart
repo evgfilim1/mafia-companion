@@ -19,8 +19,8 @@ extension StateChangeUtils on Iterable<StateChangeGameLogItem> {
     int? result;
     for (final (previous, item) in _iterWithPrevious()) {
       if (previous != null &&
-          item.players.countWhere((e) => e.isAlive) !=
-              previous.players.countWhere((e) => e.isAlive)) {
+          item.playerStates.countWhere((e) => e.isAlive) !=
+              previous.playerStates.countWhere((e) => e.isAlive)) {
         result = previous.day;
       }
     }

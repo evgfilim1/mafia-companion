@@ -7,7 +7,7 @@ extension MapJson<T> on Map<int, T> {
   Map<String, T> toJson() => map((k, v) => MapEntry(k.toString(), v));
 }
 
-extension ListPlayerJson on List<Player> {
+extension ListPlayerStateJson on List<PlayerState> {
   List<Map<String, dynamic>> toJson() => map((e) => e.toJson()).toList();
 }
 
@@ -48,8 +48,9 @@ extension BaseGameStateJson on BaseGameState {
         GameStateNightKill(:final thisNightKilledPlayerNumber) => {
             "thisNightKilledPlayerNumber": thisNightKilledPlayerNumber,
           },
-        GameStateNightCheck(:final activePlayerNumber) => {
+        GameStateNightCheck(:final activePlayerNumber, :final activePlayerTeam) => {
             "activePlayerNumber": activePlayerNumber,
+            "activePlayerTeam": activePlayerTeam.name,
           },
         GameStateBestTurn(:final currentPlayerNumber, :final playerNumbers) => {
             "currentPlayerNumber": currentPlayerNumber,
@@ -66,7 +67,7 @@ extension BaseGameStateJson on BaseGameState {
         ..addAll({
           "stage": stage.name,
           "day": day,
-          "players": players.map((e) => e.toJson()).toList(),
+          "playerStates": playerStates.map((e) => e.toJson()).toList(),
         });
 }
 
@@ -102,9 +103,14 @@ extension BaseGameLogItemJson on BaseGameLogItem {
 
 extension PlayerJson on Player {
   Map<String, dynamic> toJson() => {
-        "role": role.name,
         "number": number,
+        "role": role.name,
         "nickname": nickname,
+      };
+}
+
+extension PlayerStateJson on PlayerState {
+  Map<String, dynamic> toJson() => {
         "isAlive": isAlive,
         "warns": warns,
         "isKicked": isKicked,

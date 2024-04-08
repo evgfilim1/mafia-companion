@@ -40,9 +40,11 @@ class _ChooseRolesScreenState extends State<ChooseRolesScreen> {
   void initState() {
     super.initState();
     final controller = context.read<GameController>();
-    for (final (i, player) in controller.players.indexed) {
-      _roles[i] = {player.role};
-      _chosenNicknames[i] = player.nickname;
+    if (controller.isGameInitialized) {
+      for (final (i, player) in controller.players.indexed) {
+        _roles[i] = {player.role};
+        _chosenNicknames[i] = player.nickname;
+      }
     }
   }
 

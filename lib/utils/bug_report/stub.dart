@@ -4,11 +4,9 @@ import "package:flutter/material.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import "package:provider/provider.dart";
 
-import "../../game/log.dart";
+import "../../game/player.dart";
 import "../extensions.dart";
 import "../game_controller.dart";
-import "../json/from_json.dart";
-import "../json/to_json.dart";
 import "../versioned/game_log.dart";
 
 Future<void> reportBug(BuildContext context) async {
@@ -36,21 +34,26 @@ class BugReportInfo {
 }
 
 class GameInfo {
-  final List<BaseGameLogItem> log;
+  final GameLogWithPlayers log;
 
   const GameInfo({
     required this.log,
   });
 
-  Map<String, dynamic> toJson() => {
-        "log": log.map((e) => e.toJson()).toList(),
-      };
+  Map<String, dynamic> toJson() => GameLogWithPlayers(
+        log: log.log,
+        players: log.players.map(
+          (e) => Player(
+            role: e.role,
+            number: e.number,
+            nickname: null, // redacted for privacy, not needed for bug reports
+          ),
+        ),
+      ).toJson();
 
   factory GameInfo.fromJson(Map<String, dynamic> json) => GameInfo(
         // assuming bug reports are checked in the same app version as the game was played
-        log: (json["log"] as List<dynamic>).parseJsonList(
-          (e) => gameLogFromJson(e, version: GameLogVersion.latest),
-        ),
+        log: GameLogWithPlayers.fromJson(json, version: GameLogVersion.latest),
       );
 }
 
@@ -66,7 +69,10 @@ Future<String> reportBugCommonImpl(BuildContext context) async {
     BugReportInfo(
       packageInfo: packageInfo.data,
       game: GameInfo(
-        log: controller.gameLog.toUnmodifiableList(),
+        log: GameLogWithPlayers(
+          log: controller.gameLog.toUnmodifiableList(),
+          players: controller.players,
+        ),
       ),
     ).toJson(),
   );

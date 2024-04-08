@@ -115,10 +115,10 @@ class PlayerButton extends StatelessWidget {
       context: context,
       builder: (context) {
         final controller = context.watch<GameController>();
-        final player = controller.getPlayerByNumber(playerNumber);
-        final isAliveText = player.isAlive
+        final player = controller.players.getByNumber(playerNumber);
+        final isAliveText = player.state.isAlive
             ? "Жив"
-            : player.isKicked
+            : player.state.isKicked
                 ? "Удалён"
                 : "Мёртв";
         return AlertDialog(
@@ -127,7 +127,7 @@ class PlayerButton extends StatelessWidget {
             "Номер игрока: ${player.number}\n"
             "Состояние: $isAliveText\n"
             "Роль: ${player.role.prettyName}\n"
-            "Фолов: ${player.warns}",
+            "Фолов: ${player.state.warns}",
           ),
           actions: [
             MenuAnchor(
@@ -192,14 +192,14 @@ class PlayerButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<GameController>();
-    final player = controller.getPlayerByNumber(playerNumber);
+    final player = controller.players.getByNumber(playerNumber);
     return Stack(
       children: [
         BasicPlayerButton(
           playerNumber: playerNumber,
           isSelected: isSelected,
           isActive: isActive,
-          isAlive: player.isAlive,
+          isAlive: player.state.isAlive,
           expanded: expanded,
           onTap: onTap,
           onLongPress: () => _onLongPress(context, controller),
@@ -216,7 +216,7 @@ class PlayerButton extends StatelessWidget {
           top: 6,
           right: 6,
           child: Text(
-            player.isKicked ? "x" : "!" * player.warns,
+            player.state.isKicked ? "x" : "!" * player.state.warns,
             style: const TextStyle(color: Colors.red),
           ),
         ),

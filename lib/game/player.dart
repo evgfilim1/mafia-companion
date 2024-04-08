@@ -44,34 +44,13 @@ enum PlayerRole {
 class Player {
   final PlayerRole role;
   final int number;
-  final bool isAlive;
-  final int warns;
-  final bool isKicked;
   final String? nickname;
 
   const Player({
     required this.role,
     required this.number,
     required this.nickname,
-    this.isAlive = true,
-    this.warns = 0,
-    this.isKicked = false,
   });
-
-  @useResult
-  Player copyWith({
-    bool? isAlive,
-    int? warns,
-    bool? isKicked,
-  }) =>
-      Player(
-        isAlive: isAlive ?? this.isAlive,
-        role: role,
-        number: number,
-        nickname: nickname,
-        warns: warns ?? this.warns,
-        isKicked: isKicked ?? this.isKicked,
-      );
 
   @override
   bool operator ==(Object other) =>
@@ -80,13 +59,83 @@ class Player {
           runtimeType == other.runtimeType &&
           role == other.role &&
           number == other.number &&
-          nickname == other.nickname &&
+          nickname == other.nickname;
+
+  @override
+  int get hashCode => Object.hash(role, number, nickname);
+
+  @useResult
+  PlayerWithState withState({
+    PlayerState? state,
+  }) =>
+      PlayerWithState(
+        role: role,
+        number: number,
+        nickname: nickname,
+        state: state ?? const PlayerState(),
+      );
+}
+
+@immutable
+class PlayerState {
+  final bool isAlive;
+  final int warns;
+  final bool isKicked;
+
+  const PlayerState({
+    this.isAlive = true,
+    this.warns = 0,
+    this.isKicked = false,
+  });
+
+  @useResult
+  PlayerState copyWith({
+    bool? isAlive,
+    int? warns,
+    bool? isKicked,
+  }) =>
+      PlayerState(
+        isAlive: isAlive ?? this.isAlive,
+        warns: warns ?? this.warns,
+        isKicked: isKicked ?? this.isKicked,
+      );
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PlayerState &&
+          runtimeType == other.runtimeType &&
           isAlive == other.isAlive &&
           warns == other.warns &&
           isKicked == other.isKicked;
 
   @override
-  int get hashCode => Object.hash(role, number, nickname, isAlive, warns, isKicked);
+  int get hashCode => Object.hash(isAlive, warns, isKicked);
+}
+
+@immutable
+class PlayerWithState extends Player {
+  final PlayerState state;
+
+  const PlayerWithState({
+    required super.role,
+    required super.number,
+    required super.nickname,
+    required this.state,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PlayerWithState &&
+          runtimeType == other.runtimeType &&
+          role == other.role &&
+          number == other.number &&
+          nickname == other.nickname &&
+          state == other.state;
+
+  @override
+  int get hashCode => Object.hash(super.hashCode, state);
 }
 
 List<Player> generatePlayers({
@@ -100,9 +149,6 @@ List<Player> generatePlayers({
         role: playerRoles[i],
         number: i + 1,
         nickname: nicknames?.elementAt(i),
-        isAlive: true,
-        warns: 0,
-        isKicked: false,
       ),
   ].toUnmodifiableList();
 }

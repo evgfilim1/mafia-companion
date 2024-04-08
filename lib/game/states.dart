@@ -64,14 +64,14 @@ enum GameStage {
 sealed class BaseGameState {
   final GameStage stage;
   final int day;
-  final List<Player> players;
+  final List<PlayerState> playerStates;
 
   const BaseGameState({
     required this.stage,
     required this.day,
-    required this.players,
+    required this.playerStates,
   })  : assert(day >= 0, "Invalid day: $day"),
-        assert(players.length != 0, "Players list is empty");
+        assert(playerStates.length != 0, "Players list is empty");
 
   /// Compares two game states. Returns `true` if they differ.
   bool hasStateChanged(BaseGameState oldState) =>
@@ -84,7 +84,7 @@ sealed class BaseGameState {
 @immutable
 class GameStatePrepare extends BaseGameState {
   const GameStatePrepare({
-    required super.players,
+    required super.playerStates,
   }) : super(stage: GameStage.prepare, day: 0);
 
   @override
@@ -94,17 +94,17 @@ class GameStatePrepare extends BaseGameState {
           runtimeType == other.runtimeType &&
           stage == other.stage &&
           day == other.day &&
-          players == other.players;
+          playerStates == other.playerStates;
 
   @override
-  int get hashCode => Object.hash(stage, day, players);
+  int get hashCode => Object.hash(stage, day, playerStates);
 
   @useResult
   GameStatePrepare copyWith({
-    List<Player>? players,
+    List<PlayerState>? playerStates,
   }) =>
       GameStatePrepare(
-        players: players ?? this.players,
+        playerStates: playerStates ?? this.playerStates,
       );
 }
 
@@ -112,7 +112,7 @@ class GameStatePrepare extends BaseGameState {
 @immutable
 class GameStateNightRest extends BaseGameState {
   const GameStateNightRest({
-    required super.players,
+    required super.playerStates,
   }) : super(stage: GameStage.firstNightRest, day: 1);
 
   @override
@@ -122,17 +122,17 @@ class GameStateNightRest extends BaseGameState {
           runtimeType == other.runtimeType &&
           stage == other.stage &&
           day == other.day &&
-          players == other.players;
+          playerStates == other.playerStates;
 
   @override
-  int get hashCode => Object.hash(stage, day, players);
+  int get hashCode => Object.hash(stage, day, playerStates);
 
   @useResult
   GameStateNightRest copyWith({
-    List<Player>? players,
+    List<PlayerState>? playerStates,
   }) =>
       GameStateNightRest(
-        players: players ?? this.players,
+        playerStates: playerStates ?? this.playerStates,
       );
 }
 
@@ -146,7 +146,7 @@ class GameStateWithPlayer extends BaseGameState {
   const GameStateWithPlayer({
     required super.stage,
     required super.day,
-    required super.players,
+    required super.playerStates,
     required this.currentPlayerNumber,
   }) : assert(
           stage == GameStage.firstNightWakeUps || stage == GameStage.nightLastWords,
@@ -160,11 +160,11 @@ class GameStateWithPlayer extends BaseGameState {
           runtimeType == other.runtimeType &&
           stage == other.stage &&
           day == other.day &&
-          players == other.players &&
+          playerStates == other.playerStates &&
           currentPlayerNumber == other.currentPlayerNumber;
 
   @override
-  int get hashCode => Object.hash(stage, day, players, currentPlayerNumber);
+  int get hashCode => Object.hash(stage, day, playerStates, currentPlayerNumber);
 
   @override
   bool hasStateChanged(BaseGameState oldState) =>
@@ -175,13 +175,13 @@ class GameStateWithPlayer extends BaseGameState {
   GameStateWithPlayer copyWith({
     GameStage? stage,
     int? day,
-    List<Player>? players,
+    List<PlayerState>? playerStates,
     int? currentPlayerNumber,
   }) =>
       GameStateWithPlayer(
         stage: stage ?? this.stage,
         day: day ?? this.day,
-        players: players ?? this.players,
+        playerStates: playerStates ?? this.playerStates,
         currentPlayerNumber: currentPlayerNumber ?? this.currentPlayerNumber,
       );
 }
@@ -199,7 +199,7 @@ class GameStateSpeaking extends BaseGameState {
 
   const GameStateSpeaking({
     required super.day,
-    required super.players,
+    required super.playerStates,
     required this.currentPlayerNumber,
     required this.accusations,
     required this.canOnlyAccuse,
@@ -213,7 +213,7 @@ class GameStateSpeaking extends BaseGameState {
           runtimeType == other.runtimeType &&
           stage == other.stage &&
           day == other.day &&
-          players == other.players &&
+          playerStates == other.playerStates &&
           currentPlayerNumber == other.currentPlayerNumber &&
           accusations == other.accusations &&
           canOnlyAccuse == other.canOnlyAccuse;
@@ -222,7 +222,7 @@ class GameStateSpeaking extends BaseGameState {
   int get hashCode => Object.hash(
         stage,
         day,
-        players,
+        playerStates,
         currentPlayerNumber,
         accusations,
         canOnlyAccuse,
@@ -236,7 +236,7 @@ class GameStateSpeaking extends BaseGameState {
   @useResult
   GameStateSpeaking copyWith({
     int? day,
-    List<Player>? players,
+    List<PlayerState>? playerStates,
     int? currentPlayerNumber,
     LinkedHashMap<int, int>? accusations,
     bool? canOnlyAccuse,
@@ -244,7 +244,7 @@ class GameStateSpeaking extends BaseGameState {
   }) =>
       GameStateSpeaking(
         day: day ?? this.day,
-        players: players ?? this.players,
+        playerStates: playerStates ?? this.playerStates,
         currentPlayerNumber: currentPlayerNumber ?? this.currentPlayerNumber,
         accusations: accusations ?? this.accusations,
         canOnlyAccuse: canOnlyAccuse ?? this.canOnlyAccuse,
@@ -265,7 +265,7 @@ class GameStateVoting extends BaseGameState {
   const GameStateVoting({
     required super.stage,
     required super.day,
-    required super.players,
+    required super.playerStates,
     required this.votes,
     required this.currentPlayerNumber,
     required this.currentPlayerVotes,
@@ -281,14 +281,14 @@ class GameStateVoting extends BaseGameState {
           runtimeType == other.runtimeType &&
           stage == other.stage &&
           day == other.day &&
-          players == other.players &&
+          playerStates == other.playerStates &&
           votes == other.votes &&
           currentPlayerNumber == other.currentPlayerNumber &&
           currentPlayerVotes == other.currentPlayerVotes;
 
   @override
   int get hashCode =>
-      Object.hash(stage, day, players, votes, currentPlayerNumber, currentPlayerVotes);
+      Object.hash(stage, day, playerStates, votes, currentPlayerNumber, currentPlayerVotes);
 
   @override
   bool hasStateChanged(BaseGameState oldState) =>
@@ -299,7 +299,7 @@ class GameStateVoting extends BaseGameState {
   GameStateVoting copyWith({
     GameStage? stage,
     int? day,
-    List<Player>? players,
+    List<PlayerState>? playerStates,
     LinkedHashMap<int, int?>? votes,
     int? currentPlayerNumber,
     int? currentPlayerVotes,
@@ -307,7 +307,7 @@ class GameStateVoting extends BaseGameState {
       GameStateVoting(
         stage: stage ?? this.stage,
         day: day ?? this.day,
-        players: players ?? this.players,
+        playerStates: playerStates ?? this.playerStates,
         votes: votes ?? this.votes,
         currentPlayerNumber: currentPlayerNumber ?? this.currentPlayerNumber,
         currentPlayerVotes: currentPlayerVotes ?? this.currentPlayerVotes,
@@ -324,7 +324,7 @@ class GameStateKnockoutVoting extends BaseGameState {
 
   const GameStateKnockoutVoting({
     required super.day,
-    required super.players,
+    required super.playerStates,
     required this.playerNumbers,
     required this.votes,
   }) : super(stage: GameStage.knockoutVoting);
@@ -336,23 +336,23 @@ class GameStateKnockoutVoting extends BaseGameState {
           runtimeType == other.runtimeType &&
           stage == other.stage &&
           day == other.day &&
-          players == other.players &&
+          playerStates == other.playerStates &&
           playerNumbers == other.playerNumbers &&
           votes == other.votes;
 
   @override
-  int get hashCode => Object.hash(stage, day, players, playerNumbers, votes);
+  int get hashCode => Object.hash(stage, day, playerStates, playerNumbers, votes);
 
   @useResult
   GameStateKnockoutVoting copyWith({
     int? day,
-    List<Player>? players,
+    List<PlayerState>? playerStates,
     List<int>? playerNumbers,
     int? votes,
   }) =>
       GameStateKnockoutVoting(
         day: day ?? this.day,
-        players: players ?? this.players,
+        playerStates: playerStates ?? this.playerStates,
         playerNumbers: playerNumbers ?? this.playerNumbers,
         votes: votes ?? this.votes,
       );
@@ -368,7 +368,7 @@ class GameStateWithPlayers extends BaseGameState {
   const GameStateWithPlayers({
     required super.stage,
     required super.day,
-    required super.players,
+    required super.playerStates,
     required this.playerNumbers,
   }) : assert(
           stage == GameStage.firstNight ||
@@ -384,11 +384,11 @@ class GameStateWithPlayers extends BaseGameState {
           runtimeType == other.runtimeType &&
           stage == other.stage &&
           day == other.day &&
-          players == other.players &&
+          playerStates == other.playerStates &&
           playerNumbers == other.playerNumbers;
 
   @override
-  int get hashCode => Object.hash(stage, day, players, playerNumbers);
+  int get hashCode => Object.hash(stage, day, playerStates, playerNumbers);
 
   @override
   bool hasStateChanged(BaseGameState oldState) =>
@@ -399,13 +399,13 @@ class GameStateWithPlayers extends BaseGameState {
   GameStateWithPlayers copyWith({
     GameStage? stage,
     int? day,
-    List<Player>? players,
+    List<PlayerState>? playerStates,
     List<int>? playerNumbers,
   }) =>
       GameStateWithPlayers(
         stage: stage ?? this.stage,
         day: day ?? this.day,
-        players: players ?? this.players,
+        playerStates: playerStates ?? this.playerStates,
         playerNumbers: playerNumbers ?? this.playerNumbers,
       );
 }
@@ -419,7 +419,7 @@ class GameStateNightKill extends BaseGameState {
 
   const GameStateNightKill({
     required super.day,
-    required super.players,
+    required super.playerStates,
     required this.thisNightKilledPlayerNumber,
   }) : super(stage: GameStage.nightKill);
 
@@ -430,21 +430,21 @@ class GameStateNightKill extends BaseGameState {
           runtimeType == other.runtimeType &&
           stage == other.stage &&
           day == other.day &&
-          players == other.players &&
+          playerStates == other.playerStates &&
           thisNightKilledPlayerNumber == other.thisNightKilledPlayerNumber;
 
   @override
-  int get hashCode => Object.hash(stage, day, players, thisNightKilledPlayerNumber);
+  int get hashCode => Object.hash(stage, day, playerStates, thisNightKilledPlayerNumber);
 
   @useResult
   GameStateNightKill copyWith({
     int? day,
-    List<Player>? players,
+    List<PlayerState>? playerStates,
     int? thisNightKilledPlayerNumber,
   }) =>
       GameStateNightKill(
         day: day ?? this.day,
-        players: players ?? this.players,
+        playerStates: playerStates ?? this.playerStates,
         thisNightKilledPlayerNumber:
             thisNightKilledPlayerNumber ?? this.thisNightKilledPlayerNumber,
       );
@@ -456,11 +456,13 @@ class GameStateNightKill extends BaseGameState {
 @immutable
 class GameStateNightCheck extends BaseGameState {
   final int activePlayerNumber;
+  final RoleTeam activePlayerTeam;
 
   const GameStateNightCheck({
     required super.day,
-    required super.players,
+    required super.playerStates,
     required this.activePlayerNumber,
+    required this.activePlayerTeam,
   }) : super(stage: GameStage.nightCheck);
 
   @override
@@ -470,32 +472,38 @@ class GameStateNightCheck extends BaseGameState {
           runtimeType == other.runtimeType &&
           stage == other.stage &&
           day == other.day &&
-          players == other.players &&
-          activePlayerNumber == other.activePlayerNumber;
+          playerStates == other.playerStates &&
+          activePlayerNumber == other.activePlayerNumber &&
+          activePlayerTeam == other.activePlayerTeam;
 
   @override
   int get hashCode => Object.hash(
         stage,
         day,
-        players,
+        playerStates,
         activePlayerNumber,
+        activePlayerTeam,
       );
 
   @override
   bool hasStateChanged(BaseGameState oldState) =>
-      oldState is GameStateNightCheck && activePlayerNumber != oldState.activePlayerNumber ||
+      oldState is GameStateNightCheck &&
+          (activePlayerNumber != oldState.activePlayerNumber ||
+              activePlayerTeam != oldState.activePlayerTeam) ||
       super.hasStateChanged(oldState);
 
   @useResult
   GameStateNightCheck copyWith({
     int? day,
-    List<Player>? players,
+    List<PlayerState>? playerStates,
     int? activePlayerNumber,
+    RoleTeam? activePlayerTeam,
   }) =>
       GameStateNightCheck(
         day: day ?? this.day,
-        players: players ?? this.players,
+        playerStates: playerStates ?? this.playerStates,
         activePlayerNumber: activePlayerNumber ?? this.activePlayerNumber,
+        activePlayerTeam: activePlayerTeam ?? this.activePlayerTeam,
       );
 }
 
@@ -510,7 +518,7 @@ class GameStateBestTurn extends BaseGameState {
 
   const GameStateBestTurn({
     required super.day,
-    required super.players,
+    required super.playerStates,
     required this.currentPlayerNumber,
     required this.playerNumbers,
   }) : super(stage: GameStage.bestTurn);
@@ -522,12 +530,12 @@ class GameStateBestTurn extends BaseGameState {
           runtimeType == other.runtimeType &&
           stage == other.stage &&
           day == other.day &&
-          players == other.players &&
+          playerStates == other.playerStates &&
           currentPlayerNumber == other.currentPlayerNumber &&
           playerNumbers == other.playerNumbers;
 
   @override
-  int get hashCode => Object.hash(stage, day, players, currentPlayerNumber, playerNumbers);
+  int get hashCode => Object.hash(stage, day, playerStates, currentPlayerNumber, playerNumbers);
 
   @override
   bool hasStateChanged(BaseGameState oldState) =>
@@ -537,13 +545,13 @@ class GameStateBestTurn extends BaseGameState {
   @useResult
   GameStateBestTurn copyWith({
     int? day,
-    List<Player>? players,
+    List<PlayerState>? playerStates,
     int? currentPlayerNumber,
     List<int>? playerNumbers,
   }) =>
       GameStateBestTurn(
         day: day ?? this.day,
-        players: players ?? this.players,
+        playerStates: playerStates ?? this.playerStates,
         currentPlayerNumber: currentPlayerNumber ?? this.currentPlayerNumber,
         playerNumbers: playerNumbers ?? this.playerNumbers,
       );
@@ -560,7 +568,7 @@ class GameStateWithIterablePlayers extends BaseGameState {
   const GameStateWithIterablePlayers({
     required super.stage,
     required super.day,
-    required super.players,
+    required super.playerStates,
     required this.playerNumbers,
     required this.currentPlayerIndex,
   })  : assert(
@@ -579,12 +587,12 @@ class GameStateWithIterablePlayers extends BaseGameState {
           runtimeType == other.runtimeType &&
           stage == other.stage &&
           day == other.day &&
-          players == other.players &&
+          playerStates == other.playerStates &&
           playerNumbers == other.playerNumbers &&
           currentPlayerIndex == other.currentPlayerIndex;
 
   @override
-  int get hashCode => Object.hash(stage, day, players, playerNumbers, currentPlayerIndex);
+  int get hashCode => Object.hash(stage, day, playerStates, playerNumbers, currentPlayerIndex);
 
   @override
   bool hasStateChanged(BaseGameState oldState) =>
@@ -599,14 +607,14 @@ class GameStateWithIterablePlayers extends BaseGameState {
   GameStateWithIterablePlayers copyWith({
     GameStage? stage,
     int? day,
-    List<Player>? players,
+    List<PlayerState>? playerStates,
     List<int>? playerNumbers,
     int? currentPlayerIndex,
   }) =>
       GameStateWithIterablePlayers(
         stage: stage ?? this.stage,
         day: day ?? this.day,
-        players: players ?? this.players,
+        playerStates: playerStates ?? this.playerStates,
         playerNumbers: playerNumbers ?? this.playerNumbers,
         currentPlayerIndex: currentPlayerIndex ?? this.currentPlayerIndex,
       );
@@ -622,7 +630,7 @@ class GameStateFinish extends BaseGameState {
 
   const GameStateFinish({
     required super.day,
-    required super.players,
+    required super.playerStates,
     required this.winner,
   }) : super(stage: GameStage.finish);
 
@@ -633,11 +641,11 @@ class GameStateFinish extends BaseGameState {
           runtimeType == other.runtimeType &&
           stage == other.stage &&
           day == other.day &&
-          players == other.players &&
+          playerStates == other.playerStates &&
           winner == other.winner;
 
   @override
-  int get hashCode => Object.hash(stage, day, players, winner);
+  int get hashCode => Object.hash(stage, day, playerStates, winner);
 
   @override
   bool hasStateChanged(BaseGameState oldState) =>
@@ -646,12 +654,12 @@ class GameStateFinish extends BaseGameState {
   @useResult
   GameStateFinish copyWith({
     int? day,
-    List<Player>? players,
+    List<PlayerState>? playerStates,
     RoleTeam? winner,
   }) =>
       GameStateFinish(
         day: day ?? this.day,
-        players: players ?? this.players,
+        playerStates: playerStates ?? this.playerStates,
         winner: winner ?? this.winner,
       );
 }

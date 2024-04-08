@@ -30,10 +30,10 @@ class _PlayerButtonsState extends OrientationDependentState<PlayerButtons> {
 
   void _onPlayerButtonTap(BuildContext context, int playerNumber) {
     final controller = context.read<GameController>();
-    final player = controller.getPlayerByNumber(playerNumber);
+    final player = controller.players.getByNumber(playerNumber);
     if (controller.state case GameStateNightCheck(activePlayerNumber: final pn)) {
-      final p = controller.getPlayerByNumber(pn);
-      if (!p.isAlive) {
+      final p = controller.players.getByNumber(pn);
+      if (!p.state.isAlive) {
         return; // It's useless to allow dead players check others
       }
       final result = controller.checkPlayer(playerNumber);
@@ -50,7 +50,7 @@ class _PlayerButtonsState extends OrientationDependentState<PlayerButtons> {
         title: const Text("Результат проверки"),
         content: Text("Игрок ${player.number} — $msg"),
       );
-    } else if (!player.isAlive ||
+    } else if (!player.state.isAlive ||
         !controller.state.stage
             .isAnyOf(const [GameStage.nightKill, GameStage.bestTurn, GameStage.speaking])) {
       return;
@@ -74,9 +74,9 @@ class _PlayerButtonsState extends OrientationDependentState<PlayerButtons> {
       GameStateKnockoutVoting(playerNumbers: final ps) =>
         ps.contains(playerNumber),
       GameStateNightKill() =>
-        controller.getPlayerByNumber(playerNumber).role.team == RoleTeam.mafia,
+        controller.players.getByNumber(playerNumber).role.team == RoleTeam.mafia,
       GameStateFinish(:final winner) =>
-        controller.getPlayerByNumber(playerNumber).role.team == winner,
+        controller.players.getByNumber(playerNumber).role.team == winner,
     };
     final isSelected = switch (gameState) {
       GameStateSpeaking(accusations: final accusations) => accusations.containsValue(playerNumber),
@@ -85,12 +85,12 @@ class _PlayerButtonsState extends OrientationDependentState<PlayerButtons> {
         thisNightKilledPlayer == playerNumber,
       _ => false,
     };
-    final player = controller.getPlayerByNumber(playerNumber);
+    final player = controller.players.getByNumber(playerNumber);
     return PlayerButton(
       playerNumber: player.number,
       isSelected: isSelected,
       isActive: isActive,
-      onTap: player.isAlive || gameState.stage == GameStage.nightCheck
+      onTap: player.state.isAlive || gameState.stage == GameStage.nightCheck
           ? () => _onPlayerButtonTap(context, playerNumber)
           : null,
       showRole: showRoles,
@@ -102,7 +102,7 @@ class _PlayerButtonsState extends OrientationDependentState<PlayerButtons> {
   Widget buildPortrait(BuildContext context) {
     final controller = context.watch<GameController>();
     final itemsPerRow = _expanded ? 2 : 5;
-    final totalPlayers = controller.totalPlayersCount;
+    final totalPlayers = controller.isGameInitialized ? controller.players.count : 0;
     final width = (MediaQuery.of(context).size.width / itemsPerRow).floorToDouble();
     final height = (MediaQuery.of(context).size.width / 5).floorToDouble();
     return Column(
@@ -138,7 +138,7 @@ class _PlayerButtonsState extends OrientationDependentState<PlayerButtons> {
   Widget buildLandscape(BuildContext context) {
     final controller = context.watch<GameController>();
     const itemsPerRow = 5;
-    final totalPlayers = controller.totalPlayersCount;
+    final totalPlayers = controller.players.count;
     final size = (MediaQuery.of(context).size.height / itemsPerRow).floorToDouble() - 18;
     return Row(
       mainAxisSize: MainAxisSize.min,

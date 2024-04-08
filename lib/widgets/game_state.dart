@@ -110,7 +110,7 @@ class BottomGameStateWidget extends StatelessWidget {
 
     if (gameState is GameStateVoting) {
       assert(gameState.votes.keys.length > 1, "One or less vote candidates (bug?)");
-      final aliveCount = controller.alivePlayersCount;
+      final aliveCount = controller.players.aliveCount;
       final currentPlayerVotes = gameState.currentPlayerVotes ?? 0;
       return Counter(
         key: ValueKey(gameState.currentPlayerNumber),
@@ -125,7 +125,7 @@ class BottomGameStateWidget extends StatelessWidget {
       return Counter(
         key: const ValueKey("dropTableVoting"),
         min: 0,
-        max: controller.alivePlayersCount,
+        max: controller.players.aliveCount,
         onValueChanged: controller.vote,
         initialValue: gameState.votes,
       );

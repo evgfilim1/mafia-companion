@@ -68,9 +68,8 @@ extension GameStatePrettyString on BaseGameState {
         return "Последние слова игрока $currentPlayerNumber";
       case GameStateNightKill():
         return "Ночь, ход Мафии";
-      case GameStateNightCheck(stage: GameStage.nightCheck, :final activePlayerNumber):
-        final player = players[activePlayerNumber - 1];
-        if (player.role == PlayerRole.don) {
+      case GameStateNightCheck(stage: GameStage.nightCheck, :final activePlayerTeam):
+        if (activePlayerTeam == RoleTeam.mafia) {
           return "Ночь, ход Дона";
         }
         return "Ночь, ход Шерифа";

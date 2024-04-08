@@ -146,14 +146,15 @@ class GameLogScreen extends StatelessWidget {
     await Navigator.push(
       context,
       MaterialPageRoute<void>(
-        builder: (_) => GameLogScreen(log: logFromFile.value.toUnmodifiableList()),
+        builder: (_) => GameLogScreen(log: logFromFile.value.log.toUnmodifiableList()),
       ),
     );
   }
 
   Future<void> _onSavePressed(BuildContext context) async {
     final controller = context.read<GameController>();
-    final vgl = VersionedGameLog(controller.gameLog);
+    final vgl =
+        VersionedGameLog(GameLogWithPlayers(log: controller.gameLog, players: controller.players));
     final fileName = "mafia_game_log_${_fileNameDateFormat.format(DateTime.now())}";
     final wasSaved = await saveJsonFile(vgl.toJson(), filename: fileName);
     if (!context.mounted || !wasSaved) {

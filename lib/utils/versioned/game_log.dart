@@ -1,5 +1,9 @@
+import "package:flutter/cupertino.dart";
+
 import "../../game/log.dart";
+import "../../game/player.dart";
 import "../errors.dart";
+import "../extensions.dart";
 import "../json/from_json.dart";
 import "../json/to_json.dart";
 import "base.dart";
@@ -53,7 +57,51 @@ enum GameLogVersion implements Comparable<GameLogVersion> {
   bool operator >=(GameLogVersion other) => compareTo(other) >= 0;
 }
 
-class VersionedGameLog extends Versioned<GameLogVersion, Iterable<BaseGameLogItem>> {
+@immutable
+class GameLogWithPlayers {
+  const GameLogWithPlayers({
+    required this.log,
+    required this.players,
+  });
+
+  static List<Player> _extractLegacyPlayers(dynamic json, GameLogVersion version) =>
+      (json as List<dynamic>)
+          .cast<Map<String, dynamic>>()
+          .map((e) => playerFromJson(e, version: version))
+          .toUnmodifiableList();
+
+  factory GameLogWithPlayers.fromJson(dynamic json, {required GameLogVersion version}) {
+    if (json is Map<String, dynamic>) {
+      return GameLogWithPlayers(
+        log: (json["log"] as List<dynamic>)
+            .parseJsonList((e) => gameLogFromJson(e, version: version)),
+        players: (json["players"] as List<dynamic>)
+            .parseJsonList((e) => playerFromJson(e, version: version)),
+      );
+    }
+    if (json is List<dynamic> && version < GameLogVersion.v2) {
+      return GameLogWithPlayers(
+        log: json.parseJsonList((e) => gameLogFromJson(e, version: version)),
+        players: _extractLegacyPlayers(json[0]["newState"]["players"], version),
+      );
+    }
+    throw ArgumentError.value(
+      json,
+      "json",
+      "Cannot parse ${json.runtimeType} as GameLogWithPlayers",
+    );
+  }
+
+  final Iterable<BaseGameLogItem> log;
+  final Iterable<Player> players;
+
+  Map<String, dynamic> toJson() => {
+        "log": log.map((e) => e.toJson()).toList(),
+        "players": players.map((e) => e.toJson()).toList(),
+      };
+}
+
+class VersionedGameLog extends Versioned<GameLogVersion, GameLogWithPlayers> {
   const VersionedGameLog(
     super.value, {
     super.version = GameLogVersion.latest,
@@ -66,7 +114,7 @@ class VersionedGameLog extends Versioned<GameLogVersion, Iterable<BaseGameLogIte
   dynamic versionToJson(GameLogVersion value) => value.value;
 
   @override
-  dynamic valueToJson(Iterable<BaseGameLogItem> value) => value.map((e) => e.toJson()).toList();
+  dynamic valueToJson(GameLogWithPlayers value) => value.toJson();
 
   static GameLogVersion _versionFromJson(dynamic value) {
     final versionInt = value as int;
@@ -89,12 +137,13 @@ class VersionedGameLog extends Versioned<GameLogVersion, Iterable<BaseGameLogIte
 
   factory VersionedGameLog.fromJson(dynamic json) {
     if (json is List<dynamic>) {
-      /*throw RemovedGameLogVersion(
-        version: 0,
-        lastSupportedAppVersion: GameLogVersion.v0.lastSupportedVersion!,
+      /*const v0 = _LegacyGameLogVersion.v0;
+      throw RemovedVersion(
+        version: v0.value,
+        lastSupportedAppVersion: v0.lastSupportedAppVersion,
       );*/
       return VersionedGameLog(
-        json.parseJsonList((e) => gameLogFromJson(e, version: GameLogVersion.v0)),
+        GameLogWithPlayers.fromJson(json, version: GameLogVersion.v0),
         version: GameLogVersion.v0,
       );
     }
@@ -103,8 +152,12 @@ class VersionedGameLog extends Versioned<GameLogVersion, Iterable<BaseGameLogIte
         json,
         valueKey: "log",
         versionFromJson: _versionFromJson,
-        valueFromJson: (json, version) =>
-            (json as List<dynamic>).parseJsonList((e) => gameLogFromJson(e, version: version)),
+        valueFromJson: (json, version) => switch (version) {
+          GameLogVersion.v0 => throw AssertionError("already handled"),
+          GameLogVersion.v1 ||
+          GameLogVersion.v2 =>
+            GameLogWithPlayers.fromJson(json, version: version),
+        },
         create: VersionedGameLog.new,
       );
     }
