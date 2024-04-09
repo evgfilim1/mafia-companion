@@ -26,6 +26,9 @@ enum GameStage {
   /// Players vote for accused players they want to kill
   voting,
 
+  /// Players are announced that voting is tied between several players
+  preExcuse,
+
   /// Accused players can speak more (if the voting is tied)
   excuse,
 
@@ -360,7 +363,8 @@ class GameStateKnockoutVoting extends BaseGameState {
 
 /// Represents game state with related [playerNumbers].
 ///
-/// [stage] can be [GameStage.firstNight], [GameStage.preVoting] or [GameStage.preFinalVoting].
+/// [stage] can be [GameStage.firstNight], [GameStage.preVoting], [GameStage.preExcuse]
+/// or [GameStage.preFinalVoting].
 @immutable
 class GameStateWithPlayers extends BaseGameState {
   final List<int> playerNumbers;
@@ -373,6 +377,7 @@ class GameStateWithPlayers extends BaseGameState {
   }) : assert(
           stage == GameStage.firstNight ||
               stage == GameStage.preVoting ||
+              stage == GameStage.preExcuse ||
               stage == GameStage.preFinalVoting,
           "Invalid stage for GameStateWithPlayers: $stage",
         );
@@ -725,11 +730,12 @@ const validTransitions = <GameStage, Set<GameStage>>{
   },
   GameStage.voting: {
     GameStage.voting,
-    GameStage.excuse,
+    GameStage.preExcuse,
     GameStage.dayLastWords,
     GameStage.nightKill,
     GameStage.finish,
   },
+  GameStage.preExcuse: {GameStage.nightKill, GameStage.excuse, GameStage.finish},
   GameStage.excuse: {GameStage.excuse, GameStage.preFinalVoting, GameStage.finish},
   GameStage.preFinalVoting: {GameStage.finalVoting, GameStage.finish},
   GameStage.finalVoting: {

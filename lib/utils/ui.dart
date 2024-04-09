@@ -56,6 +56,8 @@ extension GameStatePrettyString on BaseGameState {
         return "Голосование";
       case GameStateVoting(stage: GameStage.voting, :final currentPlayerNumber):
         return "Голосование против игрока $currentPlayerNumber";
+      case GameStateWithPlayers(stage: GameStage.preExcuse):
+        return "Повторные речи";
       case GameStateWithIterablePlayers(stage: GameStage.excuse, :final currentPlayerNumber):
         return "Повторная речь игрока $currentPlayerNumber";
       case GameStateWithPlayers(stage: GameStage.preFinalVoting):

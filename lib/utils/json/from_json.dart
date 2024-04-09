@@ -85,7 +85,11 @@ BaseGameState gameStateFromJson(Map<String, dynamic> json, {required GameLogVers
   }
   return switch (stage) {
     GameStage.prepare => GameStatePrepare(playerStates: playerStates),
-    GameStage.firstNight || GameStage.preVoting || GameStage.preFinalVoting => GameStateWithPlayers(
+    GameStage.firstNight ||
+    GameStage.preVoting ||
+    GameStage.preExcuse ||
+    GameStage.preFinalVoting =>
+      GameStateWithPlayers(
         stage: stage,
         day: day,
         playerStates: playerStates,

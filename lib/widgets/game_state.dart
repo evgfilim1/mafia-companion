@@ -99,11 +99,12 @@ class BottomGameStateWidget extends StatelessWidget {
 
     if (gameState
         case GameStateWithPlayers(
-          stage: GameStage.preVoting || GameStage.preFinalVoting,
+          stage: GameStage.preVoting || GameStage.preExcuse || GameStage.preFinalVoting,
           playerNumbers: final selectedPlayers
         )) {
       return Text(
-        "Выставлены: ${selectedPlayers.join(", ")}",
+        "${gameState.stage == GameStage.preExcuse ? "Игроки" : "Выставлены"}:"
+        " ${selectedPlayers.join(", ")}",
         style: const TextStyle(fontSize: 20),
       );
     }

@@ -231,7 +231,7 @@ class Game {
           hasHalfTime: _hasHalfTime(next),
         );
       case GameStateWithPlayers(
-          stage: GameStage.preVoting || GameStage.preFinalVoting,
+          stage: GameStage.preVoting || GameStage.preExcuse || GameStage.preFinalVoting,
           playerNumbers: final pns,
         ):
         final kickedPlayers = _getKickedPlayers();
@@ -248,6 +248,15 @@ class Game {
         if (pns.length == 1) {
           return GameStateWithIterablePlayers(
             stage: GameStage.dayLastWords,
+            day: state.day,
+            playerStates: state.playerStates,
+            playerNumbers: pns,
+            currentPlayerIndex: 0,
+          );
+        }
+        if (state.stage == GameStage.preExcuse) {
+          return GameStateWithIterablePlayers(
+            stage: GameStage.excuse,
             day: state.day,
             playerStates: state.playerStates,
             playerNumbers: pns,
@@ -325,12 +334,11 @@ class Game {
             votes: 0,
           );
         }
-        return GameStateWithIterablePlayers(
-          stage: GameStage.excuse,
+        return GameStateWithPlayers(
+          stage: GameStage.preExcuse,
           day: state.day,
           playerStates: state.playerStates,
           playerNumbers: maxVotesPlayers,
-          currentPlayerIndex: 0,
         );
       case GameStateWithIterablePlayers(
           stage: GameStage.excuse,
