@@ -18,7 +18,6 @@ import "../widgets/confirmation_dialog.dart";
 import "../widgets/game_state.dart";
 import "../widgets/notes_menu_item_button.dart";
 import "../widgets/notification_dot.dart";
-import "../widgets/orientation_dependent.dart";
 import "../widgets/player_buttons.dart";
 import "../widgets/restart_game_icon_button.dart";
 
@@ -142,42 +141,32 @@ class _MainScreenState extends State<MainScreen> {
   }
 }
 
-class _RotatableMainScreenBody extends OrientationDependentWidget {
+class _RotatableMainScreenBody extends StatelessWidget {
   final bool showRoles;
 
   const _RotatableMainScreenBody({
-    this.showRoles = false,
+    required this.showRoles,
   });
-
-  @override
-  Widget buildPortrait(BuildContext context) => Column(
-        children: [
-          PlayerButtons(showRoles: showRoles),
-          const Flexible(child: _MainScreenMainBodyContent()),
-        ],
-      );
-
-  @override
-  Widget buildLandscape(BuildContext context) => Row(
-        children: [
-          PlayerButtons(showRoles: showRoles),
-          const Flexible(child: _MainScreenMainBodyContent()),
-        ],
-      );
-}
-
-class _MainScreenMainBodyContent extends StatelessWidget {
-  const _MainScreenMainBodyContent();
 
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<GameController>();
-
-    return Column(
-      children: [
-        const Expanded(child: Center(child: GameStateInfo())),
-        if (controller.isGameInitialized) const GameBottomControlBar(),
-      ],
+    final children = <Widget>[
+      if (controller.isGameInitialized) PlayerButtons(showRoles: showRoles),
+      Expanded(
+        child: Column(
+          children: [
+            const Expanded(child: Center(child: GameStateInfo())),
+            if (controller.isGameInitialized) const GameBottomControlBar(),
+          ],
+        ),
+      ),
+    ];
+    return OrientationBuilder(
+      builder: (context, orientation) => switch (orientation) {
+        Orientation.portrait => Column(children: children),
+        Orientation.landscape => Row(children: children),
+      },
     );
   }
 }

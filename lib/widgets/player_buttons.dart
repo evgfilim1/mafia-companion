@@ -6,8 +6,101 @@ import "../game/states.dart";
 import "../utils/extensions.dart";
 import "../utils/game_controller.dart";
 import "../utils/ui.dart";
-import "orientation_dependent.dart";
 import "player_button.dart";
+
+typedef PlayerButtonBuilder = Widget Function(
+  BuildContext context,
+  int index, {
+  required bool expanded,
+});
+
+@immutable
+final class ExtraWidgetsBuilderParams {
+  final Orientation orientation;
+  final bool expanded;
+
+  const ExtraWidgetsBuilderParams({
+    required this.orientation,
+    required this.expanded,
+  });
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is ExtraWidgetsBuilderParams &&
+          runtimeType == other.runtimeType &&
+          orientation == other.orientation &&
+          expanded == other.expanded;
+
+  @override
+  int get hashCode => Object.hash(orientation, expanded);
+}
+
+typedef ExtraWidgetsBuilder = Iterable<Widget> Function(
+  BuildContext context,
+  ExtraWidgetsBuilderParams params,
+);
+
+class BasicPlayerButtons extends StatelessWidget {
+  final bool expanded;
+  final int itemCount;
+  final PlayerButtonBuilder buttonBuilder;
+  final ExtraWidgetsBuilder? extraWidgetsBuilder;
+
+  const BasicPlayerButtons({
+    super.key,
+    required this.expanded,
+    required this.itemCount,
+    required this.buttonBuilder,
+    this.extraWidgetsBuilder,
+  });
+
+  @override
+  Widget build(BuildContext context) => LayoutBuilder(
+        builder: (context, constraints) {
+          final orientation = constraints.maxWidth > constraints.maxHeight
+              ? Orientation.landscape
+              : Orientation.portrait;
+          final smallestSide = switch (orientation) {
+            Orientation.portrait => constraints.maxWidth,
+            Orientation.landscape => constraints.maxHeight,
+          };
+          final expanded = orientation == Orientation.landscape || this.expanded;
+          final itemsPerRow = expanded ? 2 : 5;
+          final width = (smallestSide / itemsPerRow).floorToDouble();
+          final height = (smallestSide / 5).floorToDouble();
+          final buttons = List<Widget>.generate(
+            itemCount,
+            (i) => SizedBox(
+              width: width,
+              height: height,
+              child: Padding(
+                padding: const EdgeInsets.all(4),
+                child: buttonBuilder(context, i, expanded: expanded),
+              ),
+            ),
+          );
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              for (var i = 0; i < itemCount; i += itemsPerRow)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: buttons.getRange(i, i + itemsPerRow).toList(),
+                ),
+              if (extraWidgetsBuilder != null)
+                ...extraWidgetsBuilder!(
+                  context,
+                  ExtraWidgetsBuilderParams(
+                    orientation: orientation,
+                    expanded: expanded,
+                  ),
+                ),
+            ],
+          );
+        },
+      );
+}
 
 class PlayerButtons extends StatefulWidget {
   final bool showRoles;
@@ -21,10 +114,8 @@ class PlayerButtons extends StatefulWidget {
   State<PlayerButtons> createState() => _PlayerButtonsState();
 }
 
-class _PlayerButtonsState extends OrientationDependentState<PlayerButtons> {
+class _PlayerButtonsState extends State<PlayerButtons> {
   bool _expanded = false;
-
-  _PlayerButtonsState();
 
   bool get showRoles => widget.showRoles;
 
@@ -59,9 +150,10 @@ class _PlayerButtonsState extends OrientationDependentState<PlayerButtons> {
     }
   }
 
-  Widget _buildPlayerButton(BuildContext context, int playerNumber, BaseGameState gameState) {
+  Widget _buildPlayerButton(BuildContext context, int index, {required bool expanded}) {
     final controller = context.watch<GameController>();
-    final isActive = switch (gameState) {
+    final playerNumber = index + 1;
+    final isActive = switch (controller.state) {
       GameStatePrepare() || GameStateNightRest() => false,
       GameStateWithPlayer(currentPlayerNumber: final p) ||
       GameStateSpeaking(currentPlayerNumber: final p) ||
@@ -78,7 +170,7 @@ class _PlayerButtonsState extends OrientationDependentState<PlayerButtons> {
       GameStateFinish(:final winner) =>
         controller.players.getByNumber(playerNumber).role.team == winner,
     };
-    final isSelected = switch (gameState) {
+    final isSelected = switch (controller.state) {
       GameStateSpeaking(accusations: final accusations) => accusations.containsValue(playerNumber),
       GameStateBestTurn(playerNumbers: final playerNumbers) => playerNumbers.contains(playerNumber),
       GameStateNightKill(thisNightKilledPlayerNumber: final thisNightKilledPlayer) =>
@@ -90,79 +182,33 @@ class _PlayerButtonsState extends OrientationDependentState<PlayerButtons> {
       playerNumber: player.number,
       isSelected: isSelected,
       isActive: isActive,
-      onTap: player.state.isAlive || gameState.stage == GameStage.nightCheck
+      onTap: player.state.isAlive || controller.state.stage == GameStage.nightCheck
           ? () => _onPlayerButtonTap(context, playerNumber)
           : null,
       showRole: showRoles,
-      expanded: _expanded,
+      expanded: expanded,
     );
   }
 
   @override
-  Widget buildPortrait(BuildContext context) {
+  Widget build(BuildContext context) {
     final controller = context.watch<GameController>();
-    final itemsPerRow = _expanded ? 2 : 5;
-    final totalPlayers = controller.isGameInitialized ? controller.players.count : 0;
-    final width = (MediaQuery.of(context).size.width / itemsPerRow).floorToDouble();
-    final height = (MediaQuery.of(context).size.width / 5).floorToDouble();
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        for (var i = 0; i < totalPlayers; i += itemsPerRow)
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              for (var j = i; j < i + itemsPerRow && j < totalPlayers; j++)
-                SizedBox(
-                  width: width,
-                  height: height,
-                  child: Padding(
-                    padding: const EdgeInsets.all(4),
-                    child:
-                        _buildPlayerButton(context, controller.players[j].number, controller.state),
-                  ),
-                ),
-            ],
-          ),
-        if (totalPlayers > 0)
-          TextButton.icon(
+    if (!controller.isGameInitialized) {
+      return const SizedBox.shrink();
+    }
+    return BasicPlayerButtons(
+      expanded: _expanded,
+      itemCount: controller.players.length,
+      buttonBuilder: _buildPlayerButton,
+      extraWidgetsBuilder: (context, params) sync* {
+        if (params.orientation == Orientation.portrait) {
+          yield TextButton.icon(
             onPressed: () => setState(() => _expanded = !_expanded),
             icon: Icon(_expanded ? Icons.expand_less : Icons.expand_more),
             label: Text(_expanded ? "Свернуть" : "Развернуть"),
-          ),
-      ],
-    );
-  }
-
-  @override
-  Widget buildLandscape(BuildContext context) {
-    final controller = context.watch<GameController>();
-    const itemsPerRow = 5;
-    final totalPlayers = controller.players.count;
-    final size = (MediaQuery.of(context).size.height / itemsPerRow).floorToDouble() - 18;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        for (var i = 0; i < totalPlayers; i += itemsPerRow)
-          Column(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              for (var j = i; j < i + itemsPerRow && j < totalPlayers; j++)
-                SizedBox(
-                  width: size + 24,
-                  height: size,
-                  child: Padding(
-                    padding: const EdgeInsets.all(4),
-                    child: _buildPlayerButton(
-                      context,
-                      controller.players[i.isEven ? i + itemsPerRow + i - j - 1 : j].number,
-                      controller.state,
-                    ),
-                  ),
-                ),
-            ],
-          ),
-      ],
+          );
+        }
+      },
     );
   }
 }
