@@ -2,43 +2,40 @@ import "package:flutter/material.dart";
 
 import "../utils/ui.dart";
 
-class NotesMenuItemButton extends StatefulWidget {
-  const NotesMenuItemButton({super.key});
+class NotesMenuItemButton extends StatelessWidget {
+  final BuildContext context;
+  final TextEditingController controller;
 
-  @override
-  State<NotesMenuItemButton> createState() => _NotesMenuItemButtonState();
-}
-
-class _NotesMenuItemButtonState extends State<NotesMenuItemButton> {
-  final _notesController = TextEditingController();
-
-  @override
-  void dispose() {
-    _notesController.dispose();
-    super.dispose();
-  }
+  const NotesMenuItemButton({
+    super.key,
+    required this.context,
+    required this.controller,
+  });
 
   void _showNotes(BuildContext context) {
     showSimpleDialog(
       context: context,
       title: const Text("Заметки"),
       content: TextField(
-        controller: _notesController,
+        controller: controller,
         maxLines: null,
-      ),
-      extraActions: [
-        TextButton(
-          onPressed: _notesController.clear,
-          child: const Text("Очистить"),
+        decoration: InputDecoration(
+          suffixIcon: IconButton(
+            icon: const Icon(Icons.clear),
+            onPressed: controller.clear,
+          ),
+          suffixIconColor: Colors.grey,
         ),
-      ],
+        textCapitalization: TextCapitalization.sentences,
+        autofocus: true,
+      ),
     );
   }
 
   @override
   Widget build(BuildContext context) => MenuItemButton(
-        leadingIcon: const Icon(Icons.sticky_note_2, size: Checkbox.width),
-        onPressed: () => _showNotes(context),
-        child: const Text("Заметки"),
-      );
+    leadingIcon: const Icon(Icons.sticky_note_2, size: Checkbox.width),
+    onPressed: () => _showNotes(this.context),
+    child: const Text("Заметки"),
+  );
 }

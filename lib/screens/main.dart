@@ -31,11 +31,18 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   var _showRoles = false;
+  final _notes = TextEditingController();
 
   @override
   void initState() {
     unawaited(_checkForUpdates());
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    _notes.dispose();
+    super.dispose();
   }
 
   Future<void> _checkForUpdates() async {
@@ -117,7 +124,7 @@ class _MainScreenState extends State<MainScreen> {
                   onPressed: () => Navigator.pushNamed(context, "/log"),
                   child: const Text("Журнал игры"),
                 ),
-                const NotesMenuItemButton(),
+                NotesMenuItemButton(context: context, controller: _notes),
                 CheckboxMenuButton(
                   value: _showRoles,
                   onChanged: (value) => setState(() => _showRoles = value ?? false),
