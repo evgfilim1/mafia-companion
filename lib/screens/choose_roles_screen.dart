@@ -193,7 +193,6 @@ class _ChooseRolesScreenState extends State<ChooseRolesScreen> {
       showSnackBar(context, const SnackBar(content: Text("Для продолжения исправьте ошибки")));
       return;
     }
-    final controller = context.read<GameController>();
     final newRoles = _randomizeRoles();
     if (newRoles == null) {
       showSnackBar(
@@ -202,10 +201,6 @@ class _ChooseRolesScreenState extends State<ChooseRolesScreen> {
       );
       return;
     }
-    controller
-      ..roles = newRoles
-      ..nicknames = _chosenNicknames
-      ..startNewGame();
     final showRoles = await showDialog<bool>(
       context: context,
       builder: (context) => const ConfirmationDialog(
@@ -220,6 +215,10 @@ class _ChooseRolesScreenState extends State<ChooseRolesScreen> {
     if (showRoles == null) {
       return;
     }
+    context.read<GameController>()
+      ..roles = newRoles
+      ..nicknames = _chosenNicknames
+      ..startNewGame();
     if (showRoles) {
       await Navigator.pushNamed(context, "/roles");
       if (!context.mounted) {
