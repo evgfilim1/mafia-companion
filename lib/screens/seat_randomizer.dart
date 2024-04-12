@@ -48,17 +48,17 @@ class _SeatRandomizerScreenState extends State<SeatRandomizerScreen> {
   Widget _buildPlayerButton(BuildContext context, int index, {required bool expanded}) {
     final seatNumber = index + 1;
     return BasicPlayerButton(
-        playerNumber: seatNumber,
-        isSelected: seatNumber == _lastSeat,
-        isActive: false,
-        isAlive: seatNumber == _lastSeat || !_seats.contains(seatNumber),
-        expanded: expanded,
-        onTap: () => showSimpleDialog(
-          context: context,
-          title: Text("Место #$seatNumber"),
-          content: Text("Место ${_seats.contains(seatNumber) ? "занято" : "свободно"}"),
-        ),
-      );
+      playerNumber: seatNumber,
+      isSelected: seatNumber == _lastSeat,
+      isActive: false,
+      isAlive: seatNumber == _lastSeat || !_seats.contains(seatNumber),
+      expanded: expanded,
+      onTap: () => showSimpleDialog(
+        context: context,
+        title: Text("Место #$seatNumber"),
+        content: Text("Место ${_seats.contains(seatNumber) ? "занято" : "свободно"}"),
+      ),
+    );
   }
 
   @override

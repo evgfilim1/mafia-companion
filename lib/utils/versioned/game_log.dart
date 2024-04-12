@@ -153,8 +153,7 @@ class VersionedGameLog extends Versioned<GameLogVersion, GameLogWithPlayers> {
         versionFromJson: _versionFromJson,
         valueFromJson: (json, version) => switch (version) {
           GameLogVersion.v0 => throw AssertionError("already handled"),
-          GameLogVersion.v2 =>
-            GameLogWithPlayers.fromJson(json, version: version),
+          GameLogVersion.v2 => GameLogWithPlayers.fromJson(json, version: version),
         },
         create: VersionedGameLog.new,
       );

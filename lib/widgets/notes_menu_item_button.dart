@@ -34,8 +34,8 @@ class NotesMenuItemButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => MenuItemButton(
-    leadingIcon: const Icon(Icons.sticky_note_2, size: Checkbox.width),
-    onPressed: () => _showNotes(this.context),
-    child: const Text("Заметки"),
-  );
+        leadingIcon: const Icon(Icons.sticky_note_2, size: Checkbox.width),
+        onPressed: () => _showNotes(this.context),
+        child: const Text("Заметки"),
+      );
 }
