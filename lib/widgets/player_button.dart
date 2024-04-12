@@ -150,13 +150,15 @@ class PlayerButton extends StatelessWidget {
                 ),
               ],
               builder: (context, menuController, _) => TextButton(
-                onPressed: () {
-                  if (menuController.isOpen) {
-                    menuController.close();
-                  } else {
-                    menuController.open();
-                  }
-                },
+                onPressed: controller.isGameActive
+                    ? () {
+                        if (menuController.isOpen) {
+                          menuController.close();
+                        } else {
+                          menuController.open();
+                        }
+                      }
+                    : null,
                 child: const Text("Действия"),
               ),
             ),
