@@ -104,10 +104,12 @@ class BasicPlayerButtons extends StatelessWidget {
 
 class PlayerButtons extends StatefulWidget {
   final bool showRoles;
+  final bool warnOnTap;
 
   const PlayerButtons({
     super.key,
-    this.showRoles = false,
+    required this.showRoles,
+    required this.warnOnTap,
   });
 
   @override
@@ -117,11 +119,23 @@ class PlayerButtons extends StatefulWidget {
 class _PlayerButtonsState extends State<PlayerButtons> {
   bool _expanded = false;
 
-  bool get showRoles => widget.showRoles;
-
   void _onPlayerButtonTap(BuildContext context, int playerNumber) {
     final controller = context.read<GameController>();
     final player = controller.players.getByNumber(playerNumber);
+    if (widget.warnOnTap && controller.isGameActive && player.state.isAlive) {
+      controller.warnPlayer(playerNumber);
+      showSnackBar(
+        context,
+        SnackBar(
+          content: Text("Игрок ${player.number} получил фол"),
+          action: SnackBarAction(
+            label: "Отменить",
+            onPressed: () => controller.warnMinusPlayer(playerNumber),
+          ),
+        ),
+      );
+      return;
+    }
     if (controller.state case GameStateNightCheck(activePlayerNumber: final pn)) {
       final p = controller.players.getByNumber(pn);
       if (!p.state.isAlive) {
@@ -185,7 +199,7 @@ class _PlayerButtonsState extends State<PlayerButtons> {
       onTap: player.state.isAlive || controller.state.stage == GameStage.nightCheck
           ? () => _onPlayerButtonTap(context, playerNumber)
           : null,
-      showRole: showRoles,
+      showRole: widget.showRoles,
       expanded: expanded,
     );
   }

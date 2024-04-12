@@ -24,9 +24,12 @@ class RestartGameIconButton extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) => IconButton(
-        onPressed: () => _askRestartGame(context),
-        tooltip: "Перезапустить игру",
-        icon: const Icon(Icons.restart_alt),
-      );
+  Widget build(BuildContext context) {
+    final controller = context.watch<GameController>();
+    return IconButton(
+      onPressed: controller.isGameInitialized ? () => _askRestartGame(context) : null,
+      tooltip: "Перезапустить игру",
+      icon: const Icon(Icons.restart_alt),
+    );
+  }
 }

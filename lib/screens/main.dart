@@ -31,6 +31,7 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   var _showRoles = false;
   final _notes = TextEditingController();
+  var _warnMode = false;
 
   @override
   void initState() {
@@ -72,6 +73,8 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
+  void _resetWarnMode() => setState(() => _warnMode = false);
+
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<GameController>();
@@ -104,6 +107,13 @@ class _MainScreenState extends State<MainScreen> {
             ),
           ),
           actions: [
+            IconButton(
+              onPressed:
+                  controller.isGameActive ? () => setState(() => _warnMode = !_warnMode) : null,
+              icon: const Icon(Icons.report),
+              tooltip: _warnMode ? "Вернуться в нормальный режим" : "Включить режим выдачи фолов",
+              color: _warnMode ? Colors.red : null,
+            ),
             const RestartGameIconButton(),
             MenuAnchor(
               builder: (context, controller, child) => IconButton(
@@ -135,7 +145,12 @@ class _MainScreenState extends State<MainScreen> {
           ],
         ),
         drawer: const AppDrawer(),
-        body: _RotatableMainScreenBody(showRoles: _showRoles),
+        body: _RotatableMainScreenBody(
+          showRoles: _showRoles,
+          warnOnTap: _warnMode,
+          onPrevStateTap: _resetWarnMode,
+          onNextStateTap: _resetWarnMode,
+        ),
       ),
     );
   }
@@ -143,21 +158,31 @@ class _MainScreenState extends State<MainScreen> {
 
 class _RotatableMainScreenBody extends StatelessWidget {
   final bool showRoles;
+  final bool warnOnTap;
+  final VoidCallback? onPrevStateTap;
+  final VoidCallback? onNextStateTap;
 
   const _RotatableMainScreenBody({
     required this.showRoles,
+    required this.warnOnTap,
+    this.onPrevStateTap,
+    this.onNextStateTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<GameController>();
     final children = <Widget>[
-      if (controller.isGameInitialized) PlayerButtons(showRoles: showRoles),
+      if (controller.isGameInitialized) PlayerButtons(showRoles: showRoles, warnOnTap: warnOnTap),
       Expanded(
         child: Column(
           children: [
             const Expanded(child: Center(child: GameStateInfo())),
-            if (controller.isGameInitialized) const GameBottomControlBar(),
+            if (controller.isGameInitialized)
+              GameBottomControlBar(
+                onTapBack: onPrevStateTap,
+                onTapNext: onNextStateTap,
+              ),
           ],
         ),
       ),

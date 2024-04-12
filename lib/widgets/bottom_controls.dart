@@ -13,7 +13,19 @@ import "../utils/ui.dart";
 import "confirmation_dialog.dart";
 
 class GameBottomControlBar extends StatelessWidget {
-  const GameBottomControlBar({super.key});
+  final VoidCallback? onTapBack;
+  final VoidCallback? onTapNext;
+
+  const GameBottomControlBar({
+    super.key,
+    this.onTapBack,
+    this.onTapNext,
+  });
+
+  void _onTapBack(GameController controller) {
+    controller.setPreviousState();
+    onTapBack?.call();
+  }
 
   Future<void> _saveStats(
     BuildContext context,
@@ -98,6 +110,7 @@ class GameBottomControlBar extends StatelessWidget {
       }
       await _saveStats(context, controller, playersContainer, nextStateAssumption);
     }
+    onTapNext?.call();
   }
 
   @override
@@ -107,7 +120,7 @@ class GameBottomControlBar extends StatelessWidget {
     final nextStateAssumption = controller.nextStateAssumption;
     return BottomControlBar(
       backLabel: previousState?.prettyName ?? "(недоступно)",
-      onTapBack: previousState != null ? controller.setPreviousState : null,
+      onTapBack: previousState != null ? () => _onTapBack(controller) : null,
       onTapNext: nextStateAssumption != null ? () => _onTapNext(context, controller) : null,
       nextLabel: nextStateAssumption?.prettyName ?? "(недоступно)",
     );
