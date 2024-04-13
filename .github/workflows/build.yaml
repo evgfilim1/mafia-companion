@@ -210,6 +210,12 @@ jobs:
           echo "$GITHUB_REF_NAME" | awk '{ print "prerelease=" (($1 ~ /v[0-9]+\.[0-9]+\.[0-9]+-.+/) ? "true" : "false"); }' >>$GITHUB_OUTPUT
           echo "release_notes=$file" >>$GITHUB_OUTPUT
 
+      - name: Rename files
+        run: |
+          for file in build/app-*.apk build/app-*.apk.sha1; do
+            mv "$file" "${file/-prod/}"
+          done
+
       - name: Create a release
         uses: softprops/action-gh-release@v2
         with:
@@ -217,6 +223,7 @@ jobs:
           prerelease: ${{ steps.release_notes.outputs.prerelease }}
           files: |
             build/app-*.apk
+            build/app-*.apk.sha1
           fail_on_unmatched_files: true
 
       - name: Send release info to testers Telegram group
@@ -227,8 +234,8 @@ jobs:
           release_url="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/releases/tag/${GITHUB_REF_NAME}"
           curl --silent --show-error --fail-with-body \
             -F "chat_id=${TELEGRAM_CHAT_ID}" \
-            -F "parse_mode=MarkdownV2" \
-            -F "text=New version released: [${GITHUB_REF_NAME}](${release_url})" \
+            -F "parse_mode=HTML" \
+            -F "text=New version released: <a href=\"${release_url})\">${GITHUB_REF_NAME}</a>" \
             "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             >/dev/null
         continue-on-error: true
