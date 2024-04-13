@@ -61,7 +61,7 @@ class PlayerInfoScreen extends StatelessWidget {
           final player = snapshot.requireData!;
           return ListView(
             children: [
-              if (isDev)
+              if (kIsDev || kEnableShowIds)
                 ListTile(
                   enabled: false,
                   leading: const Icon(Icons.onetwothree),

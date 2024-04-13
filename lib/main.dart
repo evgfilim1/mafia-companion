@@ -17,6 +17,7 @@ import "utils/color_scheme.dart";
 import "utils/db/methods.dart" as db;
 import "utils/db/repo.dart";
 import "utils/game_controller.dart";
+import "utils/misc.dart";
 import "utils/settings.dart";
 import "utils/timer.dart";
 import "utils/updates_checker.dart";
@@ -28,6 +29,7 @@ void main() async {
   final settings = await getSettings();
   final packageInfo = await PackageInfo.fromPlatform();
   final appColorScheme = await loadColorScheme(fallbackSeedColor: settings.seedColor);
+  logFlags();
   runApp(
     MultiProvider(
       providers: [

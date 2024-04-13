@@ -46,7 +46,7 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Future<void> _checkForUpdates() async {
-    if (kIsWeb || isDev) {
+    if ((kIsWeb || kIsDev) && !kEnableUpdater) {
       return;
     }
     final checker = context.read<UpdatesChecker>();

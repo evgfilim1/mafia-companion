@@ -52,9 +52,9 @@ class SettingsScreen extends StatelessWidget {
     final appVersion = packageInfo.version;
     final checker = context.watch<UpdatesChecker>();
     final controller = context.watch<GameController>();
-    const updaterUnavailableReason = kIsWeb
+    const updaterUnavailableReason = kEnableUpdater ? null : kIsWeb
         ? "в браузере"
-        : isDev
+        : kIsDev
             ? "при разработке"
             : null;
 
@@ -85,7 +85,7 @@ class SettingsScreen extends StatelessWidget {
               ),
             ),
           ),
-          if (isDev)
+          if (kIsDev || kEnableDebugMenu)
             ListTile(
               leading: const Icon(Icons.bug_report),
               title: const Text("Меню отладки"),

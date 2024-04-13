@@ -109,7 +109,7 @@ Future<NewVersionInfo?> _checkForUpdates() async {
     return null;
   }
   if (currentVersion > latestVersion) {
-    if (!isDev) {
+    if (!kIsDev) {
       throw StateError("Current version is greater than latest version and not in debug mode");
     }
     return null;
@@ -226,7 +226,7 @@ class UpdatesChecker with ChangeNotifier {
     if (kIsWeb) {
       throw UnsupportedError("Web platform is not supported");
     }
-    if (isDev) {
+    if (kIsDev) {
       _log.w("Checking updates in debug mode");
     }
     NewVersionInfo? info;
