@@ -10,4 +10,6 @@ Future<void> init() async {
     ..registerAdapter(PlayerAdapter())
     ..registerAdapter(PlayerStatsAdapter());
   await Hive.openBox<Player>("players");
+  await Hive.openBox<Player>("players2");
+  await Hive.openBox<PlayerStats>("playerStats");
 }

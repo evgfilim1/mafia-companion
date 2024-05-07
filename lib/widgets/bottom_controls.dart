@@ -30,7 +30,7 @@ class GameBottomControlBar extends StatelessWidget {
   Future<void> _saveStats(
     BuildContext context,
     GameController controller,
-    PlayerList playersContainer,
+    PlayerRepo playersContainer,
     GameStateFinish nextState,
   ) async {
     final bestTurn = controller.gameLog.whereType<StateChangeGameLogItem>().getBestTurn();
@@ -54,34 +54,27 @@ class GameBottomControlBar extends StatelessWidget {
       }
     }
 
-    final newStats = <PlayerStats>[];
+    final newPlayers = <String, PlayerWithStats>{};
     for (final (dbPlayer, player) in dbPlayers.zip(controller.players)) {
       if (dbPlayer == null) {
         continue;
       }
-      newStats.add(
-        dbPlayer.$2.stats.copyWithUpdated(
-          playedAs: player.role,
-          won: nextState.winner == player.role.team,
-          warnCount: player.state.warns,
-          wasKicked: player.state.isKicked,
-          hasOtherTeamWon:
-              otherTeamWin.isNotEmpty && otherTeamWin.last.playerNumber == player.number,
-          guessedMafiaCount:
-              bestTurn?.currentPlayerNumber == player.number ? (guessedMafiaCount ?? 0) : 0,
-          foundMafiaCount: player.role == PlayerRole.sheriff ? foundMafia.length : 0,
-          foundSheriff: player.role == PlayerRole.don && foundSheriff,
-          wasKilledFirstNight: bestTurn?.currentPlayerNumber == player.number,
-        ),
+      final (key, pws) = dbPlayer;
+      final newStats = pws.stats.copyWithUpdated(
+        playedAs: player.role,
+        won: nextState.winner == player.role.team,
+        warnCount: player.state.warns,
+        wasKicked: player.state.isKicked,
+        hasOtherTeamWon: otherTeamWin.isNotEmpty && otherTeamWin.last.playerNumber == player.number,
+        guessedMafiaCount:
+            bestTurn?.currentPlayerNumber == player.number ? (guessedMafiaCount ?? 0) : 0,
+        foundMafiaCount: player.role == PlayerRole.sheriff ? foundMafia.length : 0,
+        foundSheriff: player.role == PlayerRole.don && foundSheriff,
+        wasKilledFirstNight: bestTurn?.currentPlayerNumber == player.number,
       );
+      newPlayers[key] = pws.copyWith(stats: newStats);
     }
-    await playersContainer.editAll(
-      Map.fromEntries(
-        dbPlayers.nonNulls
-            .zip(newStats)
-            .map((e) => MapEntry(e.$1.$1, e.$1.$2.copyWith(stats: e.$2))),
-      ),
-    );
+    await playersContainer.putAllWithStats(newPlayers);
     if (!context.mounted) {
       return;
     }
@@ -95,7 +88,7 @@ class GameBottomControlBar extends StatelessWidget {
     }
     controller.setNextState();
     if (nextStateAssumption is GameStateFinish) {
-      final playersContainer = context.read<PlayerList>();
+      final playersContainer = context.read<PlayerRepo>();
       final saveStats = await showDialog<bool>(
         context: context,
         builder: (context) => const ConfirmationDialog(

@@ -29,7 +29,7 @@ void main() async {
         ChangeNotifierProvider<GameController>(create: (context) => GameController()),
         ChangeNotifierProvider<UpdatesChecker>(create: (context) => UpdatesChecker()),
         Provider<BrightnessAwareColorScheme>.value(value: appColorScheme),
-        ChangeNotifierProvider<PlayerList>(create: (_) => PlayerList()),
+        ChangeNotifierProvider<PlayerRepo>(create: (_) => PlayerRepo()),
         ChangeNotifierProvider<TimerService>(
           create: (context) => TimerService(controller: context.read(), settings: context.read()),
         ),

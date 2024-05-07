@@ -253,14 +253,14 @@ class _ChooseRolesScreenState extends State<ChooseRolesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final players = context.watch<PlayerList>();
+    final players = context.watch<PlayerRepo>();
     final nicknameEntries = [
       const DropdownMenuEntry(
         value: null,
         label: "",
         labelWidget: Text("(*без никнейма*)", style: TextStyle(fontStyle: FontStyle.italic)),
       ),
-      for (final nickname in players.data.map((p) => p.nickname).toList(growable: false)..sort())
+      for (final nickname in players.data.map((p) => p.$2.nickname).toList(growable: false)..sort())
         DropdownMenuEntry(
           value: nickname,
           label: nickname,

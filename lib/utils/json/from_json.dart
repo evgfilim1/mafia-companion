@@ -8,8 +8,11 @@ import "../versioned/db_players.dart";
 import "../versioned/game_log.dart";
 
 extension MapParseJson on Map<String, dynamic> {
-  LinkedHashMap<int, VT> parseJsonMap<VT>() =>
+  LinkedHashMap<int, VT> parseJsonIntToIntMap<VT extends int?>() =>
       LinkedHashMap.from(cast<String, VT>().map((k, v) => MapEntry(int.parse(k), v)));
+
+  Map<String, VT> parseJsonMap<VT>(VT Function(dynamic json) fromJson) =>
+      map((k, v) => MapEntry(k, fromJson(v)));
 }
 
 extension ListDynamicParseJson on List<dynamic> {
@@ -106,7 +109,7 @@ BaseGameState gameStateFromJson(Map<String, dynamic> json, {required GameLogVers
         day: day,
         playerStates: playerStates,
         currentPlayerNumber: json["currentPlayerNumber"] as int,
-        accusations: (json["accusations"] as Map<String, dynamic>).parseJsonMap(),
+        accusations: (json["accusations"] as Map<String, dynamic>).parseJsonIntToIntMap(),
         canOnlyAccuse: switch (version) {
           GameLogVersion.v0 => false,
           GameLogVersion.v2 => json["canOnlyAccuse"] as bool,
@@ -120,7 +123,7 @@ BaseGameState gameStateFromJson(Map<String, dynamic> json, {required GameLogVers
         stage: stage,
         day: day,
         playerStates: playerStates,
-        votes: (json["votes"] as Map<String, dynamic>).parseJsonMap(),
+        votes: (json["votes"] as Map<String, dynamic>).parseJsonIntToIntMap(),
         currentPlayerNumber: json["currentPlayerNumber"] as int,
         currentPlayerVotes: json["currentPlayerVotes"] as int?,
       ),
@@ -185,20 +188,24 @@ PlayerState playerStateFromJson(Map<String, dynamic> json, {required GameLogVers
       },
     );
 
-db_models.Player dbPlayerFromJson(
+db_models.PlayerWithStats dbPlayerFromJson(
   Map<String, dynamic> json, {
   required DBPlayerVersion version,
 }) =>
-    db_models.Player(
-      nickname: json["nickname"] as String,
-      realName: json["realName"] as String? ?? "",
-      stats: json["stats"] != null
-          ? dbPlayerStatsFromJson(
-              json["stats"] as Map<String, dynamic>,
-              version: version,
-            )
-          : const db_models.PlayerStats.defaults(),
-    );
+    switch (version) {
+      DBPlayerVersion.v1 || DBPlayerVersion.v2 => db_models.PlayerWithStats(
+          db_models.Player(
+            nickname: json["nickname"] as String,
+            realName: json["realName"] as String? ?? "",
+          ),
+          json["stats"] != null
+              ? dbPlayerStatsFromJson(
+                  json["stats"] as Map<String, dynamic>,
+                  version: version,
+                )
+              : const db_models.PlayerStats.defaults(),
+        ),
+    };
 
 db_models.PlayerStats dbPlayerStatsFromJson(
   Map<String, dynamic> json, {

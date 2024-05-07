@@ -41,9 +41,9 @@ class _AddPlayerDialogState extends State<_AddPlayerDialog> {
 
   Future<void> _onSubmit(BuildContext context) async {
     final nickname = _nicknameController.text.trim();
-    final existingPlayer = await context.read<PlayerList>().getByNickname(nickname);
+    final existingPlayer = await context.read<PlayerRepo>().isNicknameOccupied(nickname);
     setState(() {
-      _isNicknameAvailable = existingPlayer == null;
+      _isNicknameAvailable = !existingPlayer;
     });
     if (_formKey.currentState?.validate() ?? false) {
       if (!context.mounted) {
@@ -121,13 +121,14 @@ class _LoadStrategyDialog extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.sync),
             title: const Text("Заменить"),
-            subtitle: const Text("Удалить всех текущих игроков и загрузить новых из файла"),
+            subtitle: const Text("Удалить всех текущих игроков и загрузить новых из файла."),
             onTap: () => Navigator.pop(context, _LoadStrategy.replace),
           ),
           ListTile(
             leading: const Icon(Icons.merge),
-            title: const Text("Объединить по никнейму"),
-            subtitle: const Text("Существующие игроки заменяются из файла, новые добавляются"),
+            title: const Text("Объединить"),
+            subtitle:
+                const Text("Заменить данные существующих игроков и загрузить новых из файла."),
             onTap: () => Navigator.pop(context, _LoadStrategy.merge),
           ),
           ListTile(
@@ -163,7 +164,7 @@ class PlayersScreen extends StatelessWidget {
 
   const PlayersScreen({super.key});
 
-  Future<void> _onAddPlayerPressed(BuildContext context, PlayerList players) async {
+  Future<void> _onAddPlayerPressed(BuildContext context, PlayerRepo players) async {
     final newPlayer = await showDialog<db_models.Player>(
       context: context,
       builder: (context) => const _AddPlayerDialog(),
@@ -173,10 +174,10 @@ class PlayersScreen extends StatelessWidget {
     }
   }
 
-  Future<void> _onSearchPressed(BuildContext context, PlayerList players) async {
+  Future<void> _onSearchPressed(BuildContext context, PlayerRepo players) async {
     final result = await showSearch(
       context: context,
-      delegate: _PlayerSearchDelegate(players.dataWithIDs),
+      delegate: _PlayerSearchDelegate(players.data),
     );
     if (result == null || !context.mounted) {
       return;
@@ -210,28 +211,38 @@ class PlayersScreen extends StatelessWidget {
     if (!context.mounted) {
       throw ContextNotMountedError();
     }
-    final players = context.read<PlayerList>();
+    final players = context.read<PlayerRepo>();
     switch (strategy) {
       case _LoadStrategy.replace:
         await players.clear();
-        await players.addAll(playersFromFile.value);
+        switch (playersFromFile.version) {
+          case DBPlayerVersion.v1:
+            await players.addAllWithStats(playersFromFile.value.values);
+          case DBPlayerVersion.v2:
+            await players.putAllWithStats(playersFromFile.value);
+        }
       case _LoadStrategy.merge:
-        final nicknameToID = <String, int>{};
-        for (final (key, player) in players.dataWithIDs) {
-          nicknameToID[player.nickname] = key;
+        switch (playersFromFile.version) {
+          case DBPlayerVersion.v1:
+            final nicknameToID = <String, String>{};
+            for (final (id, player) in players.data) {
+              nicknameToID[player.nickname] = id;
+            }
+            final edits = <String, db_models.PlayerWithStats>{};
+            final adds = <db_models.PlayerWithStats>[];
+            for (final entry in playersFromFile.value.entries) {
+              final id = nicknameToID[entry.value.player.nickname];
+              if (id != null) {
+                edits[id] = entry.value;
+              } else {
+                adds.add(entry.value);
+              }
+            }
+            await players.putAllWithStats(edits);
+            await players.addAllWithStats(adds);
+          case DBPlayerVersion.v2:
+            await players.putAllWithStats(playersFromFile.value);
         }
-        final edits = <int, db_models.Player>{};
-        final adds = <db_models.Player>[];
-        for (final player in playersFromFile.value) {
-          final key = nicknameToID[player.nickname];
-          if (key != null) {
-            edits[key] = player;
-          } else {
-            adds.add(player);
-          }
-        }
-        await players.editAll(edits);
-        await players.addAll(adds);
     }
     if (!context.mounted) {
       throw ContextNotMountedError();
@@ -240,9 +251,9 @@ class PlayersScreen extends StatelessWidget {
   }
 
   Future<void> _onSavePressed(BuildContext context) async {
-    final players = context.read<PlayerList>();
+    final players = context.read<PlayerRepo>();
     final wasSaved = await saveJsonFile(
-      VersionedDBPlayers(players.data).toJson(),
+      VersionedDBPlayers(players.toMapWithStats()).toJson(),
       filename: "mafia_players_${_fileNameDateFormat.format(DateTime.now())}",
     );
     if (!context.mounted || !wasSaved) {
@@ -251,7 +262,7 @@ class PlayersScreen extends StatelessWidget {
     showSnackBar(context, const SnackBar(content: Text("Игроки сохранены")));
   }
 
-  Future<void> _onClearPressed(BuildContext context, PlayerList players) async {
+  Future<void> _onClearPressed(BuildContext context, PlayerRepo players) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => const ConfirmationDialog(
@@ -270,7 +281,7 @@ class PlayersScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final players = context.watch<PlayerList>();
+    final players = context.watch<PlayerRepo>();
     return Scaffold(
       appBar: AppBar(
         title: const Text("Игроки"),
@@ -283,7 +294,17 @@ class PlayersScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.file_open),
             tooltip: "Загрузить список игроков из файла",
-            onPressed: () => _onLoadPressed(context),
+            onPressed: () async {
+              try {
+                await _onLoadPressed(context);
+              } catch (e, st) {
+                if (e is ContextNotMountedError || !context.mounted) {
+                  return;
+                }
+                showSnackBar(context, const SnackBar(content: Text("Ошибка загрузки игроков")));
+                _log.error("Error loading player list: e=$e\n$st");
+              }
+            },
           ),
           IconButton(
             icon: const Icon(Icons.save),
@@ -312,7 +333,7 @@ class PlayersScreen extends StatelessWidget {
                     titleAlignment: ListTileTitleAlignment.center,
                   );
                 }
-                final (key, player) = players.dataWithIDs[index];
+                final (key, player) = players.data[index];
                 return _PlayerTile(
                   player: player,
                   onTap: () => openPlayerInfoPage(context, key),
@@ -328,12 +349,12 @@ class PlayersScreen extends StatelessWidget {
   }
 }
 
-class _PlayerSearchDelegate extends SearchDelegate<int> {
-  final List<PlayerWithID> data;
+class _PlayerSearchDelegate extends SearchDelegate<String> {
+  final List<WithID<db_models.Player>> data;
 
   _PlayerSearchDelegate(this.data) : super(searchFieldLabel: "Никнейм");
 
-  List<PlayerWithID> get filteredData => data.where((e) {
+  List<WithID<db_models.Player>> get filteredData => data.where((e) {
         final p = e.$2;
         final q = query.toLowerCase();
         return p.nickname.toLowerCase().contains(q) || p.realName.toLowerCase().contains(q);

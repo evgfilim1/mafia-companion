@@ -7,34 +7,34 @@ import "../utils/extensions.dart";
 import "../utils/ui.dart";
 
 class PlayerStatsScreen extends StatelessWidget {
-  final int playerKey;
+  final String playerID;
 
   const PlayerStatsScreen({
     super.key,
-    required this.playerKey,
+    required this.playerID,
   });
 
   @override
   Widget build(BuildContext context) {
-    final players = context.watch<PlayerList>();
+    final players = context.watch<PlayerRepo>();
     return Scaffold(
       appBar: AppBar(
         title: const Text("Статистика игрока"),
       ),
       body: FutureBuilder(
-        future: players.get(playerKey),
+        future: players.get(playerID),
         builder: (context, snapshot) {
           if (snapshot.connectionState != ConnectionState.done) {
             return const Center(child: CircularProgressIndicator());
           }
-          if (!snapshot.hasData || snapshot.data == null) {
+          if (!snapshot.hasData || snapshot.requireData == null) {
             return const Center(child: Text("Игрок не найден"));
           }
-          final player = snapshot.data!;
-          final stats = player.stats;
-          var name = player.nickname;
-          if (player.realName.isNotEmpty) {
-            name += " (${player.realName})";
+          final pws = snapshot.requireData!;
+          final stats = pws.stats;
+          var name = pws.player.nickname;
+          if (pws.player.realName.isNotEmpty) {
+            name += " (${pws.player.realName})";
           }
           return ListView(
             children: [

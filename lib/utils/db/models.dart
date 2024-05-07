@@ -14,12 +14,14 @@ class Player {
   @HiveField(1, defaultValue: "")
   final String realName;
 
+  @Deprecated("Left for compatibility. Use PlayerWithStats instead.")
   @HiveField(2, defaultValue: PlayerStats.defaults())
   final PlayerStats stats;
 
   const Player({
     required this.nickname,
     required this.realName,
+    @Deprecated("Left for compatibility. Use PlayerWithStats instead.")
     this.stats = const PlayerStats.defaults(),
   });
 
@@ -27,12 +29,10 @@ class Player {
   Player copyWith({
     String? nickname,
     String? realName,
-    PlayerStats? stats,
   }) =>
       Player(
         nickname: nickname ?? this.nickname,
         realName: realName ?? this.realName,
-        stats: stats ?? this.stats,
       );
 }
 
@@ -178,4 +178,21 @@ class PlayerStats {
       totalWasKilledFirstNight: totalWasKilledFirstNight + (wasKilledFirstNight ? 1 : 0),
     );
   }
+}
+
+class PlayerWithStats {
+  final Player player;
+  final PlayerStats stats;
+
+  PlayerWithStats(this.player, this.stats);
+
+  @useResult
+  PlayerWithStats copyWith({
+    Player? player,
+    PlayerStats? stats,
+  }) =>
+      PlayerWithStats(
+        player ?? this.player,
+        stats ?? this.stats,
+      );
 }

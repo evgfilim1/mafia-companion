@@ -25,11 +25,11 @@ Future<void> openDebugMenuPage(BuildContext context) => openPage(context, const 
 Future<void> openGameLogPage(BuildContext context, [List<BaseGameLogItem>? log]) =>
     openPage(context, GameLogScreen(log: log));
 
-Future<void> openPlayerInfoPage(BuildContext context, int playerKey) =>
-    openPage(context, PlayerInfoScreen(playerKey: playerKey));
+Future<void> openPlayerInfoPage(BuildContext context, String playerID) =>
+    openPage(context, PlayerInfoScreen(playerID: playerID));
 
-Future<void> openPlayerStatsPage(BuildContext context, int playerKey) =>
-    openPage(context, PlayerStatsScreen(playerKey: playerKey));
+Future<void> openPlayerStatsPage(BuildContext context, String playerID) =>
+    openPage(context, PlayerStatsScreen(playerID: playerID));
 
 Future<void> openPlayersPage(BuildContext context) => openPage(context, const PlayersScreen());
 

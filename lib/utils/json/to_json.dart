@@ -135,10 +135,10 @@ extension PlayerStatsJson on db_models.PlayerStats {
       };
 }
 
-extension DbPlayerJson on db_models.Player {
+extension DbPlayerJson on db_models.PlayerWithStats {
   Map<String, dynamic> toJson() => {
-        "nickname": nickname,
-        "realName": realName,
+        "nickname": player.nickname,
+        "realName": player.realName,
         "stats": stats.toJson(),
       };
 }
