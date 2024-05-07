@@ -7,6 +7,7 @@ import "../game/player.dart";
 import "../game/states.dart";
 import "../utils/errors.dart";
 import "../utils/game_controller.dart";
+import "../utils/navigation.dart";
 import "../utils/ui.dart";
 import "confirmation_dialog.dart";
 import "counter.dart";
@@ -56,12 +57,12 @@ class BottomGameStateWidget extends StatelessWidget {
       if (!context.mounted) {
         throw ContextNotMountedError();
       }
-      await Navigator.pushNamed(context, "/seats");
+      await openSeatRandomizerPage(context);
     }
     if (!context.mounted) {
       throw ContextNotMountedError();
     }
-    await Navigator.pushNamed(context, "/chooseRoles");
+    await openRoleChooserPage(context);
   }
 
   @override
@@ -86,11 +87,11 @@ class BottomGameStateWidget extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           TextButton(
-            onPressed: () => Navigator.pushNamed(context, "/roles"),
+            onPressed: () => openRolesPage(context),
             child: const Text("Раздача ролей", style: TextStyle(fontSize: 20)),
           ),
           TextButton(
-            onPressed: () => Navigator.pushNamed(context, "/chooseRoles"),
+            onPressed: () => openRoleChooserPage(context),
             child: const Text("Редактирование игроков", style: TextStyle(fontSize: 20)),
           ),
         ],

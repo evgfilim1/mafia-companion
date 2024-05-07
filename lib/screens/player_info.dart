@@ -6,9 +6,9 @@ import "../utils/db/repo.dart";
 import "../utils/extensions.dart";
 import "../utils/log.dart";
 import "../utils/misc.dart";
+import "../utils/navigation.dart";
 import "../widgets/confirmation_dialog.dart";
 import "../widgets/list_tiles/text_field.dart";
-import "player_stats.dart";
 
 class PlayerInfoScreen extends StatelessWidget {
   static final _log = Logger("PlayerInfoScreen");
@@ -98,14 +98,7 @@ class PlayerInfoScreen extends StatelessWidget {
                 leading: const Icon(Icons.bar_chart),
                 title: const Text("Статистика"),
                 subtitle: Text("Сыграно игр: ${player.stats.gamesByRole.values.sum}"),
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute<void>(
-                      builder: (context) => PlayerStatsScreen(playerKey: playerKey),
-                    ),
-                  );
-                },
+                onTap: () => openPlayerStatsPage(context, playerKey),
               ),
               ListTile(
                 leading: const Icon(Icons.delete, color: Colors.red),

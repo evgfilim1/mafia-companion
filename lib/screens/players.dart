@@ -7,10 +7,10 @@ import "../utils/db/repo.dart";
 import "../utils/errors.dart";
 import "../utils/load_save_file.dart";
 import "../utils/log.dart";
+import "../utils/navigation.dart";
 import "../utils/ui.dart";
 import "../utils/versioned/db_players.dart";
 import "../widgets/confirmation_dialog.dart";
-import "player_info.dart";
 
 final _fileNameDateFormat = DateFormat("yyyy-MM-dd_HH-mm-ss");
 
@@ -181,12 +181,7 @@ class PlayersScreen extends StatelessWidget {
     if (result == null || !context.mounted) {
       return;
     }
-    await Navigator.push(
-      context,
-      MaterialPageRoute<void>(
-        builder: (context) => PlayerInfoScreen(playerKey: result),
-      ),
-    );
+    await openPlayerInfoPage(context, result);
   }
 
   void _onLoadFromJsonError(BuildContext context, Object error, StackTrace stackTrace) {
@@ -320,12 +315,7 @@ class PlayersScreen extends StatelessWidget {
                 final (key, player) = players.dataWithIDs[index];
                 return _PlayerTile(
                   player: player,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute<void>(
-                      builder: (context) => PlayerInfoScreen(playerKey: key),
-                    ),
-                  ),
+                  onTap: () => openPlayerInfoPage(context, key),
                 );
               },
             )

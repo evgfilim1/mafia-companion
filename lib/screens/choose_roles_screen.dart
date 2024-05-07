@@ -8,6 +8,7 @@ import "../utils/db/repo.dart";
 import "../utils/errors.dart";
 import "../utils/extensions.dart";
 import "../utils/game_controller.dart";
+import "../utils/navigation.dart";
 import "../utils/ui.dart";
 import "../widgets/confirm_pop_scope.dart";
 import "../widgets/confirmation_dialog.dart";
@@ -220,7 +221,7 @@ class _ChooseRolesScreenState extends State<ChooseRolesScreen> {
       ..nicknames = _chosenNicknames
       ..startNewGame();
     if (showRoles) {
-      await Navigator.pushNamed(context, "/roles");
+      await openRolesPage(context);
       if (!context.mounted) {
         throw ContextNotMountedError();
       }

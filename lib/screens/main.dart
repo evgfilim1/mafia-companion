@@ -8,6 +8,7 @@ import "package:provider/provider.dart";
 
 import "../utils/game_controller.dart";
 import "../utils/misc.dart";
+import "../utils/navigation.dart";
 import "../utils/settings.dart";
 import "../utils/ui.dart";
 import "../utils/updates_checker.dart";
@@ -130,7 +131,7 @@ class _MainScreenState extends State<MainScreen> {
               menuChildren: [
                 MenuItemButton(
                   leadingIcon: const Icon(Icons.list, size: Checkbox.width),
-                  onPressed: () => Navigator.pushNamed(context, "/log"),
+                  onPressed: () => openGameLogPage(context),
                   child: const Text("Журнал игры"),
                 ),
                 NotesMenuItemButton(context: context, controller: _notes),

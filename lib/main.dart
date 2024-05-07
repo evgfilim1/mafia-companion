@@ -3,16 +3,7 @@ import "package:flutter_localizations/flutter_localizations.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import "package:provider/provider.dart";
 
-import "screens/choose_roles_screen.dart";
-import "screens/debug_menu_screen.dart";
-import "screens/game_log.dart";
 import "screens/main.dart";
-import "screens/players.dart";
-import "screens/roles.dart";
-import "screens/seat_randomizer.dart";
-import "screens/settings/appearance.dart";
-import "screens/settings/behavior.dart";
-import "screens/settings/main.dart";
 import "utils/color_scheme.dart";
 import "utils/db/methods.dart" as db;
 import "utils/db/repo.dart";
@@ -66,18 +57,7 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
         ),
         themeMode: settings.themeMode,
-        routes: {
-          "/": (context) => const MainScreen(),
-          "/roles": (context) => const RolesScreen(),
-          "/settings": (context) => const SettingsScreen(),
-          "/settings/appearance": (context) => const AppearanceSettingsScreen(),
-          "/settings/behavior": (context) => const BehaviorSettingsScreen(),
-          "/seats": (context) => const SeatRandomizerScreen(),
-          "/log": (context) => const GameLogScreen(),
-          "/chooseRoles": (context) => const ChooseRolesScreen(),
-          "/debug": (context) => const DebugMenuScreen(),
-          "/players": (context) => const PlayersScreen(),
-        },
+        home: const MainScreen(),
         localizationsDelegates: const [
           GlobalMaterialLocalizations.delegate,
           GlobalWidgetsLocalizations.delegate,

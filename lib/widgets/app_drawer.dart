@@ -2,6 +2,7 @@ import "package:flutter/material.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import "package:provider/provider.dart";
 
+import "../utils/navigation.dart";
 import "../utils/ui.dart";
 import "../utils/updates_checker.dart";
 import "notification_dot.dart";
@@ -27,7 +28,7 @@ class AppDrawer extends StatelessWidget {
             title: const Text("Игроки"),
             onTap: () {
               Navigator.pop(context);
-              Navigator.pushNamed(context, "/players");
+              openPlayersPage(context);
             },
           ),
           ListTile(
@@ -44,7 +45,7 @@ class AppDrawer extends StatelessWidget {
             trailing: checker.hasUpdate ? const NotificationDot(size: 8) : null,
             onTap: () {
               Navigator.pop(context);
-              Navigator.pushNamed(context, "/settings");
+              openSettingsPage(context);
             },
           ),
         ],

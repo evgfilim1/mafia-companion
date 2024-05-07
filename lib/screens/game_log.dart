@@ -12,6 +12,7 @@ import "../utils/extensions.dart";
 import "../utils/game_controller.dart";
 import "../utils/load_save_file.dart";
 import "../utils/log.dart";
+import "../utils/navigation.dart";
 import "../utils/ui.dart";
 import "../utils/versioned/game_log.dart";
 import "../widgets/information_dialog.dart";
@@ -143,12 +144,7 @@ class GameLogScreen extends StatelessWidget {
         throw ContextNotMountedError();
       }
     }
-    await Navigator.push(
-      context,
-      MaterialPageRoute<void>(
-        builder: (_) => GameLogScreen(log: logFromFile.value.log.toUnmodifiableList()),
-      ),
-    );
+    await openGameLogPage(context, logFromFile.value.log.toUnmodifiableList());
   }
 
   Future<void> _onSavePressed(BuildContext context) async {

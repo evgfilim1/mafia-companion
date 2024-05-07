@@ -11,6 +11,7 @@ import "../../utils/bug_report/stub.dart"
 import "../../utils/errors.dart";
 import "../../utils/game_controller.dart";
 import "../../utils/misc.dart";
+import "../../utils/navigation.dart";
 import "../../utils/ui.dart";
 import "../../utils/updates_checker.dart";
 import "../../widgets/notification_dot.dart";
@@ -65,17 +66,17 @@ class SettingsScreen extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.color_lens),
             title: const Text("Внешний вид"),
-            onTap: () => Navigator.of(context).pushNamed("/settings/appearance"),
+            onTap: () => openSettingsPage(context, SettingsSubpage.appearance),
           ),
           ListTile(
             leading: const Icon(Icons.settings),
             title: const Text("Поведение"),
-            onTap: () => Navigator.of(context).pushNamed("/settings/behavior"),
+            onTap: () => openSettingsPage(context, SettingsSubpage.behavior),
           ),
           ListTile(
             leading: const Icon(Icons.rule),
             title: const Text("Правила игры"),
-            // onTap: () => Navigator.of(context).pushNamed("/settings/rules"),
+            // onTap: () => openSettingsPage(context, SettingsSubpage.rules),
             onTap: () => showSimpleDialog(
               context: context,
               title: const Text("🚧 В разработке 🚧"),
@@ -89,7 +90,7 @@ class SettingsScreen extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.bug_report),
               title: const Text("Меню отладки"),
-              onTap: () => Navigator.pushNamed(context, "/debug"),
+              onTap: () => openDebugMenuPage(context),
             ),
           ListTile(
             enabled: updaterUnavailableReason == null,
