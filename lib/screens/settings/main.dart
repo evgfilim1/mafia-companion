@@ -53,11 +53,13 @@ class SettingsScreen extends StatelessWidget {
     final appVersion = packageInfo.version;
     final checker = context.watch<UpdatesChecker>();
     final controller = context.watch<GameController>();
-    const updaterUnavailableReason = kEnableUpdater ? null : kIsWeb
-        ? "в браузере"
-        : kIsDev
-            ? "при разработке"
-            : null;
+    const updaterUnavailableReason = kEnableUpdater
+        ? null
+        : kIsWeb
+            ? "в браузере"
+            : kIsDev
+                ? "при разработке"
+                : null;
 
     return Scaffold(
       appBar: AppBar(title: const Text("Настройки")),
