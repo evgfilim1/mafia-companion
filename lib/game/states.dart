@@ -740,7 +740,7 @@ const validTransitions = <GameStage, Set<GameStage>>{
   GameStage.preFinalVoting: {GameStage.finalVoting, GameStage.finish},
   GameStage.finalVoting: {
     GameStage.finalVoting,
-    GameStage.excuse,
+    GameStage.preExcuse,
     GameStage.dayLastWords,
     GameStage.knockoutVoting,
     GameStage.nightKill,
