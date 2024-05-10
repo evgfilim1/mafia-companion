@@ -104,6 +104,7 @@ Future<void> showSimpleDialog({
   required Widget title,
   required Widget content,
   List<Widget> extraActions = const [],
+  String? rememberKey,
 }) =>
     showDialog<void>(
       context: context,
@@ -111,6 +112,7 @@ Future<void> showSimpleDialog({
         title: title,
         content: content,
         extraActions: extraActions,
+        rememberKey: rememberKey,
       ),
     );
 

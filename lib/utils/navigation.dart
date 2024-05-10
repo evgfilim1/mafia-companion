@@ -12,6 +12,7 @@ import "../screens/seat_randomizer.dart";
 import "../screens/settings/appearance.dart";
 import "../screens/settings/behavior.dart";
 import "../screens/settings/main.dart";
+import "../screens/settings/rules.dart";
 
 Future<void> openPage(BuildContext context, Widget page) async {
   await Navigator.of(context).push(MaterialPageRoute<void>(builder: (context) => page));
@@ -41,7 +42,7 @@ Future<void> openSeatRandomizerPage(BuildContext context) =>
 enum SettingsSubpage {
   appearance,
   behavior,
-  // rules,
+  rules,
 }
 
 Future<void> openSettingsPage(BuildContext context, [SettingsSubpage? subpage]) => openPage(
@@ -49,6 +50,7 @@ Future<void> openSettingsPage(BuildContext context, [SettingsSubpage? subpage]) 
       switch (subpage) {
         SettingsSubpage.appearance => const AppearanceSettingsScreen(),
         SettingsSubpage.behavior => const BehaviorSettingsScreen(),
+        SettingsSubpage.rules => const GameRulesSettingsScreen(),
         null => const SettingsScreen(),
       },
     );

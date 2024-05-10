@@ -1,14 +1,22 @@
 import "package:flutter/material.dart";
 
+import "../game/config.dart";
 import "../game/controller.dart";
 import "../game/log.dart";
 import "../game/player.dart";
 import "../game/players_view.dart";
 import "../game/states.dart";
 import "log.dart";
+import "rules.dart";
 
 extension _EnsureInitialized on Game? {
   Game get ensureInitialized => this ?? (throw StateError("Game is not initialized"));
+}
+
+extension _GameRulesModelToGameConfig on GameRulesModel {
+  GameConfig toGameConfig() => GameConfig(
+        alwaysContinueVoting: alwaysContinueVoting,
+      );
 }
 
 int getNewSeed() => DateTime.now().millisecondsSinceEpoch;
@@ -56,8 +64,13 @@ class GameController with ChangeNotifier {
 
   PlayersView get players => _game.ensureInitialized.players;
 
-  void startNewGame() {
-    _game = Game.withPlayers(generatePlayers(nicknames: _nicknames, roles: _roles));
+  void startNewGame({
+    required GameRulesModel rules,
+  }) {
+    _game = Game.withPlayers(
+      generatePlayers(nicknames: _nicknames, roles: _roles),
+      config: rules.toGameConfig(),
+    );
     notifyListeners();
   }
 

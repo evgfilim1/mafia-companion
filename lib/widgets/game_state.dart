@@ -114,9 +114,15 @@ class BottomGameStateWidget extends StatelessWidget {
       assert(gameState.votes.keys.length > 1, "One or less vote candidates (bug?)");
       final aliveCount = controller.players.aliveCount;
       final currentPlayerVotes = gameState.currentPlayerVotes ?? 0;
+      final int minVotes;
+      if (gameState.votes.keys.last == gameState.currentPlayerNumber) {
+        minVotes = currentPlayerVotes;
+      } else {
+        minVotes = 0;
+      }
       return Counter(
         key: ValueKey(gameState.currentPlayerNumber),
-        min: 0,
+        min: minVotes,
         max: aliveCount - controller.totalVotes,
         onValueChanged: controller.vote,
         initialValue: currentPlayerVotes,

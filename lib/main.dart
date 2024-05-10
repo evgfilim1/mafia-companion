@@ -9,6 +9,7 @@ import "utils/db/methods.dart" as db;
 import "utils/db/repo.dart";
 import "utils/game_controller.dart";
 import "utils/misc.dart";
+import "utils/rules.dart";
 import "utils/settings.dart";
 import "utils/timer.dart";
 import "utils/updates_checker.dart";
@@ -20,11 +21,13 @@ void main() async {
   final settings = await getSettings();
   final packageInfo = await PackageInfo.fromPlatform();
   final appColorScheme = await loadColorScheme(fallbackSeedColor: settings.seedColor);
+  final rules = await GameRulesModel.load();
   logFlags();
   runApp(
     MultiProvider(
       providers: [
         ChangeNotifierProvider<SettingsModel>.value(value: settings),
+        ChangeNotifierProvider<GameRulesModel>.value(value: rules),
         Provider<PackageInfo>.value(value: packageInfo),
         ChangeNotifierProvider<GameController>(create: (context) => GameController()),
         ChangeNotifierProvider<UpdatesChecker>(create: (context) => UpdatesChecker()),

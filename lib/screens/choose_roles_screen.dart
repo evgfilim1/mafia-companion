@@ -219,7 +219,7 @@ class _ChooseRolesScreenState extends State<ChooseRolesScreen> {
     context.read<GameController>()
       ..roles = newRoles
       ..nicknames = _chosenNicknames
-      ..startNewGame();
+      ..startNewGame(rules: context.read());
     if (showRoles) {
       await openRolesPage(context);
       if (!context.mounted) {

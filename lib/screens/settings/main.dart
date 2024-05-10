@@ -81,15 +81,22 @@ class SettingsScreen extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.rule),
             title: const Text("Правила игры"),
-            // onTap: () => openSettingsPage(context, SettingsSubpage.rules),
-            onTap: () => showSimpleDialog(
-              context: context,
-              title: const Text("🚧 В разработке 🚧"),
-              content: const Text(
-                "Настройки правил игры пока в разработке. Приложение пока работает только с"
-                " правилами, описанными ФИИМ.",
-              ),
-            ),
+            onTap: () async {
+              if (controller.isGameInitialized) {
+                await showSimpleDialog(
+                  context: context,
+                  title: const Text("Предупреждение"),
+                  content: const Text(
+                    "Чтобы изменения в правилах вступили в силу, необходим перезапуск игры.",
+                  ),
+                  rememberKey: "rulesChangeRequireRestart",
+                );
+              }
+              if (!context.mounted) {
+                throw ContextNotMountedError();
+              }
+              await openSettingsPage(context, SettingsSubpage.rules);
+            },
           ),
           if (kIsDev || kEnableDebugMenu)
             ListTile(
