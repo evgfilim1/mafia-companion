@@ -146,7 +146,7 @@ class SettingsScreen extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.info),
             title: const Text("О приложении"),
-            subtitle: Text("${packageInfo.appName} $appVersion"),
+            subtitle: Text("${packageInfo.appName} v$appVersion"),
             onTap: () => showAboutDialog(
               context: context,
               applicationIcon: Padding(
