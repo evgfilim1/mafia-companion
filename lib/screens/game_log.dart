@@ -43,7 +43,7 @@ extension _DescribeLogItem on BaseGameLogItem {
           case GameStateVoting(currentPlayerNumber: final pn, currentPlayerVotes: final votes):
             result.add("За игрока #$pn отдано голосов: ${votes ?? 0}");
           case GameStateKnockoutVoting(votes: final votes):
-            result.add("За подъём стола отдано голосов: $votes");
+            result.add("За подъём всех игроков отдано голосов: $votes");
           case GameStateBestTurn(currentPlayerNumber: final pn, playerNumbers: final pns):
             if (pns.isNotEmpty) {
               result.add(
