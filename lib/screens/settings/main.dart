@@ -1,7 +1,9 @@
 import "dart:async";
 
 import "package:flutter/foundation.dart";
+import "package:flutter/gestures.dart";
 import "package:flutter/material.dart";
+import "package:flutter_svg/flutter_svg.dart";
 import "package:package_info_plus/package_info_plus.dart";
 import "package:provider/provider.dart";
 
@@ -60,6 +62,7 @@ class SettingsScreen extends StatelessWidget {
             : kIsDev
                 ? "при разработке"
                 : null;
+    final accentColor = Theme.of(context).colorScheme.primary;
 
     return Scaffold(
       appBar: AppBar(title: const Text("Настройки")),
@@ -146,10 +149,45 @@ class SettingsScreen extends StatelessWidget {
             subtitle: Text("${packageInfo.appName} $appVersion"),
             onTap: () => showAboutDialog(
               context: context,
+              applicationIcon: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                child: SvgPicture.asset(
+                  "assets/icon.svg",
+                  width: 48,
+                  height: 48,
+                  colorFilter: ColorFilter.mode(accentColor, BlendMode.srcIn),
+                ),
+              ),
               applicationName: packageInfo.appName,
               applicationVersion: "$appVersion build ${packageInfo.buildNumber}",
-              applicationLegalese: "© 2023 Евгений Филимонов",
-              // TODO: sources, license
+              applicationLegalese: "© 2023–2024 Евгений Филимонов",
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text.rich(
+                    TextSpan(
+                      children: [
+                        const TextSpan(
+                          text: "Приложение-компаньон для ведущего спортивной (турнирной) Мафии."
+                              "\n\n",
+                        ),
+                        const TextSpan(text: "Лицензировано под GNU AGPL v3.\n"),
+                        const TextSpan(text: "Исходный код опубликован на "),
+                        TextSpan(
+                          text: "GitHub",
+                          style: const TextStyle(color: Colors.blue),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () => launchUrlOrCopy(
+                                  context,
+                                  "https://github.com/evgfilim1/mafia-companion",
+                                ),
+                        ),
+                        const TextSpan(text: "."),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
