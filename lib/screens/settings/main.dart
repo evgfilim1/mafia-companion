@@ -178,7 +178,17 @@ class SettingsScreen extends StatelessWidget {
                           text: "Приложение-компаньон для ведущего спортивной (турнирной) Мафии."
                               "\n\n",
                         ),
-                        const TextSpan(text: "Лицензировано под GNU AGPL v3.\n"),
+                        const TextSpan(text: "Лицензировано под "),
+                        TextSpan(
+                          text: "GNU AGPL v3",
+                          style: const TextStyle(color: Colors.blue),
+                          recognizer: TapGestureRecognizer()
+                            ..onTap = () => launchUrlOrCopy(
+                                  context,
+                                  "https://www.gnu.org/licenses/agpl-3.0.html#license-text",
+                                ),
+                        ),
+                        const TextSpan(text: ".\n"),
                         const TextSpan(text: "Исходный код опубликован на "),
                         TextSpan(
                           text: "GitHub",
