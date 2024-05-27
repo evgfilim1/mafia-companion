@@ -15,7 +15,6 @@ import java.io.File
 class SelfUpdater(private val context: Context) {
     private var reporter: UpdateProgressReporter? = null
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun registerSessionCallback(sessionCallback: UpdateProgressReporter) {
         context.packageManager.packageInstaller.registerSessionCallback(sessionCallback)
         reporter = sessionCallback
@@ -25,13 +24,9 @@ class SelfUpdater(private val context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O && !context.packageManager.canRequestPackageInstalls()) {
             error("Cannot request package installs, check app permissions")
         }
-        when {
-            Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP -> doUpdateLollipop(path)
-            else -> doUpdateLegacy(path)
-        }
+        doUpdateLollipop(path)
     }
 
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private fun doUpdateLollipop(path: String) {
         val file = File(path)
         if (!file.isFile) {
@@ -73,14 +68,6 @@ class SelfUpdater(private val context: Context) {
         session.commit(pendingIntent.intentSender)
     }
 
-    private fun doUpdateLegacy(path: String) {
-        Intent(Intent.ACTION_VIEW).apply {
-            data = Uri.fromFile(File(path))
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK
-        }.let(context::startActivity)
-    }
-
-    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     fun handleIntent(intent: Intent) {
         if (intent.action != PACKAGE_INSTALLED_ACTION) {
             error("Unexpected intent action: ${intent.action}")
@@ -96,7 +83,7 @@ class SelfUpdater(private val context: Context) {
                 if (installIntent.`package` !in KNOWN_INSTALLERS) {
                     error("Unexpected package received from installer: ${installIntent.`package`}")
                 }
-                if (installIntent.action != "android.content.pm.action.CONFIRM_INSTALL") {
+                if (installIntent.action !in KNOWN_ACTIONS) {
                     error("Unexpected action received from installer: ${installIntent.action}")
                 }
 
@@ -123,6 +110,10 @@ class SelfUpdater(private val context: Context) {
         private val KNOWN_INSTALLERS = setOf(
             "com.android.packageinstaller",
             "com.google.android.packageinstaller",
+        )
+        private val KNOWN_ACTIONS = setOf(
+            "android.content.pm.action.CONFIRM_INSTALL",
+            "android.content.pm.action.CONFIRM_PERMISSIONS", // I get it on Android 9
         )
     }
 }
